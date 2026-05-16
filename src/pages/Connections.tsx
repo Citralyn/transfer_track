@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
+  BookOpen,
   Check,
+  GraduationCap,
   Loader2,
+  MapPin,
   Send,
   UserRoundCheck,
   Users,
@@ -11,6 +15,7 @@ import { clsx } from 'clsx'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   fetchIncomingRequests,
+  fetchProfilesByIds,
   fetchSentRequests,
   loadLocalConnectionRequests,
   updateConnectionStatus,
@@ -20,6 +25,7 @@ type Tab = 'connections' | 'received' | 'sent'
 
 export default function Connections() {
   const { profile } = useAuthStore()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('connections')
   const [incomingRequests, setIncomingRequests] = useState<any[]>([])
   const [sentRequests, setSentRequests] = useState<any[]>([])
@@ -40,15 +46,26 @@ export default function Connections() {
       fetchSentRequests(profile.id),
     ])
     const local = loadLocalConnectionRequests()
+    const profileIds = [...incoming, ...sent].flatMap((request) => [
+      request.requester_id,
+      request.receiver_id,
+    ])
+    const relatedProfiles = await fetchProfilesByIds(profileIds)
+    const profilesById = new Map(relatedProfiles.map((item: any) => [item.id, item]))
+    const attachProfiles = (requests: any[]) => requests.map((request) => ({
+      ...request,
+      requester: request.requester || profilesById.get(request.requester_id),
+      receiver: request.receiver || profilesById.get(request.receiver_id),
+    }))
 
     setIncomingRequests(
       incoming.length > 0
-        ? incoming
+        ? attachProfiles(incoming)
         : local.filter((request) => request.receiverId === profile.id || request.receiverUsername === profile.username)
     )
     setSentRequests(
       sent.length > 0
-        ? sent
+        ? attachProfiles(sent)
         : local.filter((request) => request.requesterId === profile.id)
     )
     setLoading(false)
@@ -127,6 +144,7 @@ export default function Connections() {
         loading={loading}
         actionLoadingId={actionLoadingId}
         onUpdateStatus={handleUpdateStatus}
+        onOpenProfile={(username) => navigate(`/profile/${username}`)}
       />
     </div>
   )
@@ -139,6 +157,7 @@ function RequestList({
   loading,
   actionLoadingId,
   onUpdateStatus,
+  onOpenProfile,
 }: {
   currentProfileId: string
   mode: Tab
@@ -146,6 +165,7 @@ function RequestList({
   loading: boolean
   actionLoadingId: string | null
   onUpdateStatus: (connectionId: string, status: 'accepted' | 'declined') => void
+  onOpenProfile: (username: string) => void
 }) {
   if (loading) {
     return (
@@ -179,34 +199,91 @@ function RequestList({
         {requests.map((request: any) => {
           const isSentByCurrentUser = request.requester_id === currentProfileId || request.requesterId === currentProfileId
           const otherProfile = isSentByCurrentUser ? request.receiver : request.requester
-          const name = otherProfile?.full_name || (isSentByCurrentUser ? request.receiverName : request.requesterName) || 'Unknown'
-          const email = otherProfile?.email || (isSentByCurrentUser ? request.receiverEmail : request.requesterEmail) || 'No email'
+          const fallbackName = isSentByCurrentUser ? request.receiverName : request.requesterName
+          const fallbackEmail = isSentByCurrentUser ? request.receiverEmail : request.requesterEmail
+          const fallbackUsername = isSentByCurrentUser ? request.receiverUsername : request.requesterUsername
+          const name = otherProfile?.full_name || fallbackName || 'Unknown'
+          const email = otherProfile?.email || fallbackEmail || 'No email'
+          const username = otherProfile?.username || fallbackUsername
+          const role = otherProfile?.role
+          const school = otherProfile?.school_name
+          const summary = otherProfile?.bio || (role === 'professor' ? otherProfile?.department : otherProfile?.academic_year)
           const createdAt = request.created_at || request.requestedAt
+          const canOpenProfile = Boolean(username)
 
           return (
             <div
               key={request.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-brand-100 bg-brand-50 group hover:shadow-md transition-all"
+              onClick={() => {
+                if (username) onOpenProfile(username)
+              }}
+              onKeyDown={(event) => {
+                if (!username) return
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onOpenProfile(username)
+                }
+              }}
+              role={canOpenProfile ? 'button' : undefined}
+              tabIndex={canOpenProfile ? 0 : undefined}
+              className={clsx(
+                'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-brand-100 bg-brand-50 group hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500',
+                canOpenProfile && 'cursor-pointer'
+              )}
             >
-              <div>
-                <p className="font-bold text-brand-900">{name}</p>
-                <p className="text-sm text-brand-600">
-                  {email} - {request.status} - {createdAt ? new Date(createdAt).toLocaleDateString() : 'No date'}
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="relative shrink-0">
+                  <div className="w-14 h-14 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-sm">
+                    {name.charAt(0)}
+                  </div>
+                  {role && (
+                    <div className={clsx(
+                      'absolute -bottom-1 -right-1 w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center shadow-sm',
+                      role === 'professor' ? 'bg-accent-500 text-white' : 'bg-brand-500 text-white'
+                    )}>
+                      {role === 'professor' ? <GraduationCap className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{name}</p>
+                  <p className="text-xs font-bold text-brand-400 uppercase tracking-widest">
+                    {role || 'Profile'} - {request.status}
+                  </p>
+                  <p className="text-sm text-brand-600 mt-1">
+                    {email} - {createdAt ? new Date(createdAt).toLocaleDateString() : 'No date'}
+                  </p>
+                  {(school || summary) && (
+                    <p className="text-sm text-brand-500 mt-1 flex items-center gap-1">
+                      {school && <><MapPin className="w-3.5 h-3.5 text-brand-300" /> {school}</>}
+                      {school && summary ? ' - ' : ''}
+                      {summary}
+                    </p>
+                  )}
+                  {!canOpenProfile && (
+                    <p className="text-xs text-brand-400 mt-1">Profile details are unavailable for this request.</p>
+                  )}
+                </div>
               </div>
               {mode === 'received' && request.status === 'pending' && request.created_at && (
-                <div className="flex gap-2">
+                <div className="flex gap-2" onClick={(event) => event.stopPropagation()}>
                   <button
-                    onClick={() => onUpdateStatus(request.id, 'accepted')}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onUpdateStatus(request.id, 'accepted')
+                    }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all"
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
                   <button
-                    onClick={() => onUpdateStatus(request.id, 'declined')}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onUpdateStatus(request.id, 'declined')
+                    }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all"
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                   </button>

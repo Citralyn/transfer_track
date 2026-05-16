@@ -31,6 +31,7 @@ export interface LocalConnectionRequest {
   requesterId: string
   requesterEmail: string
   requesterName: string
+  requesterUsername?: string
   receiverId?: string
   receiverEmail?: string
   receiverName?: string
@@ -264,6 +265,7 @@ export async function sendConnectionRequest(
     requesterId,
     requesterEmail: requester.email ?? 'unknown',
     requesterName: requester.full_name ?? requester.username ?? 'User',
+    requesterUsername: requester.username,
     receiverId: target.id,
     receiverEmail: target.email,
     receiverName: target.full_name,
@@ -404,7 +406,7 @@ export async function fetchIncomingRequests(professorId: string) {
     const { data, error } = await withTimeout(
       supabase
         .from('connections')
-        .select('id, status, created_at, requester:requester_id(id, full_name, email, username)')
+        .select('id, requester_id, receiver_id, status, created_at')
         .eq('receiver_id', professorId)
         .order('created_at', { ascending: false }),
       'Supabase incoming requests'
@@ -425,7 +427,7 @@ export async function fetchSentRequests(requesterId: string) {
     const { data, error } = await withTimeout(
       supabase
         .from('connections')
-        .select('id, status, created_at, receiver:receiver_id(id, full_name, email, username)')
+        .select('id, requester_id, receiver_id, status, created_at')
         .eq('requester_id', requesterId)
         .order('created_at', { ascending: false }),
       'Supabase sent requests'
@@ -435,6 +437,27 @@ export async function fetchSentRequests(requesterId: string) {
     return data
   } catch (error) {
     console.warn('Sent requests lookup failed:', error)
+    return []
+  }
+}
+
+export async function fetchProfilesByIds(profileIds: string[]) {
+  const ids = Array.from(new Set(profileIds.filter(Boolean)))
+  if (!isSupabaseConfigured() || ids.length === 0) return []
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('profiles')
+        .select('id, role, full_name, username, email, school_name, academic_year, department, bio')
+        .in('id', ids),
+      'Supabase connection profile lookup'
+    )
+
+    if (error || !data) return []
+    return data
+  } catch (error) {
+    console.warn('Connection profile lookup failed:', error)
     return []
   }
 }
