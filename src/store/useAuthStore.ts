@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { supabase } from '@/lib/supabase'
-import { Session, User } from '@supabase/supabase-js'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { clearLocalAuth } from '@/lib/supabaseHelpers'
+import type { Session, User } from '@supabase/supabase-js'
 
 export interface Profile {
   id: string
@@ -9,24 +10,30 @@ export interface Profile {
   username: string
   email: string
   avatar_url?: string
-  school_name?: string
-  school_type?: string
-  academic_year?: string
-  department?: string
-  bio?: string
-  transfer_goals?: string
-  research_areas?: string[]
-  interests?: string[]
-  skills?: string[]
+  school_name?: string | null
+  school_type?: string | null
+  academic_year?: string | null
+  department?: string | null
+  bio?: string | null
+  transfer_goals?: string | null
+  research_areas?: string[] | null
+  interests?: string[] | null
+  skills?: string[] | null
+  gender?: string | null
+}
+
+export interface LocalAuthUser {
+  id: string
+  email: string
 }
 
 interface AuthState {
   session: Session | null
-  user: User | null
+  user: User | LocalAuthUser | null
   profile: Profile | null
   loading: boolean
   setSession: (session: Session | null) => void
-  setUser: (user: User | null) => void
+  setUser: (user: User | LocalAuthUser | null) => void
   setProfile: (profile: Profile | null) => void
   setLoading: (loading: boolean) => void
   signOut: () => Promise<void>
@@ -42,7 +49,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   setProfile: (profile) => set({ profile }),
   setLoading: (loading) => set({ loading }),
   signOut: async () => {
-    await supabase.auth.signOut()
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut()
+    }
+    clearLocalAuth()
     set({ session: null, user: null, profile: null, loading: false })
   },
 }))

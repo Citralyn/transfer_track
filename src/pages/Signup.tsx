@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { FALLBACK_SCHOOLS, makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
   GraduationCap, 
@@ -11,9 +12,8 @@ import {
   ArrowLeft, 
   Loader2, 
   Mail,
-  Lock,
   AtSign,
-  Calendar,
+  Lock,
   Building2
 } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -21,9 +21,9 @@ import { clsx } from 'clsx'
 export default function Signup() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [schools, setSchools] = useState<any[]>([])
+  const [schools, setSchools] = useState<any[]>(FALLBACK_SCHOOLS)
   const [error, setError] = useState<string | null>(null)
-  const { setProfile } = useAuthStore()
+  const { setSession, setUser, setProfile } = useAuthStore()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -41,8 +41,21 @@ export default function Signup() {
 
   useEffect(() => {
     const fetchSchools = async () => {
-      const { data } = await supabase.from('schools').select('*')
-      if (data) setSchools(data)
+      if (!isSupabaseConfigured()) return
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase.from('schools').select('*'),
+          'Supabase schools lookup'
+        )
+        if (error) {
+          console.warn('Supabase schools lookup failed, using fallback schools:', error.message)
+          return
+        }
+        if (data?.length) setSchools(data)
+      } catch (error) {
+        console.warn('Supabase schools unavailable, using fallback schools:', error)
+      }
     }
     fetchSchools()
   }, [])
@@ -61,21 +74,33 @@ export default function Signup() {
     setLoading(true)
     setError(null)
 
-    // 1. Create Auth User
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-    })
+    try {
+      if (!formData.role) {
+        setError('Choose student or professor first.')
+        return
+      }
 
-    if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
-    }
+      const { data: authData, error: authError } = await signInOrSignUpDemo({
+        email: formData.email,
+        password: formData.password,
+        name: formData.full_name,
+        role: formData.role,
+      })
 
-    if (authData.user) {
-      // 2. Create Profile
-      const profileData = {
+      if (authError) {
+        setError(authError.message)
+        return
+      }
+
+      if (!authData?.user) {
+        setError('Unable to create a demo account. Try again with an email address.')
+        return
+      }
+
+      setSession(authData.session ?? null)
+      setUser(authData.user)
+
+      const profileData = makeProfilePayload({
         id: authData.user.id,
         role: formData.role,
         full_name: formData.full_name,
@@ -86,22 +111,24 @@ export default function Signup() {
         academic_year: formData.academic_year || null,
         department: formData.department || null,
         gender: formData.gender
-      }
+      })
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .insert([profileData])
-        .select()
-        .single()
+      const { data: profile, error: profileError } = await upsertProfile(profileData)
 
       if (profileError) {
-        setError("Account created but profile failed: " + profileError.message)
+        console.warn('Profile save failed:', (profileError as Error).message)
+        setProfile(profileData)
+        navigate(profileData.role === 'professor' ? '/professor-dashboard' : '/feed')
       } else {
         setProfile(profile)
-        navigate('/feed')
+        navigate(profile?.role === 'professor' ? '/professor-dashboard' : '/feed')
       }
+    } catch (error) {
+      console.warn('Signup failed:', error)
+      setError('Sign-up hit a snag. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -240,11 +267,11 @@ export default function Signup() {
                   onChange={v => setFormData({...formData, email: v})}
                 />
 
-                <InputWithIcon 
+                <InputWithIcon
                   icon={<Lock className="w-5 h-5" />}
                   label="Password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Use a password or leave blank for demo"
                   value={formData.password}
                   onChange={v => setFormData({...formData, password: v})}
                 />
@@ -258,6 +285,20 @@ export default function Signup() {
                     onChange={v => setFormData({...formData, department: v})}
                   />
                 )}
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">Gender</label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    className="w-full px-4 py-3.5 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white shadow-sm text-brand-900"
+                  >
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="non-binary">Non-binary</option>
+                  </select>
+                </div>
               </form>
             </div>
           )}
@@ -288,7 +329,7 @@ export default function Signup() {
             ) : (
               <button
                 onClick={handleSignup}
-                disabled={loading || !formData.email || !formData.password || !formData.full_name || !formData.username}
+                disabled={loading || !formData.email || !formData.full_name || !formData.username}
                 className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
               >
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Create Account <Check className="w-5 h-5" /></>}
@@ -324,7 +365,21 @@ function RoleCard({ active, onClick, icon, title, description }: any) {
   )
 }
 
-function InputWithIcon({ icon, label, value, onChange, placeholder, type = "text" }: any) {
+function InputWithIcon({
+  icon,
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  type?: string
+}) {
   return (
     <div className="w-full">
       <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">{label}</label>

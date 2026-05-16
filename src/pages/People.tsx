@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Search, Filter, UserPlus, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
+import { useState, useEffect, type ReactNode } from 'react'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useAuthStore } from '@/store/useAuthStore'
+import { sendConnectionRequest, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { Search, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 import { Link } from 'react-router-dom'
 
@@ -8,6 +10,10 @@ export default function People() {
   const [people, setPeople] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'student' | 'professor'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusMap, setStatusMap] = useState<Record<string, 'idle' | 'sending' | 'sent'>>({})
+  const [message, setMessage] = useState<string | null>(null)
+  const { profile: currentProfile } = useAuthStore()
 
   useEffect(() => {
     fetchPeople()
@@ -15,18 +21,76 @@ export default function People() {
 
   const fetchPeople = async () => {
     setLoading(true)
-    let query = supabase.from('profiles').select('*')
-    
-    if (filter !== 'all') {
-      query = query.eq('role', filter)
+    try {
+      if (!isSupabaseConfigured()) {
+        setPeople(getFallbackPeople(filter))
+        return
+      }
+
+      let query = supabase.from('profiles').select('*')
+
+      if (filter !== 'all') {
+        query = query.eq('role', filter)
+      }
+
+      const { data, error } = await withTimeout(
+        query.order('full_name', { ascending: true }),
+        'Supabase people lookup'
+      )
+
+      if (error) {
+        console.warn('Error fetching people, using fallback people:', error.message)
+        setPeople(getFallbackPeople(filter))
+        return
+      }
+
+      setPeople(data?.length ? data : getFallbackPeople(filter))
+    } catch (error) {
+      console.warn('People lookup unavailable, using fallback people:', error)
+      setPeople(getFallbackPeople(filter))
+    } finally {
+      setLoading(false)
     }
-
-    const { data, error } = await query.order('created_at', { ascending: false })
-
-    if (data) setPeople(data)
-    if (error) console.error('Error fetching people:', error)
-    setLoading(false)
   }
+
+  const handleConnect = async (person: any) => {
+    if (!currentProfile) return
+    setMessage(null)
+    setStatusMap((prev) => ({ ...prev, [person.id]: 'sending' }))
+
+    try {
+      await upsertProfile(currentProfile)
+
+      const result = await sendConnectionRequest(currentProfile, {
+        id: person.id,
+        email: person.email,
+        full_name: person.full_name,
+        username: person.username,
+      })
+
+      if (result.success || result.duplicate || result.fallback) {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'sent' }))
+        setMessage(result.message)
+      } else {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+        setMessage(result.message)
+      }
+    } catch (error) {
+      console.warn('Connection request failed:', error)
+      setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+      setMessage('Demo request could not be saved. Please try again.')
+    }
+  }
+
+  const filteredPeople = people.filter(person => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      person.full_name?.toLowerCase().includes(searchLower) ||
+      person.school_name?.toLowerCase().includes(searchLower) ||
+      person.department?.toLowerCase().includes(searchLower) ||
+      person.username?.toLowerCase().includes(searchLower)
+    )
+  })
 
   return (
     <div className="space-y-8">
@@ -34,6 +98,12 @@ export default function People() {
         <h1 className="text-3xl font-bold text-brand-900">Network</h1>
         <p className="text-brand-500 mt-1 font-medium">Discover students and professors in your academic field.</p>
       </div>
+
+      {message && (
+        <div className="rounded-3xl border border-brand-100 bg-brand-50 px-5 py-4 text-brand-700 shadow-sm">
+          {message}
+        </div>
+      )}
 
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row gap-6">
@@ -55,6 +125,8 @@ export default function People() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, school, or department..."
             className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
           />
@@ -65,8 +137,32 @@ export default function People() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
         {loading ? (
           [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
-        ) : people.length > 0 ? (
-          people.map(person => <UserCard key={person.id} person={person} />)
+        ) : filteredPeople.length > 0 ? (
+          filteredPeople.map(person => {
+            const canExpressInterest = currentProfile?.role === 'student' && person.role === 'professor' && currentProfile.id !== person.id
+            const status = statusMap[person.id] ?? 'idle'
+
+            return (
+              <UserCard
+                key={person.id}
+                person={person}
+                actionButton={canExpressInterest ? (
+                  <button
+                    onClick={() => handleConnect(person)}
+                    disabled={status === 'sending' || status === 'sent'}
+                    className={clsx(
+                      "w-full rounded-2xl py-3.5 font-bold transition-all flex items-center justify-center gap-2",
+                      status === 'sent'
+                        ? 'bg-brand-100 text-brand-700 cursor-default'
+                        : 'gradient-brand text-white hover:shadow-lg'
+                    )}
+                  >
+                    {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Request Sent' : 'Express Interest'}
+                  </button>
+                ) : undefined}
+              />
+            )
+          })
         ) : (
           <div className="col-span-full py-20 text-center">
              <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">
@@ -81,7 +177,44 @@ export default function People() {
   )
 }
 
-function UserCard({ person }: { person: any }) {
+function getFallbackPeople(filter: 'all' | 'student' | 'professor') {
+  const people = [
+    {
+      id: 'mock-professor-maya-chen',
+      role: 'professor',
+      full_name: 'Dr. Maya Chen',
+      username: 'maya-chen',
+      email: 'maya.chen@example.edu',
+      school_name: 'UC Irvine',
+      department: 'Computer Science',
+      bio: 'Mentors transfer students interested in human-centered AI and research.',
+    },
+    {
+      id: 'mock-professor-daniel-rivera',
+      role: 'professor',
+      full_name: 'Dr. Daniel Rivera',
+      username: 'daniel-rivera',
+      email: 'daniel.rivera@example.edu',
+      school_name: 'UCLA',
+      department: 'Biology',
+      bio: 'Runs undergraduate research projects in molecular biology.',
+    },
+    {
+      id: 'mock-student-jane-doe',
+      role: 'student',
+      full_name: 'Jane Doe',
+      username: 'jane-doe',
+      email: 'jane@example.com',
+      school_name: 'Santa Monica College',
+      academic_year: 'Sophomore',
+      bio: 'Preparing to transfer into computer science.',
+    },
+  ]
+
+  return filter === 'all' ? people : people.filter((person) => person.role === filter)
+}
+
+function UserCard({ person, actionButton }: { person: any; actionButton?: ReactNode }) {
   const isProfessor = person.role === 'professor'
 
   return (
@@ -112,9 +245,11 @@ function UserCard({ person }: { person: any }) {
         </p>
       </div>
 
-      <button className="w-full gradient-brand text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 transform active:scale-95">
-        <UserPlus className="w-5 h-5" /> Connect
-      </button>
+      {actionButton ? actionButton : (
+        <button className="w-full bg-white border border-brand-100 text-brand-700 font-bold py-3.5 rounded-2xl shadow-sm transition-all hover:shadow-md">
+          View Profile
+        </button>
+      )}
     </div>
   )
 }

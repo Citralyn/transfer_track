@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
+import { FALLBACK_SCHOOLS, makeProfilePayload, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { GraduationCap, BookOpen, User, Check, ArrowRight, ArrowLeft, Loader2, Upload } from 'lucide-react'
 import { clsx } from 'clsx'
 
 export default function Onboarding() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [schools, setSchools] = useState<any[]>([])
+  const [schools, setSchools] = useState<any[]>(FALLBACK_SCHOOLS)
   const { user, setProfile } = useAuthStore()
   const navigate = useNavigate()
 
@@ -16,7 +17,7 @@ export default function Onboarding() {
     role: '' as 'student' | 'professor' | '',
     full_name: '',
     username: '',
-    gender: '',
+    gender: 'prefer-not-to-say',
     school_name: '',
     school_type: '',
     academic_year: '',
@@ -26,8 +27,21 @@ export default function Onboarding() {
 
   useEffect(() => {
     const fetchSchools = async () => {
-      const { data } = await supabase.from('schools').select('*')
-      if (data) setSchools(data)
+      if (!isSupabaseConfigured()) return
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase.from('schools').select('*'),
+          'Supabase schools lookup'
+        )
+        if (error) {
+          console.warn('Supabase schools lookup failed, using fallback schools:', error.message)
+          return
+        }
+        if (data?.length) setSchools(data)
+      } catch (error) {
+        console.warn('Supabase schools unavailable, using fallback schools:', error)
+      }
     }
     fetchSchools()
   }, [])
@@ -39,26 +53,41 @@ export default function Onboarding() {
     if (!user) return
     setLoading(true)
 
-    const profileData = {
-      id: user.id,
-      email: user.email,
-      ...formData
-    }
+    try {
+      if (!formData.role) {
+        alert('Please choose student or professor.')
+        return
+      }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([profileData])
-      .select()
-      .single()
+      const profileData = makeProfilePayload({
+        id: user.id,
+        email: user.email!,
+        role: formData.role,
+        full_name: formData.full_name,
+        username: formData.username,
+        school_name: formData.school_name,
+        school_type: formData.school_type,
+        academic_year: formData.academic_year,
+        department: formData.department,
+        gender: formData.gender,
+      })
 
-    if (error) {
-      console.error('Error saving profile:', error)
-      alert('Error saving profile: ' + error.message)
-    } else {
-      setProfile(data)
-      navigate('/feed')
+      const { data, error } = await upsertProfile(profileData)
+
+      if (error) {
+        console.warn('Profile save failed, continuing with local profile:', (error as Error).message)
+        setProfile(profileData)
+        navigate(profileData.role === 'professor' ? '/professor-dashboard' : '/feed')
+      } else {
+        setProfile(data)
+        navigate(data?.role === 'professor' ? '/professor-dashboard' : '/feed')
+      }
+    } catch (error) {
+      console.warn('Onboarding save failed:', error)
+      alert('We could not save just now. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -214,11 +243,10 @@ export default function Onboarding() {
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white"
                   >
-                    <option value="">Select...</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
                     <option value="female">Female</option>
                     <option value="male">Male</option>
                     <option value="non-binary">Non-binary</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
                   </select>
                 </div>
               </div>

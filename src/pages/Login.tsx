@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { useAuthStore } from '@/store/useAuthStore'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { ArrowRight, Loader2, Lock } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
+  const { setSession, setUser, setProfile } = useAuthStore()
 
   const from = location.state?.from?.pathname || '/feed'
 
@@ -18,17 +21,57 @@ export default function Login() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { data, error: authError } = await signInOrSignUpDemo({ email, password, role: 'student' })
 
-    if (error) {
-      setError(error.message)
-    } else {
-      navigate(from, { replace: true })
+      if (authError) {
+        setError(authError.message)
+        return
+      }
+
+      if (!data?.user) {
+        setError('Unable to complete demo sign-in. Try again with an email address.')
+        return
+      }
+
+      setSession(data.session ?? null)
+      setUser(data.user)
+
+      let profile = null
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: existingProfile } = await withTimeout(
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .maybeSingle(),
+            'Supabase profile lookup'
+          )
+          profile = existingProfile
+        } catch (error) {
+          console.warn('Supabase profile lookup failed, using local profile:', error)
+        }
+      }
+
+      if (!profile) {
+        const profilePayload = makeProfilePayload({
+          id: data.user.id,
+          role: 'student',
+          email: data.user.email || email,
+        })
+        const { data: upsertedProfile } = await upsertProfile(profilePayload)
+        profile = upsertedProfile
+      }
+
+      setProfile(profile)
+      navigate(profile?.role === 'professor' ? '/professor-dashboard' : from, { replace: true })
+    } catch (error) {
+      console.warn('Login failed:', error)
+      setError('Sign-in hit a snag. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -68,14 +111,16 @@ export default function Login() {
                 <label className="block text-sm font-semibold text-brand-900">Password</label>
                 <a href="#" className="text-xs font-bold text-accent-600 hover:underline">Forgot password?</a>
               </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Use your password or leave blank for demo"
+                />
+              </div>
             </div>
             <button
               type="submit"

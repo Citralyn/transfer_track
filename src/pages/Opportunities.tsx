@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
@@ -16,8 +16,6 @@ import {
   Loader2,
   User,
   Mail,
-  ExternalLink,
-  MapPin,
   ClipboardCheck
 } from 'lucide-react'
 import { clsx } from 'clsx'
