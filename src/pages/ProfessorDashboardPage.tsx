@@ -30,30 +30,30 @@ export function ProfessorDashboardPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+      <div className="rounded-[2rem] border border-pink-100 bg-white p-8 shadow-[0_30px_60px_rgba(249,207,232,0.25)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Professor dashboard</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Interested students</h1>
-            <p className="mt-3 text-slate-600 dark:text-slate-300">Local interest requests are saved here for professors to review.</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-orange-600">Professor dashboard</p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Interested students</h1>
+            <p className="mt-3 text-slate-600">Local interest requests are saved here for professors to review.</p>
           </div>
-          <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-300">
+          <div className="rounded-3xl bg-orange-50 px-4 py-3 text-sm text-orange-700">
             {requests.length ? 'Saved interest requests from your students.' : 'Showing mock interest requests until a real student expresses interest.'}
           </div>
         </div>
 
         <div className="mt-8 space-y-4">
           {displayRequests.map((request) => (
-            <div key={request.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
+            <div key={request.id} className="rounded-3xl border border-pink-100 bg-pink-50 p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-white">{request.studentName}</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{request.communityCollege} • {request.intendedMajor}</p>
+                  <p className="text-lg font-semibold text-slate-900">{request.studentName}</p>
+                  <p className="mt-1 text-sm text-slate-500">{request.communityCollege} • {request.intendedMajor}</p>
                 </div>
-                <p className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">{request.date}</p>
+                <p className="rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">{request.date}</p>
               </div>
-              <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">{request.message}</p>
-              <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Career goal: {request.careerGoal}</p>
+              <p className="mt-4 text-sm text-slate-700">{request.message}</p>
+              <p className="mt-4 text-sm text-slate-500">Career goal: {request.careerGoal}</p>
             </div>
           ))}
         </div>

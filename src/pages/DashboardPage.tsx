@@ -45,29 +45,29 @@ export function DashboardPage() {
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-8 xl:grid-cols-[1.4fr_0.8fr]">
         <section className="space-y-8">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+          <div className="rounded-[2rem] border border-pink-100 bg-white p-8 shadow-[0_30px_60px_rgba(249,207,232,0.25)]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">Welcome back, {profile.name}</p>
-                <h1 className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">Your transfer plan</h1>
-                <p className="mt-3 text-slate-600 dark:text-slate-300">Based on your major, interests, and completed coursework.</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-600">Welcome back, {profile.name}</p>
+                <h1 className="mt-4 text-3xl font-semibold text-slate-900">Your transfer plan</h1>
+                <p className="mt-3 text-slate-600">Based on your major, interests, and completed coursework.</p>
               </div>
               <Link
                 to="/professor-dashboard"
-                className="inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+                className="inline-flex rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95"
               >
                 Professor dashboard
               </Link>
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-900">
-                <p className="text-sm text-slate-500 dark:text-slate-400">Community college</p>
-                <p className="mt-2 text-base font-semibold text-slate-900 dark:text-white">{profile.communityCollege}</p>
+              <div className="rounded-3xl bg-orange-50 p-5">
+                <p className="text-sm text-orange-700">Community college</p>
+                <p className="mt-2 text-base font-semibold text-slate-900">{profile.communityCollege}</p>
               </div>
-              <div className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-900">
-                <p className="text-sm text-slate-500 dark:text-slate-400">Transfer goal</p>
-                <p className="mt-2 text-base font-semibold text-slate-900 dark:text-white">{profile.transferGoal}</p>
+              <div className="rounded-3xl bg-orange-50 p-5">
+                <p className="text-sm text-orange-700">Transfer goal</p>
+                <p className="mt-2 text-base font-semibold text-slate-900">{profile.transferGoal}</p>
               </div>
             </div>
           </div>

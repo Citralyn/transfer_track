@@ -7,6 +7,25 @@ export type StudentProfile = {
   interests: string[]
   skills: string[]
   careerGoal: string
+  opportunityPreferences: string[]
+}
+
+export type AuthUser = {
+  name: string
+  email: string
+  role: 'Student' | 'Professor'
+}
+
+export type OnboardingDraft = {
+  name: string
+  communityCollege: string
+  intendedMajor: string
+  transferGoal: string
+  completedCoursesText: string
+  interestsText: string
+  skillsText: string
+  careerGoal: string
+  opportunityPreferencesText: string
 }
 
 export type Professor = {

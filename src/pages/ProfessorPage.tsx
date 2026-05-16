@@ -54,47 +54,47 @@ export function ProfessorPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+      <div className="rounded-[2rem] border border-pink-100 bg-white p-8 shadow-[0_30px_60px_rgba(249,207,232,0.25)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-sky-700">Professor profile</p>
-            <h1 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{professor.name}</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{professor.title} • {professor.university}</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-orange-600">Professor profile</p>
+            <h1 className="mt-3 text-3xl font-semibold text-slate-900">{professor.name}</h1>
+            <p className="mt-1 text-sm text-slate-500">{professor.title} • {professor.university}</p>
           </div>
           <button
             type="button"
             onClick={handleInterest}
-            className="inline-flex rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+            className="inline-flex rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95"
           >
             Express Interest
           </button>
         </div>
 
         {status ? (
-          <div className="mt-6 rounded-3xl bg-slate-100 p-4 text-sm text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+          <div className="mt-6 rounded-3xl bg-orange-50 p-4 text-sm text-slate-900">
             {status}
           </div>
         ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
           <div className="space-y-6">
-            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">About this professor</h2>
-              <p className="mt-4 text-slate-600 dark:text-slate-300">{professor.bio}</p>
+            <section className="rounded-3xl border border-pink-100 bg-orange-50 p-6">
+              <h2 className="text-xl font-semibold text-slate-900">About this professor</h2>
+              <p className="mt-4 text-slate-600">{professor.bio}</p>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Research areas</h2>
+            <section className="rounded-3xl border border-pink-100 bg-pink-50 p-6">
+              <h2 className="text-xl font-semibold text-slate-900">Research areas</h2>
               <div className="mt-4 flex flex-wrap gap-2">
                 {professor.researchAreas.map((area) => (
-                  <span key={area} className="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">{area}</span>
+                  <span key={area} className="rounded-full bg-white px-3 py-1 text-sm text-orange-700 shadow-sm">{area}</span>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Prerequisites</h2>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <section className="rounded-3xl border border-pink-100 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">Prerequisites</h2>
+              <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 {professor.prerequisites.map((prerequisite) => (
                   <li key={prerequisite}>• {prerequisite}</li>
                 ))}
@@ -103,25 +103,25 @@ export function ProfessorPage() {
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Support resources</h2>
-              <ul className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <section className="rounded-3xl border border-pink-100 bg-pink-50 p-6">
+              <h2 className="text-xl font-semibold text-slate-900">Support resources</h2>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600">
                 {professor.resources.map((resource) => (
                   <li key={resource}>• {resource}</li>
                 ))}
               </ul>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Related opportunities</h2>
+            <section className="rounded-3xl border border-pink-100 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">Related opportunities</h2>
               <div className="mt-4 space-y-4">
                 {relatedOpportunities.map((opportunity) => (
-                  <div key={opportunity.id} className="rounded-3xl bg-white p-4 shadow-sm dark:bg-slate-950">
-                    <p className="font-semibold text-slate-900 dark:text-white">{opportunity.title}</p>
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{opportunity.description}</p>
+                  <div key={opportunity.id} className="rounded-3xl bg-pink-50 p-4 shadow-sm">
+                    <p className="font-semibold text-slate-900">{opportunity.title}</p>
+                    <p className="mt-2 text-sm text-slate-600">{opportunity.description}</p>
                   </div>
                 ))}
-                {!relatedOpportunities.length ? <p className="text-sm text-slate-600 dark:text-slate-300">No related opportunities available yet.</p> : null}
+                {!relatedOpportunities.length ? <p className="text-sm text-slate-600">No related opportunities available yet.</p> : null}
               </div>
             </section>
           </div>

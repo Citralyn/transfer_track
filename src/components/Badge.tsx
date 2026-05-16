@@ -8,8 +8,8 @@ export function Badge({ label, variant = 'soft' }: BadgeProps) {
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] ${
         variant === 'strong'
-          ? 'bg-slate-900 text-white'
-          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+          ? 'bg-orange-500 text-white'
+          : 'bg-pink-50 text-pink-700'
       }`}
     >
       {label}
