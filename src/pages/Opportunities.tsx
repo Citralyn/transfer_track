@@ -1,41 +1,80 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useQuery } from '@tanstack/react-query'
 import { 
   Plus, 
   Search, 
   Filter, 
   Bookmark, 
-  MapPin, 
   Building2, 
   Calendar, 
   ArrowRight,
   Sparkles,
-  Tag
+  Tag,
+  X,
+  Loader2,
+  User
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 export default function Opportunities() {
-  const [opportunities, setOpportunities] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState({
+    department: '',
+    university: '',
+    professor: ''
+  })
+  
   const { profile } = useAuthStore()
 
-  useEffect(() => {
-    fetchOpportunities()
-  }, [])
+  const { data: opportunities, isLoading, refetch } = useQuery({
+    queryKey: ['opportunities', searchQuery, filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('opportunities')
+        .select(`
+          *,
+          profiles:professor_id (
+            full_name
+          )
+        `)
+      
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`)
+      }
 
-  const fetchOpportunities = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('opportunities')
-      .select('*')
-      .order('created_at', { ascending: false })
+      if (filters.department) {
+        query = query.ilike('department', `%${filters.department}%`)
+      }
 
-    if (data) setOpportunities(data)
-    if (error) console.error('Error fetching opportunities:', error)
-    setLoading(false)
+      if (filters.university) {
+        query = query.ilike('university', `%${filters.university}%`)
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false })
+      
+      if (error) throw error
+
+      // Post-fetch filter for professor name since it's a joined field
+      if (filters.professor && data) {
+        return data.filter(opp => 
+          opp.profiles?.full_name.toLowerCase().includes(filters.professor.toLowerCase())
+        )
+      }
+
+      return data
+    }
+  })
+
+  const clearFilters = () => {
+    setFilters({ department: '', university: '', professor: '' })
+    setSearchQuery('')
   }
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0)
 
   return (
     <div className="space-y-8">
@@ -56,41 +95,119 @@ export default function Opportunities() {
       </div>
 
       {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
-          <input 
-            type="text" 
-            placeholder="Search titles, majors, or universities..."
-            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
-          />
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search titles..."
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
+            />
+          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={clsx(
+              "flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold transition-all shadow-sm border",
+              showFilters || activeFilterCount > 0 
+                ? "bg-brand-900 text-white border-brand-900" 
+                : "bg-white text-brand-600 border-brand-100 hover:bg-brand-50"
+            )}
+          >
+            <Filter className="w-5 h-5" /> 
+            Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          </button>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-brand-100 px-6 py-3.5 rounded-2xl font-bold text-brand-600 hover:bg-brand-50 transition-all shadow-sm">
-          <Filter className="w-5 h-5" /> Filters
-        </button>
+
+        {/* Filter Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-white border border-brand-100 rounded-[2rem] p-6 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">Department</label>
+                  <input 
+                    value={filters.department}
+                    onChange={e => setFilters({...filters, department: e.target.value})}
+                    placeholder="e.g. Computer Science"
+                    className="w-full px-4 py-2.5 rounded-xl bg-brand-50 border border-transparent focus:border-brand-200 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">University</label>
+                  <input 
+                    value={filters.university}
+                    onChange={e => setFilters({...filters, university: e.target.value})}
+                    placeholder="e.g. UCLA"
+                    className="w-full px-4 py-2.5 rounded-xl bg-brand-50 border border-transparent focus:border-brand-200 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">Professor</label>
+                  <input 
+                    value={filters.professor}
+                    onChange={e => setFilters({...filters, professor: e.target.value})}
+                    placeholder="Search by name"
+                    className="w-full px-4 py-2.5 rounded-xl bg-brand-50 border border-transparent focus:border-brand-200 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div className="md:col-span-3 flex justify-end gap-3">
+                   <button 
+                    onClick={clearFilters}
+                    className="text-brand-500 font-bold text-sm hover:text-brand-900 px-4 py-2"
+                   >
+                     Clear All
+                   </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-        {loading ? (
+        {isLoading ? (
           [1, 2, 3, 4].map(i => <OpportunitySkeleton key={i} />)
-        ) : opportunities.length > 0 ? (
+        ) : opportunities && opportunities.length > 0 ? (
           opportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} />)
         ) : (
-          <div className="col-span-full py-20 text-center">
+          <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-brand-100">
              <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">
                 <Sparkles className="w-10 h-10" />
              </div>
-             <h3 className="text-xl font-bold text-brand-900">No opportunities yet</h3>
-             <p className="text-brand-500 mt-2">Check back later or try a different search.</p>
+             <h3 className="text-xl font-bold text-brand-900">No opportunities found</h3>
+             <p className="text-brand-500 mt-2">Try adjusting your search or filters.</p>
+             <button onClick={clearFilters} className="mt-6 text-accent-600 font-bold hover:underline">
+               Reset all filters
+             </button>
           </div>
         )}
       </div>
 
-      {showCreateModal && <CreateOpportunityModal onClose={() => setShowCreateModal(false)} onCreated={fetchOpportunities} />}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateOpportunityModal 
+            onClose={() => setShowCreateModal(false)} 
+            onCreated={() => {
+              setShowCreateModal(false)
+              refetch()
+            }} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
+
+import { motion, AnimatePresence } from 'framer-motion'
 
 function OpportunityCard({ opportunity }: { opportunity: any }) {
   return (
@@ -114,6 +231,9 @@ function OpportunityCard({ opportunity }: { opportunity: any }) {
           </div>
           <div className="flex items-center gap-2 text-brand-500 font-medium text-sm">
             <Tag className="w-4 h-4" /> {opportunity.department}
+          </div>
+          <div className="flex items-center gap-2 text-brand-500 font-medium text-sm">
+            <User className="w-4 h-4" /> {opportunity.profiles?.full_name}
           </div>
           {opportunity.deadline && (
             <div className="flex items-center gap-2 text-brand-400 font-medium text-xs">
@@ -188,7 +308,6 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
 
     if (!error) {
       onCreated()
-      onClose()
     } else {
       alert('Error creating opportunity: ' + error.message)
     }
@@ -196,9 +315,24 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-      <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-12 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-3xl font-bold text-brand-900 mb-2">Post an Opportunity</h2>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+    >
+      <motion.div 
+        initial={{ scale: 0.95, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 20 }}
+        className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 md:p-12 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex justify-between items-start mb-2">
+          <h2 className="text-3xl font-bold text-brand-900">Post an Opportunity</h2>
+          <button onClick={onClose} className="p-2 hover:bg-brand-50 rounded-full transition-colors">
+             <X className="w-6 h-6 text-brand-400" />
+          </button>
+        </div>
         <p className="text-brand-500 mb-8 font-medium">Share research labs, mentorships, or events with students.</p>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -208,7 +342,7 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
               required
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               placeholder="e.g. Undergraduate Research Assistant - AI Lab"
             />
           </div>
@@ -220,7 +354,7 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
                 required
                 value={formData.university}
                 onChange={e => setFormData({...formData, university: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               />
             </div>
             <div>
@@ -229,7 +363,7 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
                 required
                 value={formData.department}
                 onChange={e => setFormData({...formData, department: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               />
             </div>
           </div>
@@ -241,7 +375,7 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
               rows={4}
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none shadow-sm"
               placeholder="Describe the opportunity, responsibilities, and learning outcomes..."
             />
           </div>
@@ -251,7 +385,7 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
             <input 
               value={formData.tags}
               onChange={e => setFormData({...formData, tags: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               placeholder="Research, AI, CS, STEM..."
             />
           </div>
@@ -260,20 +394,20 @@ function CreateOpportunityModal({ onClose, onCreated }: any) {
             <button 
               type="button"
               onClick={onClose}
-              className="flex-1 py-4 rounded-xl font-bold text-brand-600 hover:bg-brand-50 transition-all"
+              className="flex-1 py-4 rounded-xl font-bold text-brand-600 hover:bg-brand-50 transition-all border border-brand-100 shadow-sm"
             >
               Cancel
             </button>
             <button 
               type="submit"
               disabled={loading}
-              className="flex-1 gradient-brand text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
+              className="flex-1 gradient-brand text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? 'Posting...' : 'Post Opportunity'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Post Opportunity'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
