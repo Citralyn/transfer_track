@@ -14,12 +14,18 @@ import {
   Tag,
   X,
   Loader2,
-  User
+  User,
+  Mail,
+  ExternalLink,
+  MapPin,
+  ClipboardCheck
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Opportunities() {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
@@ -38,7 +44,10 @@ export default function Opportunities() {
         .select(`
           *,
           profiles:professor_id (
-            full_name
+            full_name,
+            username,
+            avatar_url,
+            department
           )
         `)
       
@@ -58,7 +67,6 @@ export default function Opportunities() {
       
       if (error) throw error
 
-      // Post-fetch filter for professor name since it's a joined field
       if (filters.professor && data) {
         return data.filter(opp => 
           opp.profiles?.full_name.toLowerCase().includes(filters.professor.toLowerCase())
@@ -121,7 +129,6 @@ export default function Opportunities() {
           </button>
         </div>
 
-        {/* Filter Panel */}
         <AnimatePresence>
           {showFilters && (
             <motion.div 
@@ -177,7 +184,7 @@ export default function Opportunities() {
         {isLoading ? (
           [1, 2, 3, 4].map(i => <OpportunitySkeleton key={i} />)
         ) : opportunities && opportunities.length > 0 ? (
-          opportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} />)
+          opportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} onClick={() => setSelectedOpportunity(opp)} />)
         ) : (
           <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-brand-100">
              <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">
@@ -202,14 +209,18 @@ export default function Opportunities() {
             }} 
           />
         )}
+        {selectedOpportunity && (
+          <OpportunityDetailModal 
+            opportunity={selectedOpportunity} 
+            onClose={() => setSelectedOpportunity(null)} 
+          />
+        )}
       </AnimatePresence>
     </div>
   )
 }
 
-import { motion, AnimatePresence } from 'framer-motion'
-
-function OpportunityCard({ opportunity }: { opportunity: any }) {
+function OpportunityCard({ opportunity, onClick }: { opportunity: any, onClick: () => void }) {
   return (
     <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col group relative overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 gradient-soft rounded-bl-[4rem] -z-0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -235,11 +246,6 @@ function OpportunityCard({ opportunity }: { opportunity: any }) {
           <div className="flex items-center gap-2 text-brand-500 font-medium text-sm">
             <User className="w-4 h-4" /> {opportunity.profiles?.full_name}
           </div>
-          {opportunity.deadline && (
-            <div className="flex items-center gap-2 text-brand-400 font-medium text-xs">
-              <Calendar className="w-4 h-4" /> Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
-            </div>
-          )}
         </div>
 
         <p className="text-brand-600 text-sm line-clamp-3 mb-6 leading-relaxed">
@@ -248,17 +254,115 @@ function OpportunityCard({ opportunity }: { opportunity: any }) {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8 relative z-10">
-        {opportunity.tags?.map((tag: string) => (
-          <span key={tag} className="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-xs font-bold">
+        {opportunity.tags?.slice(0, 3).map((tag: string) => (
+          <span key={tag} className="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-xs font-bold border border-brand-100">
             {tag}
           </span>
         ))}
       </div>
 
-      <button className="w-full bg-brand-50 text-brand-800 font-bold py-3.5 rounded-2xl hover:gradient-brand hover:text-white transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+      <button 
+        onClick={onClick}
+        className="w-full bg-brand-50 text-brand-800 font-bold py-3.5 rounded-2xl hover:gradient-brand hover:text-white transition-all duration-300 flex items-center justify-center gap-2 group/btn"
+      >
         View Details <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
       </button>
     </div>
+  )
+}
+
+function OpportunityDetailModal({ opportunity, onClose }: { opportunity: any, onClose: () => void }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-brand-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
+    >
+      <motion.div 
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        {/* Modal Header */}
+        <div className="relative h-48 gradient-brand flex items-center px-12 overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+          <div className="relative z-10 flex items-center gap-6">
+             <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white font-extrabold text-4xl shadow-xl">
+               {opportunity.university?.charAt(0)}
+             </div>
+             <div>
+               <h2 className="text-3xl font-extrabold text-white leading-tight mb-2">{opportunity.title}</h2>
+               <div className="flex items-center gap-4 text-white/90 text-sm font-bold">
+                 <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> {opportunity.university}</span>
+                 <span className="flex items-center gap-1.5"><Tag className="w-4 h-4" /> {opportunity.department}</span>
+               </div>
+             </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-md transition-all border border-white/20 shadow-lg"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="flex-1 overflow-y-auto p-10 md:p-12 space-y-10">
+          {/* Main Description */}
+          <section>
+            <h3 className="text-xl font-bold text-brand-900 mb-4 flex items-center gap-2">
+              <ClipboardCheck className="w-6 h-6 text-accent-500" /> About this opportunity
+            </h3>
+            <p className="text-brand-700 leading-relaxed text-lg whitespace-pre-wrap">
+              {opportunity.description}
+            </p>
+          </section>
+
+          {/* Requirements & Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t border-brand-50 pt-10">
+             <section className="space-y-4">
+               <h4 className="font-bold text-brand-900 uppercase tracking-widest text-xs">Requirements</h4>
+               <p className="text-brand-600 leading-relaxed italic">
+                 {opportunity.requirements || "No specific requirements listed. Open to all interested students in the department."}
+               </p>
+             </section>
+             <section className="space-y-4">
+               <h4 className="font-bold text-brand-900 uppercase tracking-widest text-xs">Important Dates</h4>
+               <div className="flex items-center gap-3 text-brand-600">
+                  <Calendar className="w-5 h-5 text-brand-300" />
+                  <span className="font-medium">Deadline: {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString() : 'Rolling basis'}</span>
+               </div>
+             </section>
+          </div>
+
+          {/* Professor Profile */}
+          <div className="bg-brand-50 p-8 rounded-3xl border border-brand-100 flex flex-col md:flex-row items-center gap-6">
+             <div className="w-20 h-20 rounded-2xl gradient-soft flex items-center justify-center text-brand-400 font-bold text-3xl shadow-sm border border-white">
+                {opportunity.profiles?.full_name?.charAt(0)}
+             </div>
+             <div className="flex-1 text-center md:text-left">
+                <h4 className="text-xl font-bold text-brand-900">{opportunity.profiles?.full_name}</h4>
+                <p className="text-brand-500 text-sm font-medium">Professor in {opportunity.profiles?.department || opportunity.department}</p>
+             </div>
+             <button className="bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold hover:shadow-md transition-all flex items-center gap-2">
+                <User className="w-5 h-5" /> View Profile
+             </button>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-8 border-t border-brand-50 bg-brand-50/30 flex items-center gap-4">
+           <button className="flex-1 gradient-brand text-white py-4 rounded-2xl font-extrabold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              <Mail className="w-5 h-5" /> Apply Now / Contact
+           </button>
+           <button className="w-16 h-14 bg-white border border-brand-100 rounded-2xl flex items-center justify-center text-brand-400 hover:text-accent-600 hover:border-accent-100 transition-all shadow-sm">
+              <Bookmark className="w-6 h-6" />
+           </button>
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
