@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { sendConnectionRequest, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { Search, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 export default function People() {
   const [people, setPeople] = useState<any[]>([])
@@ -39,15 +39,21 @@ export default function People() {
       )
 
       if (error) {
-        console.warn('Error fetching people, using fallback people:', error.message)
-        setPeople(getFallbackPeople(filter))
+        console.warn('Error fetching people from Supabase:', error.message)
+        setPeople([])
+        setMessage(`Unable to load people from Supabase: ${error.message}`)
         return
       }
 
-      setPeople(data?.length ? data : getFallbackPeople(filter))
+      setPeople(data ?? [])
     } catch (error) {
-      console.warn('People lookup unavailable, using fallback people:', error)
-      setPeople(getFallbackPeople(filter))
+      console.warn('People lookup unavailable:', error)
+      if (isSupabaseConfigured()) {
+        setPeople([])
+        setMessage('Unable to load people from Supabase. Check your browser console for the exact error.')
+      } else {
+        setPeople(getFallbackPeople(filter))
+      }
     } finally {
       setLoading(false)
     }
@@ -139,16 +145,19 @@ export default function People() {
           [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
         ) : filteredPeople.length > 0 ? (
           filteredPeople.map(person => {
-            const canExpressInterest = currentProfile?.role === 'student' && person.role === 'professor' && currentProfile.id !== person.id
+            const canConnect = Boolean(currentProfile?.id && currentProfile.id !== person.id)
             const status = statusMap[person.id] ?? 'idle'
 
             return (
               <UserCard
                 key={person.id}
                 person={person}
-                actionButton={canExpressInterest ? (
+                actionButton={canConnect ? (
                   <button
-                    onClick={() => handleConnect(person)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleConnect(person)
+                    }}
                     disabled={status === 'sending' || status === 'sent'}
                     className={clsx(
                       "w-full rounded-2xl py-3.5 font-bold transition-all flex items-center justify-center gap-2",
@@ -157,7 +166,7 @@ export default function People() {
                         : 'gradient-brand text-white hover:shadow-lg'
                     )}
                   >
-                    {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Request Sent' : 'Express Interest'}
+                    {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Request Sent' : 'Connect'}
                   </button>
                 ) : undefined}
               />
@@ -216,9 +225,23 @@ function getFallbackPeople(filter: 'all' | 'student' | 'professor') {
 
 function UserCard({ person, actionButton }: { person: any; actionButton?: ReactNode }) {
   const isProfessor = person.role === 'professor'
+  const navigate = useNavigate()
+  const profilePath = `/profile/${person.username}`
+  const openProfile = () => navigate(profilePath)
 
   return (
-    <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group">
+    <div
+      onClick={openProfile}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openProfile()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
+    >
       <div className="relative mb-6">
         <div className="w-24 h-24 rounded-[2rem] gradient-brand flex items-center justify-center text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300">
           {person.full_name?.charAt(0)}
@@ -231,9 +254,7 @@ function UserCard({ person, actionButton }: { person: any; actionButton?: ReactN
         </div>
       </div>
 
-      <Link to={`/profile/${person.username}`} className="hover:text-accent-600 transition-colors">
-        <h3 className="text-lg font-bold text-brand-900 mb-1">{person.full_name}</h3>
-      </Link>
+      <h3 className="text-lg font-bold text-brand-900 mb-1 group-hover:text-accent-600 transition-colors">{person.full_name}</h3>
       <p className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-4">{person.role}</p>
       
       <div className="space-y-2 mb-8 flex-1">

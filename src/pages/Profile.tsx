@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   sendConnectionRequest,
-  fetchIncomingRequests,
-  fetchSentRequests,
   getExistingConnection,
   getConnectionCount,
-  updateConnectionStatus,
   loadLocalConnectionRequests,
   upsertProfile,
   withTimeout,
@@ -25,7 +22,6 @@ import {
   ChevronRight,
   Loader2,
   Check,
-  X,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -37,9 +33,6 @@ export default function Profile() {
   const [connectionCount, setConnectionCount] = useState(0)
   const [requestState, setRequestState] = useState<'idle' | 'sending' | 'sent' | 'fallback' | 'error'>('idle')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
-  const [requests, setRequests] = useState<any[]>([])
-  const [loadingRequests, setLoadingRequests] = useState(false)
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -51,15 +44,9 @@ export default function Profile() {
 
     loadConnectionCount(profile.id)
 
-    if (profile.id === loggedInProfile?.id) {
-      loadRequests()
-    }
-
     if (
       loggedInProfile?.id &&
-      profile.id !== loggedInProfile.id &&
-      loggedInProfile.role === 'student' &&
-      profile.role === 'professor'
+      profile.id !== loggedInProfile.id
     ) {
       checkExistingRequest()
     }
@@ -113,27 +100,6 @@ export default function Profile() {
     setConnectionCount(localCount)
   }
 
-  const loadRequests = async () => {
-    if (!profile?.id) return
-    setLoadingRequests(true)
-
-    const fetched = profile.role === 'professor'
-      ? await fetchIncomingRequests(profile.id)
-      : await fetchSentRequests(profile.id)
-
-    if (fetched.length > 0) {
-      setRequests(fetched)
-    } else {
-      const local = loadLocalConnectionRequests()
-      const localRequests = profile.role === 'professor'
-        ? local.filter((request) => request.receiverId === profile.id || request.receiverUsername === profile.username)
-        : local.filter((request) => request.requesterId === profile.id)
-      setRequests(localRequests)
-    }
-
-    setLoadingRequests(false)
-  }
-
   const checkExistingRequest = async () => {
     if (!loggedInProfile?.id || !profile?.id) return
 
@@ -169,18 +135,6 @@ export default function Profile() {
     setRequestMessage(result.message)
   }
 
-  const handleUpdateStatus = async (connectionId: string, status: 'accepted' | 'declined') => {
-    setActionLoadingId(connectionId)
-    const { error } = await updateConnectionStatus(connectionId, status)
-    setActionLoadingId(null)
-
-    if (error) {
-      setRequestMessage('Unable to update request: ' + error.message)
-    } else {
-      await loadRequests()
-    }
-  }
-
   if (loading) {
     return (
       <div className="animate-pulse space-y-8">
@@ -197,8 +151,6 @@ export default function Profile() {
 
   const isOwnProfile = loggedInProfile?.id === profile.id
   const isProfessor = profile.role === 'professor'
-  const requestTitle = profile.role === 'professor' ? 'Interest Requests' : 'Sent Requests'
-
   return (
     <div className="space-y-8 pb-20">
       <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm overflow-hidden">
@@ -219,8 +171,7 @@ export default function Profile() {
               </div>
               <ProfileActions
                 isOwnProfile={isOwnProfile}
-                isProfessor={isProfessor}
-                requesterRole={loggedInProfile?.role}
+                canConnect={Boolean(loggedInProfile?.id && loggedInProfile.id !== profile.id)}
                 requestState={requestState}
                 onEdit={() => navigate('/settings')}
                 onConnect={handleConnect}
@@ -240,14 +191,22 @@ export default function Profile() {
       )}
 
       {isOwnProfile && (
-        <RequestPanel
-          title={requestTitle}
-          role={profile.role}
-          requests={requests}
-          loading={loadingRequests}
-          actionLoadingId={actionLoadingId}
-          onUpdateStatus={handleUpdateStatus}
-        />
+        <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-2xl font-bold text-brand-900 flex items-center gap-2">
+              <Users className="w-6 h-6 text-accent-500" />
+              Connections
+            </h3>
+            <p className="text-brand-500 mt-2">Review accepted connections and manage sent or received requests.</p>
+          </div>
+          <Link
+            to="/connections"
+            className="gradient-brand text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            Manage Connections
+            <ChevronRight className="w-5 h-5" />
+          </Link>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -333,15 +292,13 @@ export default function Profile() {
 
 function ProfileActions({
   isOwnProfile,
-  isProfessor,
-  requesterRole,
+  canConnect,
   requestState,
   onEdit,
   onConnect,
 }: {
   isOwnProfile: boolean
-  isProfessor: boolean
-  requesterRole?: string
+  canConnect: boolean
   requestState: 'idle' | 'sending' | 'sent' | 'fallback' | 'error'
   onEdit: () => void
   onConnect: () => void
@@ -357,7 +314,7 @@ function ProfileActions({
     )
   }
 
-  if (requesterRole === 'student' && isProfessor) {
+  if (canConnect) {
     return (
       <div className="flex gap-3">
         <button
@@ -373,7 +330,7 @@ function ProfileActions({
           ) : requestState === 'sent' ? (
             <><Check className="w-5 h-5" /> Request Sent</>
           ) : (
-            'Express Interest'
+            'Connect'
           )}
         </button>
         <button className="bg-white border border-brand-100 text-brand-800 px-4 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all">
@@ -387,81 +344,6 @@ function ProfileActions({
     <button className="bg-white border border-brand-100 text-brand-700 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all">
       View Profile
     </button>
-  )
-}
-
-function RequestPanel({
-  title,
-  role,
-  requests,
-  loading,
-  actionLoadingId,
-  onUpdateStatus,
-}: {
-  title: string
-  role: 'student' | 'professor'
-  requests: any[]
-  loading: boolean
-  actionLoadingId: string | null
-  onUpdateStatus: (connectionId: string, status: 'accepted' | 'declined') => void
-}) {
-  if (loading) {
-    return (
-      <div className="rounded-3xl border border-brand-100 bg-white shadow-sm p-8 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-500" />
-      </div>
-    )
-  }
-
-  if (requests.length === 0) return null
-
-  return (
-    <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
-      <h3 className="text-2xl font-bold text-brand-900 mb-6 flex items-center gap-2">
-        <Users className="w-6 h-6 text-accent-500" />
-        {title}
-      </h3>
-      <div className="space-y-4">
-        {requests.map((req: any) => {
-          const otherProfile = role === 'professor' ? req.requester : req.receiver
-          const name = otherProfile?.full_name || req.requesterName || req.receiverName || 'Unknown'
-          const email = otherProfile?.email || req.requesterEmail || req.receiverEmail || 'No email'
-          const createdAt = req.created_at || req.requestedAt
-
-          return (
-            <div
-              key={req.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-brand-100 bg-brand-50 group hover:shadow-md transition-all"
-            >
-              <div>
-                <p className="font-bold text-brand-900">{name}</p>
-                <p className="text-sm text-brand-600">
-                  {email} - {req.status} - {createdAt ? new Date(createdAt).toLocaleDateString() : 'No date'}
-                </p>
-              </div>
-              {role === 'professor' && req.status === 'pending' && req.created_at && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => onUpdateStatus(req.id, 'accepted')}
-                    disabled={actionLoadingId === req.id}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all"
-                  >
-                    {actionLoadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => onUpdateStatus(req.id, 'declined')}
-                    disabled={actionLoadingId === req.id}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all"
-                  >
-                    {actionLoadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                  </button>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 

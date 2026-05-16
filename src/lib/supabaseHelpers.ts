@@ -255,15 +255,15 @@ export async function sendConnectionRequest(
     return { success: false, message: 'Missing requester id.' }
   }
 
-  if (requester.role && requester.role !== 'student') {
-    return { success: false, message: 'Only students can express interest in a professor.' }
+  if (target.id && target.id === requesterId) {
+    return { success: false, message: 'You cannot request a connection with yourself.' }
   }
 
   const requestPayload: LocalConnectionRequest = {
     id: `${requesterId}-${target.id || target.email || target.username}-${Date.now()}`,
     requesterId,
     requesterEmail: requester.email ?? 'unknown',
-    requesterName: requester.full_name ?? requester.username ?? 'Student',
+    requesterName: requester.full_name ?? requester.username ?? 'User',
     receiverId: target.id,
     receiverEmail: target.email,
     receiverName: target.full_name,
@@ -289,7 +289,7 @@ export async function sendConnectionRequest(
       return {
         success: false,
         fallback: true,
-        message: 'Demo request saved locally. Supabase sign-in is not active for this student.',
+        message: 'Demo request saved locally. Supabase sign-in is not active for this user.',
       }
     }
 
@@ -304,7 +304,7 @@ export async function sendConnectionRequest(
       return {
         success: false,
         fallback: true,
-        message: 'Demo request saved locally. This professor has not joined the live database yet.',
+        message: 'Demo request saved locally. This person has not joined the live database yet.',
       }
     }
 
