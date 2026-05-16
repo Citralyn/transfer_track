@@ -145,18 +145,45 @@ export default function MainLayout() {
                 className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               />
             </div>
-            <div className="flex items-center gap-4 ml-6">
+            <div className="flex items-center gap-4 ml-6 relative group">
               <button className="w-12 h-12 flex items-center justify-center bg-white border border-brand-100 rounded-2xl text-brand-500 hover:text-brand-800 transition-all shadow-sm relative">
                 <Bell className="w-6 h-6" />
                 <span className="absolute top-3 right-3 w-3 h-3 bg-accent-500 border-2 border-white rounded-full" />
               </button>
-              <div className="flex items-center gap-3 bg-white border border-brand-100 p-1.5 pr-4 rounded-2xl shadow-sm">
-                <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-bold">
-                  {profile?.full_name?.charAt(0)}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-brand-900 leading-tight">{profile?.full_name}</span>
-                  <span className="text-[10px] text-brand-400 font-medium uppercase tracking-wider">{profile?.role}</span>
+              
+              {/* Profile Section with Dropdown */}
+              <div className="relative py-2">
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-3 bg-white border border-brand-100 p-1.5 pr-4 rounded-2xl shadow-sm hover:border-brand-300 transition-all cursor-pointer relative z-[101]"
+                >
+                  <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-bold">
+                    {profile?.full_name?.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-brand-900 leading-tight">{profile?.full_name}</span>
+                    <span className="text-[10px] text-brand-400 font-medium uppercase tracking-wider">{profile?.role}</span>
+                  </div>
+                </Link>
+
+                {/* Dropdown Menu - Wrapped in a hover bridge container */}
+                <div className="absolute right-0 top-full -mt-1 pt-3 w-48 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 delay-75 z-[100]">
+                  <div className="bg-white border border-brand-100 rounded-2xl shadow-xl p-2">
+                    <Link 
+                      to="/settings" 
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-brand-600 hover:bg-brand-50 hover:text-brand-900 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <button 
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-brand-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
