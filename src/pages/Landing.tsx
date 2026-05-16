@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, GraduationCap, Users, Sparkles, MessageCircle } from 'lucide-react'
+import { ArrowRight, GraduationCap, Users, Sparkles } from 'lucide-react'
 
 export default function Landing() {
   return (

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase'
-import { User, Bell, Shield, LogOut, Check, Loader2 } from 'lucide-react'
+import { User, Bell, Shield, Check, Loader2 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 export default function Settings() {
@@ -19,7 +19,7 @@ export default function Settings() {
     setLoading(true)
     setSuccess(false)
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .update(formData)
       .eq('id', profile?.id)

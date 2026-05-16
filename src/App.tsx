@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
+import { loadLocalProfile, withTimeout } from '@/lib/supabaseHelpers'
 
 // Pages
 import Landing from '@/pages/Landing'
@@ -22,26 +23,48 @@ import MainLayout from '@/layouts/MainLayout'
 const queryClient = new QueryClient()
 
 function App() {
-  const { setSession, setUser, setProfile, setLoading } = useAuthStore((state: any) => ({
+  const { setSession, setUser, setProfile, setLoading } = useAuthStore((state) => ({
     setSession: state.setSession,
     setUser: state.setUser,
     setProfile: state.setProfile,
-    setLoading: (loading: boolean) => useAuthStore.setState({ loading })
+    setLoading: state.setLoading,
   }))
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
-        useAuthStore.setState({ loading: false })
+      try {
+        if (!isSupabaseConfigured()) {
+          const localProfile = loadLocalProfile()
+          setProfile(localProfile)
+          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+          setSession(null)
+          return
+        }
+
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 'Supabase session lookup')
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          const localProfile = loadLocalProfile()
+          setProfile(localProfile)
+          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        }
+      } catch (error) {
+        console.warn('Auth initialization fell back to local profile:', error)
+        const localProfile = loadLocalProfile()
+        setProfile(localProfile)
+        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        setSession(null)
+      } finally {
+        setLoading(false)
       }
     }
 
     initAuth()
+
+    if (!isSupabaseConfigured()) return
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
@@ -49,8 +72,10 @@ function App() {
       if (session?.user) {
         await fetchProfile(session.user.id)
       } else {
-        setProfile(null)
-        useAuthStore.setState({ loading: false })
+        const localProfile = loadLocalProfile()
+        setProfile(localProfile)
+        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        setLoading(false)
       }
     })
 
@@ -58,18 +83,27 @@ function App() {
   }, [])
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(),
+        'Supabase profile lookup'
+      )
 
-    if (data) {
-      setProfile(data)
-    } else {
-      setProfile(null)
+      if (error) {
+        console.warn('Supabase profile lookup failed, using local profile:', error.message)
+      }
+
+      setProfile(data || loadLocalProfile())
+    } catch (error) {
+      console.warn('Supabase profile lookup unavailable, using local profile:', error)
+      setProfile(loadLocalProfile())
+    } finally {
+      setLoading(false)
     }
-    useAuthStore.setState({ loading: false })
   }
 
   return (
@@ -87,6 +121,7 @@ function App() {
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/people" element={<People />} />
               <Route path="/profile/:username?" element={<Profile />} />
+              <Route path="/professor-dashboard" element={<Profile />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
@@ -107,7 +142,7 @@ function ProtectedRoute() {
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-500"></div>
   </div>
 
-  if (!session) return <Navigate to="/login" state={{ from: location }} replace />
+  if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
   
   const isOnboardingPath = location.pathname === '/onboarding'
   
