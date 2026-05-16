@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { DashboardPage } from './pages/DashboardPage'
@@ -7,17 +8,147 @@ import { ProfessorDashboardPage } from './pages/ProfessorDashboardPage'
 import { ProfessorPage } from './pages/ProfessorPage'
 
 function App() {
+=======
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useAuthStore } from '@/store/useAuthStore'
+import { loadLocalProfile, withTimeout } from '@/lib/supabaseHelpers'
+
+// Pages
+import Landing from '@/pages/Landing'
+import Login from '@/pages/Login'
+import Signup from '@/pages/Signup'
+import Onboarding from '@/pages/Onboarding'
+import Feed from '@/pages/Feed'
+import Opportunities from '@/pages/Opportunities'
+import People from '@/pages/People'
+import Profile from '@/pages/Profile'
+import Messages from '@/pages/Messages'
+import Settings from '@/pages/Settings'
+
+// Layouts
+import MainLayout from '@/layouts/MainLayout'
+
+const queryClient = new QueryClient()
+
+function App() {
+  const { setSession, setUser, setProfile, setLoading } = useAuthStore((state) => ({
+    setSession: state.setSession,
+    setUser: state.setUser,
+    setProfile: state.setProfile,
+    setLoading: state.setLoading,
+  }))
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (!isSupabaseConfigured()) {
+          const localProfile = loadLocalProfile()
+          setProfile(localProfile)
+          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+          setSession(null)
+          return
+        }
+
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 'Supabase session lookup')
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          const localProfile = loadLocalProfile()
+          setProfile(localProfile)
+          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        }
+      } catch (error) {
+        console.warn('Auth initialization fell back to local profile:', error)
+        const localProfile = loadLocalProfile()
+        setProfile(localProfile)
+        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        setSession(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
+
+    if (!isSupabaseConfigured()) return
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        await fetchProfile(session.user.id)
+      } else {
+        const localProfile = loadLocalProfile()
+        setProfile(localProfile)
+        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(),
+        'Supabase profile lookup'
+      )
+
+      if (error) {
+        console.warn('Supabase profile lookup failed, using local profile:', error.message)
+      }
+
+      setProfile(data || loadLocalProfile())
+    } catch (error) {
+      console.warn('Supabase profile lookup unavailable, using local profile:', error)
+      setProfile(loadLocalProfile())
+    } finally {
+      setLoading(false)
+    }
+  }
+
+>>>>>>> Stashed changes
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,241,235,0.9),_transparent_35%),_linear-gradient(180deg,_#fff,_#fff)] text-slate-900">
         <Navbar />
         <Routes>
+<<<<<<< Updated upstream
           <Route path="/" element={<LandingPage />} />
           <Route path="/onboarding" element={<Navigate to="/onboarding/profile" replace />} />
           <Route path="/onboarding/:step" element={<OnboardingPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/professor/:id" element={<ProfessorPage />} />
           <Route path="/professor-dashboard" element={<ProfessorDashboardPage />} />
+=======
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route element={<MainLayout />}>
+              <Route path="/feed" element={<Feed />} />
+              <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/people" element={<People />} />
+              <Route path="/profile/:username?" element={<Profile />} />
+              <Route path="/professor-dashboard" element={<Profile />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+          </Route>
+
+>>>>>>> Stashed changes
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -25,4 +156,30 @@ function App() {
   )
 }
 
+<<<<<<< Updated upstream
+=======
+function ProtectedRoute() {
+  const { session, profile, loading } = useAuthStore()
+  const location = useLocation()
+
+  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-brand-50">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-500"></div>
+  </div>
+
+  if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
+  
+  const isOnboardingPath = location.pathname === '/onboarding'
+  
+  if (!profile && !isOnboardingPath) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  if (profile && isOnboardingPath) {
+    return <Navigate to="/feed" replace />
+  }
+
+  return <Outlet />
+}
+
+>>>>>>> Stashed changes
 export default App
