@@ -8,7 +8,9 @@ import {
   fetchAcceptedConnections,
   fetchProfilesByIds,
   getRelationshipStatus,
+  type ClassMaterialEntry,
   type ProjectEntry,
+  type ResearchEntry,
   sendConnectionRequest,
   getConnectionCount,
   upsertProfile,
@@ -27,6 +29,7 @@ import {
   ChevronRight,
   Loader2,
   Check,
+  ExternalLink,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
@@ -39,6 +42,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [connectionCount, setConnectionCount] = useState(0)
   const [acceptedConnections, setAcceptedConnections] = useState<any[]>([])
+  const [professorOpportunities, setProfessorOpportunities] = useState<any[]>([])
   const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus | 'sending' | 'error'>('none')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
 
@@ -51,6 +55,11 @@ export default function Profile() {
 
     loadConnectionCount(profile.id)
     loadAcceptedConnections(profile.id)
+    if (profile.role === 'professor') {
+      loadProfessorOpportunities(profile.id)
+    } else {
+      setProfessorOpportunities([])
+    }
 
     if (
       loggedInProfile?.id &&
@@ -121,6 +130,35 @@ export default function Profile() {
     )
   }
 
+  const loadProfessorOpportunities = async (profileId: string) => {
+    if (!isSupabaseConfigured()) {
+      setProfessorOpportunities([])
+      return
+    }
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('opportunities')
+          .select('*')
+          .eq('professor_id', profileId)
+          .order('created_at', { ascending: false }),
+        'Supabase professor opportunities lookup'
+      )
+
+      if (error) {
+        console.warn('Error fetching professor opportunities:', error.message)
+        setProfessorOpportunities([])
+        return
+      }
+
+      setProfessorOpportunities(data || [])
+    } catch (error) {
+      console.warn('Professor opportunities lookup unavailable:', error)
+      setProfessorOpportunities([])
+    }
+  }
+
   const checkRelationshipStatus = async () => {
     if (!loggedInProfile?.id || !profile?.id) return
 
@@ -169,6 +207,9 @@ export default function Profile() {
   const coursework = normalizeEntries<CourseworkEntry>(profile.coursework)
   const experience = normalizeEntries<ExperienceEntry>(profile.experience)
   const projects = normalizeEntries<ProjectEntry>(profile.projects)
+  const classMaterials = normalizeEntries<ClassMaterialEntry>(profile.class_materials)
+  const research = normalizeEntries<ResearchEntry>(profile.research)
+  const opportunityPreview = professorOpportunities.slice(0, 3)
   return (
     <div className="space-y-8 pb-20">
       <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm overflow-hidden">
@@ -310,85 +351,133 @@ export default function Profile() {
             </p>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10 overflow-hidden relative">
-             <div className="absolute top-0 right-0 w-32 h-32 gradient-soft rounded-bl-full -z-0" />
-             
-             <h3 className="text-2xl font-bold text-brand-900 mb-8 relative z-10">
-               {isProfessor ? 'Academic Collaboration' : 'Transfer Goals'}
-             </h3>
-             
-             {isProfessor ? (
-               <div className="space-y-6 relative z-10">
-                 <ProfileLink title="Open Research Positions" count="2" color="accent" />
-                 <ProfileLink title="Suggested Preparation Materials" count="5" color="brand" />
-                 <ProfileLink title="Lab Website" color="brand" />
-               </div>
-             ) : (
-               <div className="space-y-6 relative z-10">
-                 <div className="p-6 bg-brand-50 rounded-3xl border border-brand-100">
-                   <h4 className="font-bold text-brand-900 mb-2">Target Universities</h4>
-                   <p className="text-brand-600">{profile.transfer_goals || 'UC Berkeley, UCLA, Stanford University'}</p>
-                 </div>
-                 <div className="p-6 bg-accent-50/50 rounded-3xl border border-accent-100">
-                   <h4 className="font-bold text-accent-800 mb-2">Academic Interests</h4>
-                   <p className="text-accent-700">{(profile.interests || ['Machine Learning', 'Physics', 'Mathematical Modeling']).join(', ')}</p>
-                 </div>
-               </div>
-             )}
-          </div>
-
-          <ProfileSection
-            title="Coursework"
-            isOwnProfile={isOwnProfile}
-            emptyText="Add coursework to highlight relevant classes."
-            hasEntries={coursework.length > 0}
-          >
-            {coursework.map((course) => (
-              <div key={course.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                <h4 className="font-bold text-brand-900">{course.course_name || 'Untitled course'}</h4>
-                {course.course_code && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-1">{course.course_code}</p>}
-                {course.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{course.description}</p>}
-              </div>
-            ))}
-          </ProfileSection>
-
-          <ProfileSection
-            title="Experience"
-            isOwnProfile={isOwnProfile}
-            emptyText="Add experience to show internships, work, research, or leadership."
-            hasEntries={experience.length > 0}
-          >
-            {experience.map((item) => (
-              <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                <h4 className="font-bold text-brand-900">{item.title || 'Untitled role'}</h4>
-                <p className="text-brand-600 mt-1">{item.organization || 'Organization not specified'}</p>
-                {(item.start_date || item.end_date || item.is_present) && (
-                  <p className="text-sm text-brand-400 font-bold mt-2">
-                    {item.start_date || 'Start'} - {item.is_present ? 'Present' : item.end_date || 'End'}
-                  </p>
+          {isProfessor ? (
+            <>
+              <ProfileSection
+                title="Posted Opportunities"
+                isOwnProfile
+                emptyText="No opportunities posted yet."
+                hasEntries={opportunityPreview.length > 0}
+                action={(
+                  <Link to={`/profile/${profile.username}/opportunities`} className="bg-brand-50 text-brand-800 px-4 py-2 rounded-xl font-bold text-sm border border-brand-100 hover:shadow-sm transition-all">
+                    View all opportunities
+                  </Link>
                 )}
-                {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
-              </div>
-            ))}
-          </ProfileSection>
+              >
+                {opportunityPreview.map((opportunity) => (
+                  <OpportunityPreview key={opportunity.id} opportunity={opportunity} />
+                ))}
+              </ProfileSection>
 
-          <ProfileSection
-            title="Projects"
-            isOwnProfile={isOwnProfile}
-            emptyText="Add projects to showcase what you have built or researched."
-            hasEntries={projects.length > 0}
-          >
-            {projects.map((project) => (
-              <div key={project.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                  <h4 className="font-bold text-brand-900">{project.project_name || 'Untitled project'}</h4>
-                  {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-accent-600 hover:underline">View Project</a>}
-                </div>
-                {project.tech_stack && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">{project.tech_stack}</p>}
-                {project.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{project.description}</p>}
+              <ProfileSection
+                title="Class Material"
+                isOwnProfile
+                emptyText="No class materials shared yet."
+                hasEntries={classMaterials.length > 0}
+              >
+                {classMaterials.map((item) => (
+                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                    <p className="text-sm font-bold text-brand-400 uppercase tracking-wider">
+                      {[item.course_code, item.course_name].filter(Boolean).join(' - ') || 'Course material'}
+                    </p>
+                    <h4 className="font-bold text-brand-900 mt-2">{item.title || 'Untitled material'}</h4>
+                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                    {item.link && <ExternalProfileLink href={item.link} label="Open material" />}
+                  </div>
+                ))}
+              </ProfileSection>
+
+              <ProfileSection
+                title="Research"
+                isOwnProfile
+                emptyText="No research added yet."
+                hasEntries={research.length > 0}
+              >
+                {research.map((item) => (
+                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                    <h4 className="font-bold text-brand-900">{item.title || 'Untitled research'}</h4>
+                    {(item.publication || item.year) && (
+                      <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">
+                        {[item.publication, item.year].filter(Boolean).join(' - ')}
+                      </p>
+                    )}
+                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                    {item.link && <ExternalProfileLink href={item.link} label="View research" />}
+                  </div>
+                ))}
+              </ProfileSection>
+            </>
+          ) : (
+            <>
+              <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10 overflow-hidden relative">
+                 <div className="absolute top-0 right-0 w-32 h-32 gradient-soft rounded-bl-full -z-0" />
+                 <h3 className="text-2xl font-bold text-brand-900 mb-8 relative z-10">Transfer Goals</h3>
+                 <div className="space-y-6 relative z-10">
+                   <div className="p-6 bg-brand-50 rounded-3xl border border-brand-100">
+                     <h4 className="font-bold text-brand-900 mb-2">Target Universities</h4>
+                     <p className="text-brand-600">{profile.transfer_goals || 'UC Berkeley, UCLA, Stanford University'}</p>
+                   </div>
+                   <div className="p-6 bg-accent-50/50 rounded-3xl border border-accent-100">
+                     <h4 className="font-bold text-accent-800 mb-2">Academic Interests</h4>
+                     <p className="text-accent-700">{(profile.interests || ['Machine Learning', 'Physics', 'Mathematical Modeling']).join(', ')}</p>
+                   </div>
+                 </div>
               </div>
-            ))}
-          </ProfileSection>
+
+              <ProfileSection
+                title="Coursework"
+                isOwnProfile={isOwnProfile}
+                emptyText="Add coursework to highlight relevant classes."
+                hasEntries={coursework.length > 0}
+              >
+                {coursework.map((course) => (
+                  <div key={course.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                    <h4 className="font-bold text-brand-900">{course.course_name || 'Untitled course'}</h4>
+                    {course.course_code && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-1">{course.course_code}</p>}
+                    {course.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{course.description}</p>}
+                  </div>
+                ))}
+              </ProfileSection>
+
+              <ProfileSection
+                title="Experience"
+                isOwnProfile={isOwnProfile}
+                emptyText="Add experience to show internships, work, research, or leadership."
+                hasEntries={experience.length > 0}
+              >
+                {experience.map((item) => (
+                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                    <h4 className="font-bold text-brand-900">{item.title || 'Untitled role'}</h4>
+                    <p className="text-brand-600 mt-1">{item.organization || 'Organization not specified'}</p>
+                    {(item.start_date || item.end_date || item.is_present) && (
+                      <p className="text-sm text-brand-400 font-bold mt-2">
+                        {item.start_date || 'Start'} - {item.is_present ? 'Present' : item.end_date || 'End'}
+                      </p>
+                    )}
+                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                  </div>
+                ))}
+              </ProfileSection>
+
+              <ProfileSection
+                title="Projects"
+                isOwnProfile={isOwnProfile}
+                emptyText="Add projects to showcase what you have built or researched."
+                hasEntries={projects.length > 0}
+              >
+                {projects.map((project) => (
+                  <div key={project.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <h4 className="font-bold text-brand-900">{project.project_name || 'Untitled project'}</h4>
+                      {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-accent-600 hover:underline">View Project</a>}
+                    </div>
+                    {project.tech_stack && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">{project.tech_stack}</p>}
+                    {project.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{project.description}</p>}
+                  </div>
+                ))}
+              </ProfileSection>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -414,19 +503,24 @@ function ProfileSection({
   isOwnProfile,
   emptyText,
   hasEntries,
+  action,
   children,
 }: {
   title: string
   isOwnProfile: boolean
   emptyText: string
   hasEntries: boolean
+  action?: React.ReactNode
   children: React.ReactNode
 }) {
   if (!hasEntries && !isOwnProfile) return null
 
   return (
     <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10">
-      <h3 className="text-2xl font-bold text-brand-900 mb-6">{title}</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h3 className="text-2xl font-bold text-brand-900">{title}</h3>
+        {action}
+      </div>
       {hasEntries ? (
         <div className="space-y-4">{children}</div>
       ) : (
@@ -436,30 +530,32 @@ function ProfileSection({
   )
 }
 
-function ProfileLink({ title, count, color }: { title: string; count?: string; color: 'brand' | 'accent' }) {
+function OpportunityPreview({ opportunity }: { opportunity: any }) {
   return (
-    <button className={clsx(
-      "w-full flex items-center justify-between p-6 rounded-3xl border transition-all hover:scale-[1.02] active:scale-95 group",
-      color === 'brand' ? "bg-white border-brand-100 hover:border-brand-300" : "bg-white border-accent-100 hover:border-accent-300"
-    )}>
-      <div className="flex items-center gap-4">
-        <div className={clsx(
-          "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm",
-          color === 'brand' ? "bg-brand-50 text-brand-600" : "bg-accent-50 text-accent-600"
-        )}>
-          <ChevronRight className="w-6 h-6" />
-        </div>
-        <span className="font-bold text-brand-900">{title}</span>
-      </div>
-      {count && (
-        <span className={clsx(
-          "px-3 py-1 rounded-full text-xs font-bold",
-          color === 'brand' ? "bg-brand-100 text-brand-800" : "bg-accent-100 text-accent-800"
-        )}>
-          {count}
-        </span>
+    <div className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+      <h4 className="font-bold text-brand-900">{opportunity.title}</h4>
+      <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">
+        {[opportunity.university, opportunity.department].filter(Boolean).join(' - ')}
+      </p>
+      {opportunity.description && <p className="text-brand-600 mt-3 line-clamp-3">{opportunity.description}</p>}
+      {opportunity.deadline && (
+        <p className="text-sm text-brand-500 mt-3">Deadline: {new Date(opportunity.deadline).toLocaleDateString()}</p>
       )}
-    </button>
+    </div>
+  )
+}
+
+function ExternalProfileLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-accent-600 hover:underline"
+    >
+      {label}
+      <ExternalLink className="w-4 h-4" />
+    </a>
   )
 }
 

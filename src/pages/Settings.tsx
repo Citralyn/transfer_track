@@ -4,9 +4,11 @@ import {
   makeProfilePayload,
   uploadProfileImage,
   upsertProfile,
+  type ClassMaterialEntry,
   type CourseworkEntry,
   type ExperienceEntry,
   type ProjectEntry,
+  type ResearchEntry,
 } from '@/lib/supabaseHelpers'
 import { Bell, Camera, Check, Loader2, Plus, Shield, Trash2, User } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -52,6 +54,8 @@ export default function Settings() {
         coursework: formData.coursework,
         experience: formData.experience,
         projects: formData.projects,
+        class_materials: formData.class_materials,
+        research: formData.research,
       })
 
       const { data, error } = await upsertProfile(profileData)
@@ -145,18 +149,33 @@ export default function Settings() {
                 <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
               )}
 
-              <CourseworkEditor
-                entries={formData.coursework}
-                onChange={(coursework) => setFormData({ ...formData, coursework })}
-              />
-              <ExperienceEditor
-                entries={formData.experience}
-                onChange={(experience) => setFormData({ ...formData, experience })}
-              />
-              <ProjectsEditor
-                entries={formData.projects}
-                onChange={(projects) => setFormData({ ...formData, projects })}
-              />
+              {profile.role === 'student' ? (
+                <>
+                  <CourseworkEditor
+                    entries={formData.coursework}
+                    onChange={(coursework) => setFormData({ ...formData, coursework })}
+                  />
+                  <ExperienceEditor
+                    entries={formData.experience}
+                    onChange={(experience) => setFormData({ ...formData, experience })}
+                  />
+                  <ProjectsEditor
+                    entries={formData.projects}
+                    onChange={(projects) => setFormData({ ...formData, projects })}
+                  />
+                </>
+              ) : (
+                <>
+                  <ClassMaterialsEditor
+                    entries={formData.class_materials}
+                    onChange={(class_materials) => setFormData({ ...formData, class_materials })}
+                  />
+                  <ResearchEditor
+                    entries={formData.research}
+                    onChange={(research) => setFormData({ ...formData, research })}
+                  />
+                </>
+              )}
 
               <div className="flex items-center gap-4 pt-4">
                 <button
@@ -269,6 +288,46 @@ function ProjectsEditor({ entries, onChange }: { entries: ProjectEntry[]; onChan
   )
 }
 
+function ClassMaterialsEditor({ entries, onChange }: { entries: ClassMaterialEntry[]; onChange: (entries: ClassMaterialEntry[]) => void }) {
+  const addEntry = () => onChange([...entries, { id: makeEntryId(), course_name: '', course_code: '', title: '', description: '', link: '' }])
+
+  return (
+    <EntrySection title="Class Material" onAdd={addEntry}>
+      {entries.map((entry, index) => (
+        <EntryCard key={entry.id} onDelete={() => onChange(entries.filter((item) => item.id !== entry.id))}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextField label="Course Name" value={entry.course_name} onChange={(course_name) => updateEntry(entries, index, { ...entry, course_name }, onChange)} />
+            <TextField label="Course Code" value={entry.course_code || ''} onChange={(course_code) => updateEntry(entries, index, { ...entry, course_code }, onChange)} />
+          </div>
+          <TextField label="Material Title" value={entry.title} onChange={(title) => updateEntry(entries, index, { ...entry, title }, onChange)} />
+          <TextArea label="Description" value={entry.description || ''} onChange={(description) => updateEntry(entries, index, { ...entry, description }, onChange)} placeholder="What should students know about this material?" />
+          <TextField label="Link" value={entry.link || ''} onChange={(link) => updateEntry(entries, index, { ...entry, link }, onChange)} />
+        </EntryCard>
+      ))}
+    </EntrySection>
+  )
+}
+
+function ResearchEditor({ entries, onChange }: { entries: ResearchEntry[]; onChange: (entries: ResearchEntry[]) => void }) {
+  const addEntry = () => onChange([...entries, { id: makeEntryId(), title: '', publication: '', year: '', description: '', link: '' }])
+
+  return (
+    <EntrySection title="Research" onAdd={addEntry}>
+      {entries.map((entry, index) => (
+        <EntryCard key={entry.id} onDelete={() => onChange(entries.filter((item) => item.id !== entry.id))}>
+          <TextField label="Title" value={entry.title} onChange={(title) => updateEntry(entries, index, { ...entry, title }, onChange)} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextField label="Publication / Venue" value={entry.publication || ''} onChange={(publication) => updateEntry(entries, index, { ...entry, publication }, onChange)} />
+            <TextField label="Year" value={entry.year || ''} onChange={(year) => updateEntry(entries, index, { ...entry, year }, onChange)} />
+          </div>
+          <TextArea label="Description / Abstract" value={entry.description || ''} onChange={(description) => updateEntry(entries, index, { ...entry, description }, onChange)} placeholder="Summarize the research or publication." />
+          <TextField label="Link / DOI" value={entry.link || ''} onChange={(link) => updateEntry(entries, index, { ...entry, link }, onChange)} />
+        </EntryCard>
+      ))}
+    </EntrySection>
+  )
+}
+
 function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => void; children: React.ReactNode }) {
   return (
     <section className="border-t border-brand-50 pt-8 space-y-4">
@@ -328,6 +387,8 @@ function makeForm(profile: any) {
     coursework: normalizeEntries<CourseworkEntry>(profile?.coursework),
     experience: normalizeEntries<ExperienceEntry>(profile?.experience),
     projects: normalizeEntries<ProjectEntry>(profile?.projects),
+    class_materials: normalizeEntries<ClassMaterialEntry>(profile?.class_materials),
+    research: normalizeEntries<ResearchEntry>(profile?.research),
   }
 }
 
