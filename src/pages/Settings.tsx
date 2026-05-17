@@ -94,8 +94,8 @@ export default function Settings() {
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-black text-black">Settings</h1>
-        <p className="text-black mt-1 font-bold">Manage your account and profile preferences.</p>
+        <h1 className="text-3xl font-semibold text-[#1d1d1f]">Settings</h1>
+        <p className="text-[#1d1d1f] mt-1 font-bold">Manage your account and profile preferences.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -106,19 +106,19 @@ export default function Settings() {
         </div>
 
         <div className="lg:col-span-3 space-y-8">
-          <div className="bg-white rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8 md:p-12">
-            <h2 className="text-xl font-black text-black mb-8">Profile Information</h2>
+          <div className="bg-white rounded-xl border border-black/5 shadow-xl p-8 md:p-12">
+            <h2 className="text-xl font-semibold text-[#1d1d1f] mb-8">Profile Information</h2>
 
-            {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-none text-sm border-4 border-black">{error}</div>}
+            {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-black/5">{error}</div>}
 
             <form onSubmit={handleUpdateProfile} className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="w-28 h-28 rounded-none bg-[#00ff00] flex items-center justify-center border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden shrink-0">
-                  {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-black" />}
+                <div className="w-28 h-28 rounded-xl bg-[#34c759] flex items-center justify-center border border-black/5 shadow-xl overflow-hidden shrink-0">
+                  {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-[#1d1d1f]" />}
                 </div>
                 <div className="w-full">
-                  <label className="block text-sm font-black text-black mb-2">Profile Image</label>
-                  <label className="cursor-pointer bg-white border-4 border-black text-black px-6 py-3 rounded-none font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all inline-flex items-center gap-2">
+                  <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">Profile Image</label>
+                  <label className="cursor-pointer bg-white border border-black/5 text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-xl hover:shadow-xl transition-all inline-flex items-center gap-2">
                     <Camera className="w-5 h-5" />
                     Choose Image
                     <input
@@ -139,15 +139,15 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-black text-black mb-2">Profile Banner</label>
-                <div className="h-40 rounded-none bg-[#ff0000] overflow-hidden border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] mb-4">
+                <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">Profile Banner</label>
+                <div className="h-40 rounded-xl bg-[#ff3b30] overflow-hidden border border-black/5 shadow-xl mb-4">
                   {bannerPreview || formData.banner_url ? (
                     <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
                   )}
                 </div>
-                <label className="cursor-pointer bg-white border-4 border-black text-black px-6 py-3 rounded-none font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all inline-flex items-center gap-2">
+                <label className="cursor-pointer bg-white border border-black/5 text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-xl hover:shadow-xl transition-all inline-flex items-center gap-2">
                   <Camera className="w-5 h-5" />
                   Choose Banner
                   <input
@@ -218,11 +218,11 @@ export default function Settings() {
                 <button
                   type="submit"
                   disabled={loading || !formData.full_name || !formData.username || !formData.school_name}
-                  className="bg-[#ff0000] text-white px-8 py-3.5 rounded-none font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="bg-[#ff3b30] text-white px-8 py-3.5 rounded-full font-semibold shadow-xl hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <Check className="w-5 h-5" /> : 'Save Changes')}
                 </button>
-                {success && <span className="text-green-600 font-black text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
+                {success && <span className="text-green-600 font-semibold text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
               </div>
             </form>
           </div>
@@ -235,11 +235,11 @@ export default function Settings() {
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-black text-black mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{label}</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-none border-4 border-black focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
       />
     </div>
   )
@@ -248,12 +248,12 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
     <div>
-      <label className="block text-sm font-black text-black mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{label}</label>
       <textarea
         rows={4}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-none border-4 border-black focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"
+        className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"
         placeholder={placeholder}
       />
     </div>
@@ -291,7 +291,7 @@ function ExperienceEditor({ entries, onChange }: { entries: ExperienceEntry[]; o
             <TextField label="Start Date" value={entry.start_date || ''} onChange={(start_date) => updateEntry(entries, index, { ...entry, start_date }, onChange)} />
             <TextField label="End Date" value={entry.is_present ? '' : entry.end_date || ''} onChange={(end_date) => updateEntry(entries, index, { ...entry, end_date }, onChange)} />
           </div>
-          <label className="flex items-center gap-2 text-sm font-black text-black">
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#1d1d1f]">
             <input
               type="checkbox"
               checked={Boolean(entry.is_present)}
@@ -369,8 +369,8 @@ function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => 
   return (
     <section className="border-t border-brand-50 pt-8 space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-lg font-black text-black">{title}</h3>
-        <button type="button" onClick={onAdd} className="bg-white text-black px-4 py-2 rounded-none font-black text-sm flex items-center gap-2 border-4 border-black">
+        <h3 className="text-lg font-semibold text-[#1d1d1f]">{title}</h3>
+        <button type="button" onClick={onAdd} className="bg-white text-[#1d1d1f] px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 border border-black/5">
           <Plus className="w-4 h-4" /> Add
         </button>
       </div>
@@ -381,9 +381,9 @@ function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => 
 
 function EntryCard({ onDelete, children }: { onDelete: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-none border-4 border-black bg-white/50 p-5 space-y-4">
+    <div className="rounded-xl border border-black/5 bg-white/70 backdrop-blur-md p-5 space-y-4">
       <div className="flex justify-end">
-        <button type="button" onClick={onDelete} className="text-red-500 hover:text-red-600 font-black text-sm flex items-center gap-1">
+        <button type="button" onClick={onDelete} className="text-red-500 hover:text-red-600 font-semibold text-sm flex items-center gap-1">
           <Trash2 className="w-4 h-4" /> Delete
         </button>
       </div>
@@ -399,8 +399,8 @@ function updateEntry<T>(entries: T[], index: number, nextEntry: T, onChange: (en
 function SettingsTab({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) {
   return (
     <button className={clsx(
-      'w-full flex items-center gap-4 px-6 py-4 rounded-none font-black transition-all text-left',
-      active ? 'bg-[#ff0000] text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : 'text-black hover:bg-white hover:text-black'
+      'w-full flex items-center gap-4 px-6 py-4 rounded-xl font-semibold transition-all text-left',
+      active ? 'bg-[#ff3b30] text-white shadow-xl' : 'text-[#1d1d1f] hover:bg-white hover:text-[#1d1d1f]'
     )}>
       {icon}
       <span>{label}</span>

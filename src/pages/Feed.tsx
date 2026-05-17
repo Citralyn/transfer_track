@@ -80,13 +80,13 @@ export default function Feed() {
         {/* Simple Trigger Input */}
         <div 
           onClick={() => setIsEditorOpen(true)}
-          className="bg-white p-6 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all group"
+          className="bg-white p-6 rounded-xl border border-black/5 shadow-xl cursor-pointer hover:shadow-xl transition-all group"
         >
           <div className="flex gap-4 items-center">
             <Link to={`/profile/${profile?.username}`} className="hover:scale-105 transition-transform shrink-0">
-              <ProfileAvatar profile={profile} className="w-12 h-12 rounded-none bg-[#ff0000] text-white font-black text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" />
+              <ProfileAvatar profile={profile} className="w-12 h-12 rounded-full bg-[#ff3b30] text-white font-semibold text-xl shadow-xl" />
             </Link>
-            <div className="flex-1 bg-white rounded-none px-6 py-3.5 text-black font-bold group-hover:bg-[#ffff00] transition-colors">
+            <div className="flex-1 bg-white rounded-xl px-6 py-3.5 text-[#1d1d1f] font-bold group-hover:bg-[#ffcc00] transition-colors">
               What's on your mind, {profile?.full_name?.split(' ')[0]}?
             </div>
           </div>
@@ -95,26 +95,26 @@ export default function Feed() {
         {/* Posts List */}
         <div className="space-y-6 pb-20 md:pb-10">
           {missingRoutePost && (
-            <div className="rounded-none border-4 border-black bg-amber-50 px-5 py-4 font-black text-amber-800">
+            <div className="rounded-xl border border-black/5 bg-amber-50 px-5 py-4 font-semibold text-amber-800">
               This post could not be found.
             </div>
           )}
 
           {isLoading ? (
             <div className="flex justify-center py-20">
-               <Loader2 className="w-8 h-8 animate-spin text-black" />
+               <Loader2 className="w-8 h-8 animate-spin text-[#1d1d1f]" />
             </div>
           ) : posts && posts.length > 0 ? (
             posts.map((post) => (
               <PostCard key={post.id} post={post} isHighlighted={post.id === postId} />
             ))
           ) : (
-            <div className="py-20 text-center bg-white rounded-none border-4 border-black">
-               <div className="w-16 h-16 bg-white rounded-none flex items-center justify-center text-black mx-auto mb-4">
+            <div className="py-20 text-center bg-white rounded-xl border border-black/5">
+               <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-[#1d1d1f] mx-auto mb-4">
                   <Type className="w-8 h-8" />
                </div>
-               <h3 className="font-black text-black">Your feed is empty</h3>
-               <p className="text-black text-sm">Be the first to share an update!</p>
+               <h3 className="font-semibold text-[#1d1d1f]">Your feed is empty</h3>
+               <p className="text-[#1d1d1f] text-sm">Be the first to share an update!</p>
             </div>
           )}
         </div>
@@ -122,8 +122,8 @@ export default function Feed() {
 
       {/* Right Sidebar */}
       <div className="hidden lg:block space-y-6">
-        <div className="bg-white p-6 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          <h3 className="font-black text-black mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+        <div className="bg-white p-6 rounded-xl border border-black/5 shadow-xl">
+          <h3 className="font-semibold text-[#1d1d1f] mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
             Suggested Connections
           </h3>
           <div className="space-y-4">
@@ -133,8 +133,8 @@ export default function Feed() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          <h3 className="font-black text-black mb-4 text-sm uppercase tracking-wider">Trending</h3>
+        <div className="bg-white p-6 rounded-xl border border-black/5 shadow-xl">
+          <h3 className="font-semibold text-[#1d1d1f] mb-4 text-sm uppercase tracking-wider">Trending</h3>
           <div className="space-y-3">
             <TrendingItem tag="#UCApplications" count="1.2k posts" />
             <TrendingItem tag="#STEMResearch" count="850 posts" />
@@ -243,25 +243,25 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-[#ff0000]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
+      className="fixed inset-0 bg-[#ff3b30]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
     >
       <motion.div 
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-2xl rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <div className="px-8 py-6 border-b border-brand-50 flex items-center justify-between bg-white/30">
           <div className="flex items-center gap-3">
-            <ProfileAvatar profile={profile} className="w-10 h-10 rounded-none bg-[#ff0000] text-white font-black text-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" />
+            <ProfileAvatar profile={profile} className="w-10 h-10 rounded-full bg-[#ff3b30] text-white font-semibold text-lg shadow-xl" />
             <div>
-              <h3 className="font-black text-black leading-tight">Create Post</h3>
-              <p className="text-[10px] text-black font-black uppercase tracking-wider">Post to Academic Feed</p>
+              <h3 className="font-semibold text-[#1d1d1f] leading-tight">Create Post</h3>
+              <p className="text-[10px] text-[#1d1d1f] font-semibold uppercase tracking-wider">Post to Academic Feed</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-none bg-white border-4 border-black flex items-center justify-center text-black hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+            className="w-10 h-10 rounded-xl bg-white border border-black/5 flex items-center justify-center text-[#1d1d1f] hover:text-[#1d1d1f] transition-all shadow-xl"
           >
             <X className="w-5 h-5" />
           </button>
@@ -273,16 +273,16 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full min-h-[200px] text-xl text-black placeholder:text-black outline-none resize-none bg-transparent"
+            className="w-full min-h-[200px] text-xl text-[#1d1d1f] placeholder:text-[#1d1d1f] outline-none resize-none bg-transparent"
             autoFocus
           />
 
           {imagePreview && (
             <div className="relative group">
-              <img src={imagePreview} className="w-full h-auto rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" alt="Preview" />
+              <img src={imagePreview} className="w-full h-auto rounded-xl border border-black/5 shadow-xl" alt="Preview" />
               <button 
                 onClick={() => { setImage(null); setImagePreview(null); }}
-                className="absolute top-4 right-4 w-10 h-10 rounded-none bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -290,15 +290,15 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
           )}
         </div>
 
-        <div className="p-6 bg-white/50 border-t border-brand-50">
+        <div className="p-6 bg-white/70 backdrop-blur-md border-t border-brand-50">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-1 bg-white p-1.5 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-1 bg-white p-1.5 rounded-xl border border-black/5 shadow-xl">
               <ToolbarButton onClick={() => insertText('**', '**')} icon={<Bold className="w-4 h-4" />} title="Bold" />
               <ToolbarButton onClick={() => insertText('*', '*')} icon={<Italic className="w-4 h-4" />} title="Italic" />
               <ToolbarButton onClick={() => insertText('# ')} icon={<Heading1 className="w-4 h-4" />} title="H1" />
               <ToolbarButton onClick={() => insertText('## ')} icon={<Heading2 className="w-4 h-4" />} title="H2" />
               <ToolbarButton onClick={() => insertText('- ')} icon={<List className="w-4 h-4" />} title="List" />
-              <div className="w-px h-6 bg-[#ffff00] mx-1" />
+              <div className="w-px h-6 bg-[#ffcc00] mx-1" />
               
               <div className="relative">
                 <ToolbarButton 
@@ -307,7 +307,7 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
                   title="Emoji" 
                 />
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full mb-4 left-0 bg-white border-4 border-black p-3 rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] grid grid-cols-4 gap-2 z-10 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="absolute bottom-full mb-4 left-0 bg-white border border-black/5 p-3 rounded-xl shadow-xl grid grid-cols-4 gap-2 z-10 animate-in fade-in slide-in-from-bottom-2">
                     {emojis.map(e => (
                       <button 
                         key={e} 
@@ -338,7 +338,7 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
             <button 
               onClick={handlePost}
               disabled={isPosting || (!content.trim() && !image)}
-              className="bg-[#4f46e5] text-white px-8 py-4 rounded-none font-black border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-3 disabled:opacity-50 uppercase tracking-widest"
+              className="bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-semibold border border-black/5 shadow-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-xl transition-all flex items-center gap-3 disabled:opacity-50 uppercase tracking-widest"
             >
               {isPosting ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Publish <Send className="w-5 h-5 stroke-[3]" /></>}
             </button>
@@ -354,7 +354,7 @@ function ToolbarButton({ onClick, icon, title }: { onClick: () => void, icon: Re
     <button 
       onClick={onClick}
       title={title}
-      className="p-2.5 rounded-none hover:bg-white text-black hover:text-black transition-all"
+      className="p-2.5 rounded-xl hover:bg-white text-[#1d1d1f] hover:text-[#1d1d1f] transition-all"
     >
       {icon}
     </button>
@@ -362,19 +362,19 @@ function ToolbarButton({ onClick, icon, title }: { onClick: () => void, icon: Re
 }
 
 function SuggestionItem({ name, role, school }: any) {
-  const colors = ['bg-[#ff0000]', 'bg-[#00ff00]', 'bg-[#ffff00]', 'bg-[#ff00ff]']
+  const colors = ['bg-[#ff3b30]', 'bg-[#34c759]', 'bg-[#ffcc00]', 'bg-[#af52de]']
   const randomColor = colors[Math.floor(Math.random() * colors.length)]
   
   return (
     <div className="flex items-center justify-between group">
       <div className="flex items-center gap-3">
-        <div className={clsx("w-10 h-10 rounded-none border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]", randomColor)} />
+        <div className={clsx("w-10 h-10 rounded-xl border border-black/5 shadow-xl", randomColor)} />
         <div className="flex flex-col">
-          <span className="text-sm font-black text-black leading-tight group-hover:text-black transition-colors">{name}</span>
-          <span className="text-[10px] text-black font-black uppercase">{role} • {school}</span>
+          <span className="text-sm font-semibold text-[#1d1d1f] leading-tight group-hover:text-[#1d1d1f] transition-colors">{name}</span>
+          <span className="text-[10px] text-[#1d1d1f] font-semibold uppercase">{role} • {school}</span>
         </div>
       </div>
-      <button className="p-1.5 rounded-none bg-[#00ff00] border-4 border-black text-black hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+      <button className="p-1.5 rounded-xl bg-[#34c759] border border-black/5 text-[#1d1d1f] hover:bg-black hover:text-white transition-all shadow-xl">
         <Plus className="w-4 h-4" />
       </button>
     </div>
@@ -383,9 +383,9 @@ function SuggestionItem({ name, role, school }: any) {
 
 function TrendingItem({ tag, count }: any) {
   return (
-    <div className="flex flex-col hover:bg-[#ffff00] p-2 rounded-none border-4 border-transparent hover:border-black transition-all cursor-pointer group shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-      <span className="text-sm font-black text-black group-hover:text-black">#{tag.replace('#', '')}</span>
-      <span className="text-[10px] text-black font-black uppercase">{count}</span>
+    <div className="flex flex-col hover:bg-[#ffcc00] p-2 rounded-xl border-4 border-transparent hover:border-black transition-all cursor-pointer group shadow-xl hover:shadow-xl">
+      <span className="text-sm font-semibold text-[#1d1d1f] group-hover:text-[#1d1d1f]">#{tag.replace('#', '')}</span>
+      <span className="text-[10px] text-[#1d1d1f] font-semibold uppercase">{count}</span>
     </div>
   )
 }
@@ -409,7 +409,7 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
     <div
       id={`post-${post.id}`}
       className={clsx(
-        "bg-white rounded-none border shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden scroll-mt-24",
+        "bg-white rounded-xl border shadow-xl hover:shadow-xl transition-all overflow-hidden scroll-mt-24",
         isHighlighted ? "border-accent-300 ring-4 ring-accent-100" : "border-black"
       )}
     >
@@ -417,28 +417,28 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Link to={`/profile/${profiles?.username}`} className="hover:scale-105 transition-transform shrink-0">
-              <ProfileAvatar profile={profiles} className="w-12 h-12 rounded-none bg-[#ff0000] text-white font-black text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" />
+              <ProfileAvatar profile={profiles} className="w-12 h-12 rounded-full bg-[#ff3b30] text-white font-semibold text-xl shadow-xl" />
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${profiles?.username}`} className="font-black text-black leading-tight hover:text-[#4f46e5] transition-colors">
+                <Link to={`/profile/${profiles?.username}`} className="font-semibold text-[#1d1d1f] leading-tight hover:text-[#4f46e5] transition-colors">
                   {profiles?.full_name}
                 </Link>
                 {isProfessor && (
-                  <span className="bg-accent-100 text-accent-700 text-[10px] font-black px-2 py-0.5 rounded-none uppercase tracking-wider">
+                  <span className="bg-accent-100 text-accent-700 text-[10px] font-semibold px-2 py-0.5 rounded-xl uppercase tracking-wider">
                     Professor
                   </span>
                 )}
               </div>
-              <span className="text-xs text-black font-bold">{profiles?.school_name} • {formatDistanceToNow(new Date(created_at))} ago</span>
+              <span className="text-xs text-[#1d1d1f] font-bold">{profiles?.school_name} • {formatDistanceToNow(new Date(created_at))} ago</span>
             </div>
           </div>
-          <button className="text-black hover:text-black transition-colors">
+          <button className="text-[#1d1d1f] hover:text-[#1d1d1f] transition-colors">
             <MoreHorizontal className="w-6 h-6" />
           </button>
         </div>
         
-        <div className="prose prose-brand max-w-none text-black leading-relaxed mb-4">
+        <div className="prose prose-brand max-w-none text-[#1d1d1f] leading-relaxed mb-4">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </div>
@@ -448,45 +448,45 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
           <img 
             src={image_url} 
             alt="Post content" 
-            className="w-full h-auto rounded-none object-cover border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full h-auto rounded-xl object-cover border border-black/5 shadow-xl"
           />
         </div>
       )}
 
-      <div className="px-6 py-4 bg-white/50 border-t border-brand-50 flex items-center justify-between">
+      <div className="px-6 py-4 bg-white/70 backdrop-blur-md border-t border-brand-50 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <button 
             onClick={toggleLike}
             className={clsx(
               "flex items-center gap-2 transition-colors group",
-              isLiked ? "text-[#4f46e5]" : "text-black hover:text-[#4f46e5]"
+              isLiked ? "text-[#4f46e5]" : "text-[#1d1d1f] hover:text-[#4f46e5]"
             )}
           >
             <div className={clsx(
-              "p-2 rounded-none transition-colors",
-              isLiked ? "bg-[#ff00ff]" : "group-hover:bg-[#ff00ff]"
+              "p-2 rounded-xl transition-colors",
+              isLiked ? "bg-[#af52de]" : "group-hover:bg-[#af52de]"
             )}>
               <Heart className={clsx("w-5 h-5", isLiked && "fill-current")} />
             </div>
-            <span className="text-sm font-black">{likeCount}</span>
+            <span className="text-sm font-semibold">{likeCount}</span>
           </button>
           <button 
             onClick={() => setShowComments(!showComments)}
             className={clsx(
               "flex items-center gap-2 transition-colors group",
-              showComments ? "text-black" : "text-black hover:text-black"
+              showComments ? "text-[#1d1d1f]" : "text-[#1d1d1f] hover:text-[#1d1d1f]"
             )}
           >
             <div className={clsx(
-              "p-2 rounded-none transition-colors",
-              showComments ? "bg-[#ffff00]" : "group-hover:bg-[#ffff00]"
+              "p-2 rounded-xl transition-colors",
+              showComments ? "bg-[#ffcc00]" : "group-hover:bg-[#ffcc00]"
             )}>
               <MessageCircle className="w-5 h-5" />
             </div>
-            <span className="text-sm font-black">{commentCount}</span>
+            <span className="text-sm font-semibold">{commentCount}</span>
           </button>
         </div>
-        <button className="text-black hover:text-black transition-colors p-2 rounded-none hover:bg-[#ffff00]">
+        <button className="text-[#1d1d1f] hover:text-[#1d1d1f] transition-colors p-2 rounded-xl hover:bg-[#ffcc00]">
           <Share2 className="w-5 h-5" />
         </button>
       </div>
@@ -494,15 +494,15 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
       {showComments && (
         <div className="px-6 py-6 bg-white border-t border-brand-50 animate-in slide-in-from-top duration-300">
           <form onSubmit={handleComment} className="flex gap-3 mb-6">
-            <ProfileAvatar profile={currentProfile} className="w-8 h-8 rounded-none bg-[#ff0000] text-white font-black text-xs shrink-0 mt-1" />
+            <ProfileAvatar profile={currentProfile} className="w-8 h-8 rounded-full bg-[#ff3b30] text-white font-semibold text-xs shrink-0 mt-1" />
             <div className="flex-1 relative">
               <input 
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
                 placeholder="Write a comment..."
-                className="w-full bg-white rounded-none px-4 py-2 text-sm outline-none border border-transparent focus:border-black transition-all pr-10"
+                className="w-full bg-white rounded-xl px-4 py-2 text-sm outline-none border border-transparent focus:border-black transition-all pr-10"
               />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-black hover:text-[#4f46e5]">
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1d1d1f] hover:text-[#4f46e5]">
                 <Send className="w-4 h-4" />
               </button>
             </div>
@@ -511,13 +511,13 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
           <div className="space-y-4">
             {post_comments?.map((comment: any) => (
               <div key={comment.id} className="flex gap-3 group">
-                <ProfileAvatar profile={comment.profiles} className="w-8 h-8 rounded-none bg-[#ffff00] text-black font-black text-xs shrink-0" />
-                <div className="flex-1 bg-white/50 p-3 rounded-none rounded-none border-4 border-black">
+                <ProfileAvatar profile={comment.profiles} className="w-8 h-8 rounded-full bg-[#ffcc00] text-[#1d1d1f] font-semibold text-xs shrink-0" />
+                <div className="flex-1 bg-white/70 backdrop-blur-md p-3 rounded-xl rounded-xl border border-black/5">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-black text-black">{comment.profiles?.full_name}</span>
-                    <span className="text-[10px] text-black">{formatDistanceToNow(new Date(comment.created_at))} ago</span>
+                    <span className="text-xs font-semibold text-[#1d1d1f]">{comment.profiles?.full_name}</span>
+                    <span className="text-[10px] text-[#1d1d1f]">{formatDistanceToNow(new Date(comment.created_at))} ago</span>
                   </div>
-                  <p className="text-sm text-black leading-snug">{comment.content}</p>
+                  <p className="text-sm text-[#1d1d1f] leading-snug">{comment.content}</p>
                 </div>
               </div>
             ))}

@@ -1,110 +1,117 @@
 @import "tailwindcss";
 
 @theme {
-  /* Ultra Vibrant "Bright & Bold" Palette - Blocky Edition */
-  --color-background: #fdfcf0;    
-  --color-foreground: #000000;    
+  /* Elegant "Soft Fruit" Palette */
+  --color-background: #f5f5f7;    /* Clean Apple Gray */
+  --color-foreground: #1d1d1f;    /* Soft Black Text */
   
-  --color-card: #ffffff;          
-  --color-card-foreground: #000000; 
+  --color-card: #ffffff;          /* White Widgets */
+  --color-card-foreground: #1d1d1f; 
   
-  --color-brand-50: #ffffff;
-  --color-brand-100: #ffff00;     
-  --color-brand-200: #000000;     
-  --color-brand-500: #4f46e5;     
-  --color-brand-600: #4338ca;
-  --color-brand-700: #3730a3;
-  --color-brand-800: #312e81;
-  --color-brand-900: #000000;     
+  --color-brand-50: #fbfbfd;
+  --color-brand-100: #f5f5f7;     
+  --color-brand-200: #e8e8ed;     
+  --color-brand-500: #0066cc;     /* Classic Link Blue */
+  --color-brand-600: #0044bb;
+  --color-brand-900: #1d1d1f;     
 
-  /* Neon Primary Accents - Solid "Squares" */
-  --color-accent-red: #ff0000;    
-  --color-accent-green: #00ff00;  
-  --color-accent-yellow: #ffff00; 
-  --color-accent-pink: #ff00ff;   
-  --color-accent-indigo: #4f46e5; 
+  /* Fruit-Inspired Accents */
+  --color-accent-red: #ff3b30;    /* Gala Red */
+  --color-accent-green: #34c759;  /* Granny Smith Green */
+  --color-accent-yellow: #ffcc00; /* Golden Delicious Yellow */
 
-  /* Sharp Lines */
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
+  /* Squares with a little rounding */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
 
-  /* Massive Hard Brutalist Shadows */
-  --shadow-sm: 4px 4px 0px 0px rgba(0,0,0,1);
-  --shadow-md: 6px 6px 0px 0px rgba(0,0,0,1);
-  --shadow-lg: 8px 8px 0px 0px rgba(0,0,0,1);
-  --shadow-xl: 12px 12px 0px 0px rgba(0,0,0,1);
-  --shadow-2xl: 16px 16px 0px 0px rgba(0,0,0,1);
+  /* Diffuse iOS Shadows */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow-xl: 0 20px 40px rgba(0,0,0,0.15);
 }
 
 :root {
   color-scheme: light;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   
-  --background: 52 80% 97%;    
-  --foreground: 0 0% 0%;   
+  --background: 240 5% 96%;    
+  --foreground: 240 5% 12%;   
   
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
+  --card-foreground: 240 5% 12%;
   
-  --primary: 243 75% 59%;      
+  --primary: 211 100% 40%;      
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 120 100% 50%;    
-  --secondary-foreground: 0 0% 0%;
+  --secondary: 142 58% 49%;    
+  --secondary-foreground: 0 0% 100%;
   
-  --muted: 0 0% 90%;
-  --muted-foreground: 0 0% 20%;
+  --muted: 240 5% 90%;
+  --muted-foreground: 240 5% 45%;
   
-  --accent: 120 100% 50%;
+  --accent: 142 58% 49%;
   
-  --destructive: 0 100% 50%;    
+  --destructive: 4 90% 58%;    
   --destructive-foreground: 0 0% 100%;
   
-  --border: 0 0% 0%;           
+  --border: 240 5% 90%;           
   --input: 0 0% 100%;
-  --ring: 243 75% 59%;
-  --radius: 0px;
+  --ring: 211 100% 40%;
+  --radius: 12px;
 }
 
 @layer base {
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: #fdfcf0;
-    color: #000000;
-    /* Retro dot pattern */
-    background-image: radial-gradient(#000000 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-attachment: fixed;
+    background-color: #f5f5f7;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
   }
 
   * {
-    border-color: #000000;
+    border-color: rgba(0,0,0,0.08);
   }
 
   button, .btn {
-    transition: transform 0.1s, box-shadow 0.1s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   button:active, .btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px 0px rgba(0,0,0,1) !important;
+    transform: scale(0.96);
   }
 }
 
 .gradient-brand {
-  background-color: #ff0000;
-  background-image: none;
+  /* Subtle fruit gradient */
+  background-image: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%);
 }
 
 .gradient-soft {
-  background-color: #00ff00;
-  background-image: none;
+  background-image: linear-gradient(135deg, #34c759 0%, #32ade6 100%);
 }
 
 .glass {
-  background-color: #ffffff;
-  border: 4px solid #000000;
-  box-shadow: 12px 12px 0px 0px rgba(0,0,0,1);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+
+.card-apple {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-apple:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
 }

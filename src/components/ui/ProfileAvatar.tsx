@@ -28,7 +28,7 @@ export function ProfileAvatar({
   return (
     <div
       className={clsx(
-        'flex items-center justify-center overflow-hidden',
+        'flex items-center justify-center overflow-hidden rounded-full',
         className
       )}
     >

@@ -83,45 +83,45 @@ export default function ProfessorOpportunities() {
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <Link to={`/profile/${professor.username}`} className="inline-flex items-center gap-2 text-black hover:text-black font-black text-sm mb-4">
+        <Link to={`/profile/${professor.username}`} className="inline-flex items-center gap-2 text-[#1d1d1f] hover:text-[#1d1d1f] font-semibold text-sm mb-4">
           <ArrowLeft className="w-4 h-4" />
           Back to profile
         </Link>
-        <h1 className="text-3xl font-black text-black">Posted Opportunities</h1>
-        <p className="text-black mt-1 font-bold">All opportunities posted by {professor.full_name}.</p>
+        <h1 className="text-3xl font-semibold text-[#1d1d1f]">Posted Opportunities</h1>
+        <p className="text-[#1d1d1f] mt-1 font-bold">All opportunities posted by {professor.full_name}.</p>
       </div>
 
       {opportunities.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {opportunities.map((opportunity) => (
-            <div key={opportunity.id} className="bg-white rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-7">
-              <div className="w-12 h-12 rounded-none bg-[#ff0000] text-white flex items-center justify-center mb-5">
+            <div key={opportunity.id} className="bg-white rounded-xl border border-black/5 shadow-xl p-7">
+              <div className="w-12 h-12 rounded-xl bg-[#ff3b30] text-white flex items-center justify-center mb-5">
                 <Briefcase className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-black text-black">{opportunity.title}</h2>
-              <div className="flex flex-wrap gap-3 text-sm text-black font-bold mt-3">
+              <h2 className="text-xl font-semibold text-[#1d1d1f]">{opportunity.title}</h2>
+              <div className="flex flex-wrap gap-3 text-sm text-[#1d1d1f] font-bold mt-3">
                 <span className="flex items-center gap-1.5"><Tag className="w-4 h-4" /> {opportunity.department}</span>
                 {opportunity.deadline && (
                   <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(opportunity.deadline).toLocaleDateString()}</span>
                 )}
               </div>
-              <p className="text-black mt-5 leading-relaxed whitespace-pre-wrap">{opportunity.description}</p>
+              <p className="text-[#1d1d1f] mt-5 leading-relaxed whitespace-pre-wrap">{opportunity.description}</p>
               {opportunity.requirements && (
-                <div className="mt-5 p-4 rounded-none bg-white border-4 border-black">
-                  <p className="text-xs font-black uppercase tracking-widest text-black mb-2">Requirements</p>
-                  <p className="text-sm text-black">{opportunity.requirements}</p>
+                <div className="mt-5 p-4 rounded-xl bg-white border border-black/5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[#1d1d1f] mb-2">Requirements</p>
+                  <p className="text-sm text-[#1d1d1f]">{opportunity.requirements}</p>
                 </div>
               )}
             </div>
           ))}
         </div>
       ) : (
-        <div className="rounded-none border-4 border-black bg-white p-10 text-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          <div className="w-16 h-16 bg-[#00ff00] rounded-none flex items-center justify-center text-black mx-auto mb-5">
+        <div className="rounded-xl border border-black/5 bg-white p-10 text-center shadow-xl">
+          <div className="w-16 h-16 bg-[#34c759] rounded-full flex items-center justify-center text-[#1d1d1f] mx-auto mb-5">
             <Briefcase className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-black text-black">No opportunities posted yet.</h3>
-          <p className="text-black mt-2">When this professor posts opportunities, they will appear here.</p>
+          <h3 className="text-xl font-semibold text-[#1d1d1f]">No opportunities posted yet.</h3>
+          <p className="text-[#1d1d1f] mt-2">When this professor posts opportunities, they will appear here.</p>
         </div>
       )}
     </div>

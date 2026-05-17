@@ -91,45 +91,45 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-            <div className="w-14 h-14 bg-[#ff0000] border-4 border-black rounded-none flex items-center justify-center text-white font-black text-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <div className="w-14 h-14 bg-[#ff3b30] border border-black/5 rounded-full flex items-center justify-center text-white font-semibold text-2xl shadow-xl group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-xl transition-all">
               TT
             </div>
-            <span className="text-3xl font-black text-black tracking-tighter uppercase">Transfer Track</span>
+            <span className="text-3xl font-semibold text-[#1d1d1f] tracking-tighter uppercase">Transfer Track</span>
           </Link>
-          <h2 className="text-4xl font-black text-black uppercase tracking-tighter">Welcome back</h2>
-          <p className="text-black font-black mt-2 uppercase text-sm tracking-widest">Access your academic hub</p>
+          <h2 className="text-4xl font-semibold text-[#1d1d1f] uppercase tracking-tighter">Welcome back</h2>
+          <p className="text-[#1d1d1f] font-semibold mt-2 uppercase text-sm tracking-widest">Access your academic hub</p>
         </div>
 
-        <div className="bg-white p-10 rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
+        <div className="bg-white p-10 rounded-xl shadow-xl border border-black/5">
           <form onSubmit={handleLogin} className="space-y-8">
             {error && (
-              <div className="bg-[#ff0000] text-white p-4 rounded-none font-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-[#ff3b30] text-white p-4 rounded-full font-semibold border border-black/5 shadow-xl">
                 {error}
               </div>
             )}
             <div>
-              <label className="block text-xs font-black text-black uppercase tracking-[0.2em] mb-3 ml-1">Email Address</label>
+              <label className="block text-xs font-semibold text-[#1d1d1f] uppercase tracking-[0.2em] mb-3 ml-1">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-4 rounded-none border-4 border-black bg-white focus:bg-[#ffff00] transition-colors outline-none font-black text-black"
+                className="w-full px-5 py-4 rounded-xl border border-black/5 bg-white focus:bg-[#ffcc00] transition-colors outline-none font-semibold text-[#1d1d1f]"
                 placeholder="YOU@EXAMPLE.COM"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-3 ml-1">
-                <label className="block text-xs font-black text-black uppercase tracking-[0.2em]">Password</label>
-                <a href="#" className="text-xs font-black text-black hover:underline uppercase">Forgot?</a>
+                <label className="block text-xs font-semibold text-[#1d1d1f] uppercase tracking-[0.2em]">Password</label>
+                <a href="#" className="text-xs font-semibold text-[#1d1d1f] hover:underline uppercase">Forgot?</a>
               </div>
               <div className="relative">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-black" />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1d1d1f]" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-14 pr-5 py-4 rounded-none border-4 border-black bg-white focus:bg-[#00ff00] transition-colors outline-none font-black text-black"
+                  className="w-full pl-14 pr-5 py-4 rounded-xl border border-black/5 bg-white focus:bg-[#34c759] transition-colors outline-none font-semibold text-[#1d1d1f]"
                   placeholder="DEMO MODE"
                 />
               </div>
@@ -137,7 +137,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ff00ff] text-white py-5 rounded-none font-black text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all uppercase tracking-widest disabled:opacity-50"
+              className="w-full bg-[#af52de] text-white py-5 rounded-full font-semibold text-xl border border-black/5 shadow-xl hover:shadow-xl hover:translate-x-1 hover:translate-y-1 transition-all uppercase tracking-widest disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-8 h-8 animate-spin mx-auto" />
@@ -147,10 +147,10 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t-4 border-black text-center">
-            <p className="text-black font-black uppercase text-sm">
+          <div className="mt-10 pt-8 border-t border-black/5 text-center">
+            <p className="text-[#1d1d1f] font-semibold uppercase text-sm">
               New here?{' '}
-              <Link to="/signup" className="text-black font-black hover:underline">
+              <Link to="/signup" className="text-[#1d1d1f] font-semibold hover:underline">
                 Sign Up Now
               </Link>
             </p>
