@@ -5,8 +5,6 @@ import { useAuthStore } from '@/store/useAuthStore'
 import {
   type CourseworkEntry,
   type ExperienceEntry,
-  fetchAcceptedConnections,
-  fetchProfilesByIds,
   getRelationshipStatus,
   type ClassMaterialEntry,
   type ProjectEntry,
@@ -24,10 +22,8 @@ import {
   GraduationCap,
   BookOpen,
   Settings,
-  Users,
   MessageSquare,
   Sparkles,
-  ChevronRight,
   Loader2,
   Check,
   ExternalLink,
@@ -42,7 +38,6 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [connectionCount, setConnectionCount] = useState(0)
-  const [acceptedConnections, setAcceptedConnections] = useState<any[]>([])
   const [professorOpportunities, setProfessorOpportunities] = useState<any[]>([])
   const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus | 'sending' | 'error'>('none')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
@@ -56,7 +51,6 @@ export default function Profile() {
     if (!profile?.id) return
 
     loadConnectionCount(profile.id)
-    loadAcceptedConnections(profile.id)
     if (profile.role === 'professor') {
       loadProfessorOpportunities(profile.id)
     } else {
@@ -109,27 +103,6 @@ export default function Profile() {
   const loadConnectionCount = async (profileId: string) => {
     const count = await getConnectionCount(profileId)
     setConnectionCount(count)
-  }
-
-  const loadAcceptedConnections = async (profileId: string) => {
-    setAcceptedConnections([])
-    const connections = await fetchAcceptedConnections(profileId)
-    const profileIds = connections.flatMap((connection: any) => [connection.requester_id, connection.receiver_id])
-    const relatedProfiles = await fetchProfilesByIds(profileIds)
-    const profilesById = new Map(relatedProfiles.map((item: any) => [item.id, item]))
-
-    setAcceptedConnections(
-      connections
-        .filter((connection: any) => connection.status === 'accepted')
-        .map((connection: any) => {
-          const otherProfileId = connection.requester_id === profileId ? connection.receiver_id : connection.requester_id
-          return {
-            ...connection,
-            profile: profilesById.get(otherProfileId),
-          }
-        })
-        .filter((connection: any) => connection.profile)
-    )
   }
 
   const loadProfessorOpportunities = async (profileId: string) => {
@@ -239,6 +212,12 @@ export default function Profile() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-extrabold text-brand-900 leading-tight">{profile.full_name}</h1>
+                <Link
+                  to={isOwnProfile ? '/connections' : `/profile/${profile.username}/connections`}
+                  className="inline-flex items-center text-sm font-bold text-accent-600 hover:text-accent-700 hover:underline mt-3"
+                >
+                  {connectionCount} connections
+                </Link>
                 <p className="text-brand-500 font-bold tracking-wide uppercase text-xs mt-1">@{profile.username} • {profile.role}</p>
               </div>
               <div className="flex gap-3">
@@ -289,50 +268,6 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h3 className="text-2xl font-bold text-brand-900 flex items-center gap-2">
-            <Users className="w-6 h-6 text-accent-500" />
-            Connections
-          </h3>
-          {isOwnProfile && (
-            <Link
-              to="/connections"
-              className="bg-brand-50 text-brand-800 px-5 py-2.5 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 border border-brand-100"
-            >
-              Manage Connections
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          )}
-        </div>
-
-        {acceptedConnections.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {acceptedConnections.map((connection: any) => (
-              <Link
-                key={connection.id}
-                to={`/profile/${connection.profile.username}`}
-                className="p-4 rounded-2xl border border-brand-100 bg-brand-50/60 hover:shadow-md transition-all flex items-center gap-4 group"
-              >
-                <ProfileAvatar profile={connection.profile} className="w-12 h-12 rounded-xl gradient-brand text-white font-bold text-lg shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors truncate">
-                    {connection.profile.full_name}
-                  </p>
-                  <p className="text-xs font-bold text-brand-400 uppercase tracking-widest truncate">
-                    {connection.profile.role} - {connection.profile.school_name || 'Transfer Track'}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-brand-400">
-            {isOwnProfile ? 'Accepted connections will appear here.' : 'No accepted connections to show yet.'}
-          </p>
-        )}
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
@@ -347,7 +282,6 @@ export default function Profile() {
                 <InfoItem icon={<BookOpen className="w-5 h-5" />} label="Year" value={profile.academic_year} />
               )}
               <InfoItem icon={<MapPin className="w-5 h-5" />} label="Location" value="California, USA" />
-              <InfoItem icon={<Users className="w-5 h-5" />} label="Connections" value={connectionCount.toString()} />
             </div>
           </div>
 

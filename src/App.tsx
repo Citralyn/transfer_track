@@ -23,6 +23,7 @@ import Messages from '@/pages/Messages'
 import Settings from '@/pages/Settings'
 import SearchResults from '@/pages/SearchResults'
 import ProfessorOpportunities from '@/pages/ProfessorOpportunities'
+import ProfileConnections from '@/pages/ProfileConnections'
 
 // Layouts
 import MainLayout from '@/layouts/MainLayout'
@@ -146,6 +147,7 @@ function App() {
               <Route path="/search" element={<SearchResults />} />
               <Route path="/connections" element={<Connections />} />
               <Route path="/profile/:username/opportunities" element={<ProfessorOpportunities />} />
+              <Route path="/profile/:username/connections" element={<ProfileConnections />} />
               <Route path="/profile/:username?" element={<Profile />} />
               <Route path="/professor-dashboard" element={<Profile />} />
               <Route path="/messages/:conversationId?" element={<Messages />} />

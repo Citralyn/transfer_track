@@ -170,6 +170,8 @@ CREATE POLICY "Users can unsave opportunities" ON saved_opportunities FOR DELETE
 -- Connections: Users can see their own connections
 ALTER TABLE connections ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own connections" ON connections FOR SELECT USING (auth.uid() = requester_id OR auth.uid() = receiver_id);
+DROP POLICY IF EXISTS "Accepted connections are viewable by everyone" ON connections;
+CREATE POLICY "Accepted connections are viewable by everyone" ON connections FOR SELECT USING (status = 'accepted');
 CREATE POLICY "Users can request connections" ON connections FOR INSERT WITH CHECK (auth.uid() = requester_id);
 CREATE POLICY "Users can update own connection requests" ON connections FOR UPDATE USING (auth.uid() = requester_id OR auth.uid() = receiver_id);
 

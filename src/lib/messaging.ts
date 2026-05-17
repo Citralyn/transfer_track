@@ -25,6 +25,24 @@ export interface Conversation {
   messageCount?: number
 }
 
+type ConversationParticipantRow = {
+  user_id: string
+  profiles:
+    | {
+        full_name: string
+        username: string
+        avatar_url: string | null
+        role: string
+      }
+    | {
+        full_name: string
+        username: string
+        avatar_url: string | null
+        role: string
+      }[]
+    | null
+}
+
 /**
  * Get or create a conversation between two users
  */
@@ -124,12 +142,12 @@ export async function fetchConversations(userId: string) {
     return []
   }
 
-  return data.map((item: any) => {
+  return data.map((item: any): Conversation => {
     const conv = item.conversations
     return {
       id: conv.id,
       created_at: conv.created_at,
-      participants: conv.conversation_participants.filter((p: any) => p.user_id !== userId),
+      participants: normalizeParticipants(conv.conversation_participants, userId),
       messageCount: conv.messages?.length || 0
     }
   })
@@ -170,9 +188,21 @@ export async function fetchConversation(conversationId: string, userId: string) 
   return {
     id: data.id,
     created_at: data.created_at,
-    participants: data.conversation_participants.filter((p: any) => p.user_id !== userId),
+    participants: normalizeParticipants(data.conversation_participants, userId),
     messageCount: data.messages?.length || 0
-  }
+  } satisfies Conversation
+}
+
+function normalizeParticipants(participants: ConversationParticipantRow[] = [], currentUserId: string) {
+  return participants
+    .filter((participant) => participant.user_id !== currentUserId)
+    .map((participant) => ({
+      user_id: participant.user_id,
+      profiles: Array.isArray(participant.profiles)
+        ? participant.profiles[0]
+        : participant.profiles,
+    }))
+    .filter((participant): participant is Conversation['participants'][number] => Boolean(participant.profiles))
 }
 
 /**
