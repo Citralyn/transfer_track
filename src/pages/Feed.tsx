@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
@@ -69,9 +70,9 @@ export default function Feed() {
           className="bg-white p-6 rounded-[2rem] border border-brand-100 shadow-sm cursor-pointer hover:shadow-md transition-all group"
         >
           <div className="flex gap-4 items-center">
-            <div className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-md shrink-0">
+            <Link to={`/profile/${profile?.username}`} className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-md shrink-0 hover:scale-105 transition-transform">
               {profile?.full_name?.charAt(0)}
-            </div>
+            </Link>
             <div className="flex-1 bg-brand-50 rounded-2xl px-6 py-3.5 text-brand-400 font-medium group-hover:bg-brand-100 transition-colors">
               What's on your mind, {profile?.full_name?.split(' ')[0]}?
             </div>
@@ -390,12 +391,14 @@ function PostCard({ post }: { post: any }) {
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-sm shrink-0">
+            <Link to={`/profile/${profiles?.username}`} className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-sm shrink-0 hover:scale-105 transition-transform">
               {profiles?.full_name?.charAt(0)}
-            </div>
+            </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-brand-900 leading-tight">{profiles?.full_name}</span>
+                <Link to={`/profile/${profiles?.username}`} className="font-bold text-brand-900 leading-tight hover:text-accent-600 transition-colors">
+                  {profiles?.full_name}
+                </Link>
                 {isProfessor && (
                   <span className="bg-accent-100 text-accent-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                     Professor

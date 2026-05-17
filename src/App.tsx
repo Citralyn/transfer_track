@@ -144,7 +144,7 @@ function App() {
               <Route path="/connections" element={<Connections />} />
               <Route path="/profile/:username?" element={<Profile />} />
               <Route path="/professor-dashboard" element={<Profile />} />
-              <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/:conversationId?" element={<Messages />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
