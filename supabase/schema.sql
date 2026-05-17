@@ -21,6 +21,9 @@ CREATE TABLE profiles (
   research_areas TEXT[], -- For professors
   interests TEXT[],
   skills TEXT[],
+  coursework JSONB DEFAULT '[]'::jsonb,
+  experience JSONB DEFAULT '[]'::jsonb,
+  projects JSONB DEFAULT '[]'::jsonb,
   transfer_goals TEXT, -- For students
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

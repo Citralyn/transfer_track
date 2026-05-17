@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
-import { makeProfilePayload, uploadProfileImage, upsertProfile } from '@/lib/supabaseHelpers'
-import { Bell, Camera, Check, Loader2, Shield, User } from 'lucide-react'
+import {
+  makeProfilePayload,
+  uploadProfileImage,
+  upsertProfile,
+  type CourseworkEntry,
+  type ExperienceEntry,
+  type ProjectEntry,
+} from '@/lib/supabaseHelpers'
+import { Bell, Camera, Check, Loader2, Plus, Shield, Trash2, User } from 'lucide-react'
 import { clsx } from 'clsx'
 
 export default function Settings() {
@@ -42,6 +49,9 @@ export default function Settings() {
         transfer_goals: profile.role === 'student' ? formData.transfer_goals : null,
         avatar_url: avatarUrl,
         gender: formData.gender,
+        coursework: formData.coursework,
+        experience: formData.experience,
+        projects: formData.projects,
       })
 
       const { data, error } = await upsertProfile(profileData)
@@ -135,6 +145,19 @@ export default function Settings() {
                 <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
               )}
 
+              <CourseworkEditor
+                entries={formData.coursework}
+                onChange={(coursework) => setFormData({ ...formData, coursework })}
+              />
+              <ExperienceEditor
+                entries={formData.experience}
+                onChange={(experience) => setFormData({ ...formData, experience })}
+              />
+              <ProjectsEditor
+                entries={formData.projects}
+                onChange={(projects) => setFormData({ ...formData, projects })}
+              />
+
               <div className="flex items-center gap-4 pt-4">
                 <button
                   type="submit"
@@ -181,6 +204,102 @@ function TextArea({ label, value, onChange, placeholder }: { label: string; valu
   )
 }
 
+function CourseworkEditor({ entries, onChange }: { entries: CourseworkEntry[]; onChange: (entries: CourseworkEntry[]) => void }) {
+  const addEntry = () => onChange([...entries, { id: makeEntryId(), course_name: '', course_code: '', description: '' }])
+
+  return (
+    <EntrySection title="Coursework" onAdd={addEntry}>
+      {entries.map((entry, index) => (
+        <EntryCard key={entry.id} onDelete={() => onChange(entries.filter((item) => item.id !== entry.id))}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextField label="Course Name" value={entry.course_name} onChange={(course_name) => updateEntry(entries, index, { ...entry, course_name }, onChange)} />
+            <TextField label="Course Code" value={entry.course_code || ''} onChange={(course_code) => updateEntry(entries, index, { ...entry, course_code }, onChange)} />
+          </div>
+          <TextArea label="Description / Topics" value={entry.description || ''} onChange={(description) => updateEntry(entries, index, { ...entry, description }, onChange)} placeholder="What did you learn?" />
+        </EntryCard>
+      ))}
+    </EntrySection>
+  )
+}
+
+function ExperienceEditor({ entries, onChange }: { entries: ExperienceEntry[]; onChange: (entries: ExperienceEntry[]) => void }) {
+  const addEntry = () => onChange([...entries, { id: makeEntryId(), title: '', organization: '', start_date: '', end_date: '', is_present: false, description: '' }])
+
+  return (
+    <EntrySection title="Experience" onAdd={addEntry}>
+      {entries.map((entry, index) => (
+        <EntryCard key={entry.id} onDelete={() => onChange(entries.filter((item) => item.id !== entry.id))}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextField label="Title / Role" value={entry.title} onChange={(title) => updateEntry(entries, index, { ...entry, title }, onChange)} />
+            <TextField label="Organization" value={entry.organization} onChange={(organization) => updateEntry(entries, index, { ...entry, organization }, onChange)} />
+            <TextField label="Start Date" value={entry.start_date || ''} onChange={(start_date) => updateEntry(entries, index, { ...entry, start_date }, onChange)} />
+            <TextField label="End Date" value={entry.is_present ? '' : entry.end_date || ''} onChange={(end_date) => updateEntry(entries, index, { ...entry, end_date }, onChange)} />
+          </div>
+          <label className="flex items-center gap-2 text-sm font-bold text-brand-600">
+            <input
+              type="checkbox"
+              checked={Boolean(entry.is_present)}
+              onChange={(event) => updateEntry(entries, index, { ...entry, is_present: event.target.checked, end_date: event.target.checked ? '' : entry.end_date }, onChange)}
+            />
+            Present
+          </label>
+          <TextArea label="Description" value={entry.description || ''} onChange={(description) => updateEntry(entries, index, { ...entry, description }, onChange)} placeholder="Describe your responsibilities or impact." />
+        </EntryCard>
+      ))}
+    </EntrySection>
+  )
+}
+
+function ProjectsEditor({ entries, onChange }: { entries: ProjectEntry[]; onChange: (entries: ProjectEntry[]) => void }) {
+  const addEntry = () => onChange([...entries, { id: makeEntryId(), project_name: '', description: '', tech_stack: '', link: '' }])
+
+  return (
+    <EntrySection title="Projects" onAdd={addEntry}>
+      {entries.map((entry, index) => (
+        <EntryCard key={entry.id} onDelete={() => onChange(entries.filter((item) => item.id !== entry.id))}>
+          <TextField label="Project Name" value={entry.project_name} onChange={(project_name) => updateEntry(entries, index, { ...entry, project_name }, onChange)} />
+          <TextArea label="Description" value={entry.description} onChange={(description) => updateEntry(entries, index, { ...entry, description }, onChange)} placeholder="What did you build or investigate?" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextField label="Tech Stack" value={entry.tech_stack || ''} onChange={(tech_stack) => updateEntry(entries, index, { ...entry, tech_stack }, onChange)} />
+            <TextField label="Link" value={entry.link || ''} onChange={(link) => updateEntry(entries, index, { ...entry, link }, onChange)} />
+          </div>
+        </EntryCard>
+      ))}
+    </EntrySection>
+  )
+}
+
+function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => void; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-brand-50 pt-8 space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-lg font-bold text-brand-900">{title}</h3>
+        <button type="button" onClick={onAdd} className="bg-brand-50 text-brand-800 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 border border-brand-100">
+          <Plus className="w-4 h-4" /> Add
+        </button>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
+  )
+}
+
+function EntryCard({ onDelete, children }: { onDelete: () => void; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-brand-100 bg-brand-50/50 p-5 space-y-4">
+      <div className="flex justify-end">
+        <button type="button" onClick={onDelete} className="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-1">
+          <Trash2 className="w-4 h-4" /> Delete
+        </button>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function updateEntry<T>(entries: T[], index: number, nextEntry: T, onChange: (entries: T[]) => void) {
+  onChange(entries.map((entry, entryIndex) => entryIndex === index ? nextEntry : entry))
+}
+
 function SettingsTab({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) {
   return (
     <button className={clsx(
@@ -206,9 +325,20 @@ function makeForm(profile: any) {
     transfer_goals: profile?.transfer_goals || '',
     avatar_url: profile?.avatar_url || '',
     gender: profile?.gender || 'prefer-not-to-say',
+    coursework: normalizeEntries<CourseworkEntry>(profile?.coursework),
+    experience: normalizeEntries<ExperienceEntry>(profile?.experience),
+    projects: normalizeEntries<ProjectEntry>(profile?.projects),
   }
 }
 
 function splitTags(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function normalizeEntries<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : []
+}
+
+function makeEntryId() {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }

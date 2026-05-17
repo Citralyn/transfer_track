@@ -8,6 +8,31 @@ const SUPABASE_TIMEOUT_MS = 4000
 
 export type Role = 'student' | 'professor'
 
+export interface CourseworkEntry {
+  id: string
+  course_name: string
+  course_code?: string
+  description?: string
+}
+
+export interface ExperienceEntry {
+  id: string
+  title: string
+  organization: string
+  start_date?: string
+  end_date?: string
+  is_present?: boolean
+  description?: string
+}
+
+export interface ProjectEntry {
+  id: string
+  project_name: string
+  description: string
+  tech_stack?: string
+  link?: string
+}
+
 export interface ProfilePayload {
   id: string
   role: Role
@@ -24,6 +49,9 @@ export interface ProfilePayload {
   research_areas?: string[] | null
   interests?: string[] | null
   skills?: string[] | null
+  coursework?: CourseworkEntry[] | null
+  experience?: ExperienceEntry[] | null
+  projects?: ProjectEntry[] | null
   gender?: string | null
 }
 
@@ -158,6 +186,9 @@ export async function upsertProfile(profile: ProfilePayload) {
     research_areas: profile.research_areas || null,
     interests: profile.interests || null,
     skills: profile.skills || null,
+    coursework: normalizeArray(profile.coursework),
+    experience: normalizeArray(profile.experience),
+    projects: normalizeArray(profile.projects),
     transfer_goals: profile.transfer_goals || null,
     bio: profile.bio || null,
     avatar_url: profile.avatar_url || null,
@@ -725,6 +756,9 @@ export function makeProfilePayload(input: {
   research_areas?: string[] | null
   interests?: string[] | null
   skills?: string[] | null
+  coursework?: CourseworkEntry[] | null
+  experience?: ExperienceEntry[] | null
+  projects?: ProjectEntry[] | null
   transfer_goals?: string | null
   bio?: string | null
   avatar_url?: string | null
@@ -746,11 +780,18 @@ export function makeProfilePayload(input: {
     research_areas: input.role === 'professor' ? input.research_areas || null : null,
     interests: input.role === 'student' ? input.interests || null : null,
     skills: input.role === 'student' ? input.skills || null : null,
+    coursework: normalizeArray(input.coursework),
+    experience: normalizeArray(input.experience),
+    projects: normalizeArray(input.projects),
     transfer_goals: input.role === 'student' ? input.transfer_goals || null : null,
     bio: input.bio || null,
     avatar_url: input.avatar_url || null,
     gender: input.gender || null,
   }
+}
+
+function normalizeArray<T>(value?: T[] | null) {
+  return value && value.length > 0 ? value : []
 }
 
 export function isProfileOnboardingComplete(profile?: Partial<ProfilePayload> | null) {

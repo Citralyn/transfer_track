@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { clearLocalAuth } from '@/lib/supabaseHelpers'
 import type { Session, User } from '@supabase/supabase-js'
+import type { CourseworkEntry, ExperienceEntry, ProjectEntry } from '@/lib/supabaseHelpers'
 
 export interface Profile {
   id: string
@@ -19,6 +20,9 @@ export interface Profile {
   research_areas?: string[] | null
   interests?: string[] | null
   skills?: string[] | null
+  coursework?: CourseworkEntry[] | null
+  experience?: ExperienceEntry[] | null
+  projects?: ProjectEntry[] | null
   gender?: string | null
 }
 

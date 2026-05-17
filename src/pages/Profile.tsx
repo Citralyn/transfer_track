@@ -3,7 +3,10 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
+  type CourseworkEntry,
+  type ExperienceEntry,
   getRelationshipStatus,
+  type ProjectEntry,
   sendConnectionRequest,
   getConnectionCount,
   upsertProfile,
@@ -145,6 +148,9 @@ export default function Profile() {
 
   const isOwnProfile = loggedInProfile?.id === profile.id
   const isProfessor = profile.role === 'professor'
+  const coursework = normalizeEntries<CourseworkEntry>(profile.coursework)
+  const experience = normalizeEntries<ExperienceEntry>(profile.experience)
+  const projects = normalizeEntries<ProjectEntry>(profile.projects)
   return (
     <div className="space-y-8 pb-20">
       <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm overflow-hidden">
@@ -283,6 +289,59 @@ export default function Profile() {
               </div>
             )}
           </div>
+
+          <ProfileSection
+            title="Coursework"
+            isOwnProfile={isOwnProfile}
+            emptyText="Add coursework to highlight relevant classes."
+            hasEntries={coursework.length > 0}
+          >
+            {coursework.map((course) => (
+              <div key={course.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                <h4 className="font-bold text-brand-900">{course.course_name || 'Untitled course'}</h4>
+                {course.course_code && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-1">{course.course_code}</p>}
+                {course.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{course.description}</p>}
+              </div>
+            ))}
+          </ProfileSection>
+
+          <ProfileSection
+            title="Experience"
+            isOwnProfile={isOwnProfile}
+            emptyText="Add experience to show internships, work, research, or leadership."
+            hasEntries={experience.length > 0}
+          >
+            {experience.map((item) => (
+              <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                <h4 className="font-bold text-brand-900">{item.title || 'Untitled role'}</h4>
+                <p className="text-brand-600 mt-1">{item.organization || 'Organization not specified'}</p>
+                {(item.start_date || item.end_date || item.is_present) && (
+                  <p className="text-sm text-brand-400 font-bold mt-2">
+                    {item.start_date || 'Start'} - {item.is_present ? 'Present' : item.end_date || 'End'}
+                  </p>
+                )}
+                {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+              </div>
+            ))}
+          </ProfileSection>
+
+          <ProfileSection
+            title="Projects"
+            isOwnProfile={isOwnProfile}
+            emptyText="Add projects to showcase what you have built or researched."
+            hasEntries={projects.length > 0}
+          >
+            {projects.map((project) => (
+              <div key={project.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                  <h4 className="font-bold text-brand-900">{project.project_name || 'Untitled project'}</h4>
+                  {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-accent-600 hover:underline">View Project</a>}
+                </div>
+                {project.tech_stack && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">{project.tech_stack}</p>}
+                {project.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{project.description}</p>}
+              </div>
+            ))}
+          </ProfileSection>
         </div>
       </div>
     </div>
@@ -382,6 +441,33 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
   )
 }
 
+function ProfileSection({
+  title,
+  isOwnProfile,
+  emptyText,
+  hasEntries,
+  children,
+}: {
+  title: string
+  isOwnProfile: boolean
+  emptyText: string
+  hasEntries: boolean
+  children: React.ReactNode
+}) {
+  if (!hasEntries && !isOwnProfile) return null
+
+  return (
+    <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10">
+      <h3 className="text-2xl font-bold text-brand-900 mb-6">{title}</h3>
+      {hasEntries ? (
+        <div className="space-y-4">{children}</div>
+      ) : (
+        <p className="text-brand-400">{emptyText}</p>
+      )}
+    </div>
+  )
+}
+
 function ProfileLink({ title, count, color }: { title: string; count?: string; color: 'brand' | 'accent' }) {
   return (
     <button className={clsx(
@@ -407,4 +493,8 @@ function ProfileLink({ title, count, color }: { title: string; count?: string; c
       )}
     </button>
   )
+}
+
+function normalizeEntries<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : []
 }

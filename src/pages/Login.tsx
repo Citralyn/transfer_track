@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { loadLocalProfile, makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { ArrowRight, Loader2, Lock } from 'lucide-react'
