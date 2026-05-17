@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function Opportunities() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -337,9 +338,10 @@ function OpportunityDetailModal({ opportunity, onClose }: { opportunity: any, on
 
           {/* Professor Profile */}
           <div className="bg-brand-50 p-8 rounded-3xl border border-brand-100 flex flex-col md:flex-row items-center gap-6">
-             <div className="w-20 h-20 rounded-2xl gradient-soft flex items-center justify-center text-brand-400 font-bold text-3xl shadow-sm border border-white">
-                {opportunity.profiles?.full_name?.charAt(0)}
-             </div>
+             <ProfileAvatar
+                profile={opportunity.profiles}
+                className="w-20 h-20 rounded-2xl gradient-soft text-brand-400 font-bold text-3xl shadow-sm border border-white"
+             />
              <div className="flex-1 text-center md:text-left">
                 <h4 className="text-xl font-bold text-brand-900">{opportunity.profiles?.full_name}</h4>
                 <p className="text-brand-500 text-sm font-medium">Professor in {opportunity.profiles?.department || opportunity.department}</p>

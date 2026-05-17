@@ -629,7 +629,7 @@ export async function fetchProfilesByIds(profileIds: string[]) {
     const { data, error } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, role, full_name, username, email, school_name, academic_year, department, bio')
+        .select('id, role, full_name, username, email, avatar_url, school_name, academic_year, department, bio')
         .in('id', ids),
       'Supabase connection profile lookup'
     )

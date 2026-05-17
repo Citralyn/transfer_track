@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function Profile() {
   const { username } = useParams()
@@ -175,13 +176,7 @@ export default function Profile() {
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
         </div>
         <div className="px-8 pb-8 flex flex-col md:flex-row items-end gap-6 -mt-16 relative z-10">
-          <div className="w-40 h-40 rounded-[3rem] border-8 border-white gradient-brand flex items-center justify-center text-white font-bold text-6xl shadow-xl">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-[2.5rem]" />
-            ) : (
-              profile.full_name?.charAt(0)
-            )}
-          </div>
+          <ProfileAvatar profile={profile} className="w-40 h-40 rounded-[3rem] border-8 border-white gradient-brand text-white font-bold text-6xl shadow-xl" />
           <div className="flex-1 pb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -258,13 +253,7 @@ export default function Profile() {
                 to={`/profile/${connection.profile.username}`}
                 className="p-4 rounded-2xl border border-brand-100 bg-brand-50/60 hover:shadow-md transition-all flex items-center gap-4 group"
               >
-                <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-lg overflow-hidden shrink-0">
-                  {connection.profile.avatar_url ? (
-                    <img src={connection.profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    connection.profile.full_name?.charAt(0)
-                  )}
-                </div>
+                <ProfileAvatar profile={connection.profile} className="w-12 h-12 rounded-xl gradient-brand text-white font-bold text-lg shrink-0" />
                 <div className="min-w-0">
                   <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors truncate">
                     {connection.profile.full_name}

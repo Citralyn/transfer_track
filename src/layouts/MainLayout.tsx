@@ -14,6 +14,7 @@ import {
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { clsx } from 'clsx'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -155,9 +156,7 @@ export default function MainLayout() {
                   to="/profile" 
                   className="flex items-center gap-3 bg-white border border-brand-100 p-1.5 pr-4 rounded-2xl shadow-sm hover:border-brand-300 transition-all cursor-pointer relative z-[101]"
                 >
-                  <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-bold">
-                    {profile?.full_name?.charAt(0)}
-                  </div>
+                  <ProfileAvatar profile={profile} className="w-9 h-9 rounded-xl gradient-brand text-white font-bold" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-brand-900 leading-tight">{profile?.full_name}</span>
                     <span className="text-[10px] text-brand-400 font-medium uppercase tracking-wider">{profile?.role}</span>
