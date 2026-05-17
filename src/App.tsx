@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
   loadLocalProfile, 
-  withTimeout, 
+  withTimeout,
   LOCAL_USER_KEY
 } from '@/lib/supabaseHelpers'
 
