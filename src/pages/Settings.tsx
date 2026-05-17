@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   makeProfilePayload,
@@ -11,11 +12,12 @@ import {
   type ProjectEntry,
   type ResearchEntry,
 } from '@/lib/supabaseHelpers'
-import { Bell, Camera, Check, Loader2, Plus, Shield, Trash2, User } from 'lucide-react'
-import { clsx } from 'clsx'
+import { Camera, Check, Loader2, Plus, Trash2, User } from 'lucide-react'
 
 export default function Settings() {
   const { profile, setProfile } = useAuthStore()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +30,12 @@ export default function Settings() {
   useEffect(() => {
     setFormData(makeForm(profile))
   }, [profile?.id])
+
+  useEffect(() => {
+    if (location.search || location.hash) {
+      navigate('/settings', { replace: true })
+    }
+  }, [location.hash, location.search, navigate])
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,138 +103,128 @@ export default function Settings() {
     <div className="space-y-8 pb-20">
       <div>
         <h1 className="text-3xl font-bold text-brand-900">Settings</h1>
-        <p className="text-brand-500 mt-1 font-medium">Manage your account and profile preferences.</p>
+        <p className="text-brand-500 mt-1 font-medium">Update the profile details students and professors see.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-2">
-          <SettingsTab icon={<User className="w-5 h-5" />} label="Profile" active />
-          <SettingsTab icon={<Bell className="w-5 h-5" />} label="Notifications" />
-          <SettingsTab icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
-        </div>
+      <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8 md:p-12">
+        <h2 className="text-xl font-bold text-brand-900 mb-8">Profile Information</h2>
 
-        <div className="lg:col-span-3 space-y-8">
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8 md:p-12">
-            <h2 className="text-xl font-bold text-brand-900 mb-8">Profile Information</h2>
+        {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">{error}</div>}
 
-            {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">{error}</div>}
-
-            <form onSubmit={handleUpdateProfile} className="space-y-8">
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="w-28 h-28 rounded-[2rem] gradient-soft flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
-                  {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-brand-300" />}
-                </div>
-                <div className="w-full">
-                  <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Image</label>
-                  <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
-                    <Camera className="w-5 h-5" />
-                    Choose Image
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0]
-                        if (!file) return
-                        setAvatarFile(file)
-                        const reader = new FileReader()
-                        reader.onloadend = () => setAvatarPreview(reader.result as string)
-                        reader.readAsDataURL(file)
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Banner</label>
-                <div className="h-40 rounded-[2rem] gradient-brand overflow-hidden border border-brand-100 shadow-sm mb-4">
-                  {bannerPreview || formData.banner_url ? (
-                    <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                  )}
-                </div>
-                <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
-                  <Camera className="w-5 h-5" />
-                  Choose Banner
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      setBannerFile(file)
-                      const reader = new FileReader()
-                      reader.onloadend = () => setBannerPreview(reader.result as string)
-                      reader.readAsDataURL(file)
-                    }}
-                  />
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TextField label="Full Name" value={formData.full_name} onChange={(full_name) => setFormData({ ...formData, full_name })} />
-                <TextField label="Username" value={formData.username} onChange={(username) => setFormData({ ...formData, username })} />
-                <TextField label="College" value={formData.school_name} onChange={(school_name) => setFormData({ ...formData, school_name })} />
-                {profile.role === 'student' ? (
-                  <>
-                    <TextField label="Major" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
-                    <TextField label="Academic Year" value={formData.academic_year} onChange={(academic_year) => setFormData({ ...formData, academic_year })} />
-                  </>
-                ) : (
-                  <TextField label="Department" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
-                )}
-              </div>
-
-              <TextArea label="Biography" value={formData.bio} onChange={(bio) => setFormData({ ...formData, bio })} placeholder="Tell your story..." />
-              <TextArea label="Interests" value={formData.interestsText} onChange={(interestsText) => setFormData({ ...formData, interestsText })} placeholder="Separate interests with commas." />
-              {profile.role === 'student' && (
-                <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
-              )}
-
-              {profile.role === 'student' ? (
-                <>
-                  <CourseworkEditor
-                    entries={formData.coursework}
-                    onChange={(coursework) => setFormData({ ...formData, coursework })}
-                  />
-                  <ExperienceEditor
-                    entries={formData.experience}
-                    onChange={(experience) => setFormData({ ...formData, experience })}
-                  />
-                  <ProjectsEditor
-                    entries={formData.projects}
-                    onChange={(projects) => setFormData({ ...formData, projects })}
-                  />
-                </>
-              ) : (
-                <>
-                  <ClassMaterialsEditor
-                    entries={formData.class_materials}
-                    onChange={(class_materials) => setFormData({ ...formData, class_materials })}
-                  />
-                  <ResearchEditor
-                    entries={formData.research}
-                    onChange={(research) => setFormData({ ...formData, research })}
-                  />
-                </>
-              )}
-
-              <div className="flex items-center gap-4 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading || !formData.full_name || !formData.username || !formData.school_name}
-                  className="bg-brand-900 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
-                >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <Check className="w-5 h-5" /> : 'Save Changes')}
-                </button>
-                {success && <span className="text-green-600 font-bold text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
-              </div>
-            </form>
+        <form onSubmit={handleUpdateProfile} className="space-y-8">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-28 h-28 rounded-[2rem] gradient-soft flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
+              {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-brand-300" />}
+            </div>
+            <div className="w-full">
+              <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Image</label>
+              <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Choose Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (!file) return
+                    setAvatarFile(file)
+                    const reader = new FileReader()
+                    reader.onloadend = () => setAvatarPreview(reader.result as string)
+                    reader.readAsDataURL(file)
+                  }}
+                />
+              </label>
+            </div>
           </div>
-        </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Banner</label>
+            <div className="h-40 rounded-[2rem] gradient-brand overflow-hidden border border-brand-100 shadow-sm mb-4">
+              {bannerPreview || formData.banner_url ? (
+                <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+              )}
+            </div>
+            <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
+              <Camera className="w-5 h-5" />
+              Choose Banner
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  setBannerFile(file)
+                  const reader = new FileReader()
+                  reader.onloadend = () => setBannerPreview(reader.result as string)
+                  reader.readAsDataURL(file)
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TextField label="Full Name" value={formData.full_name} onChange={(full_name) => setFormData({ ...formData, full_name })} />
+            <TextField label="Username" value={formData.username} onChange={(username) => setFormData({ ...formData, username })} />
+            <TextField label="College" value={formData.school_name} onChange={(school_name) => setFormData({ ...formData, school_name })} />
+            {profile.role === 'student' ? (
+              <>
+                <TextField label="Major" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
+                <TextField label="Academic Year" value={formData.academic_year} onChange={(academic_year) => setFormData({ ...formData, academic_year })} />
+              </>
+            ) : (
+              <TextField label="Department" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
+            )}
+          </div>
+
+          <TextArea label="Biography" value={formData.bio} onChange={(bio) => setFormData({ ...formData, bio })} placeholder="Tell your story..." />
+          <TextArea label="Interests" value={formData.interestsText} onChange={(interestsText) => setFormData({ ...formData, interestsText })} placeholder="Separate interests with commas." />
+          {profile.role === 'student' && (
+            <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
+          )}
+
+          {profile.role === 'student' ? (
+            <>
+              <CourseworkEditor
+                entries={formData.coursework}
+                onChange={(coursework) => setFormData({ ...formData, coursework })}
+              />
+              <ExperienceEditor
+                entries={formData.experience}
+                onChange={(experience) => setFormData({ ...formData, experience })}
+              />
+              <ProjectsEditor
+                entries={formData.projects}
+                onChange={(projects) => setFormData({ ...formData, projects })}
+              />
+            </>
+          ) : (
+            <>
+              <ClassMaterialsEditor
+                entries={formData.class_materials}
+                onChange={(class_materials) => setFormData({ ...formData, class_materials })}
+              />
+              <ResearchEditor
+                entries={formData.research}
+                onChange={(research) => setFormData({ ...formData, research })}
+              />
+            </>
+          )}
+
+          <div className="flex items-center gap-4 pt-4">
+            <button
+              type="submit"
+              disabled={loading || !formData.full_name || !formData.username || !formData.school_name}
+              className="bg-brand-900 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <Check className="w-5 h-5" /> : 'Save Changes')}
+            </button>
+            {success && <span className="text-green-600 font-bold text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
+          </div>
+        </form>
       </div>
     </div>
   )
@@ -394,18 +392,6 @@ function EntryCard({ onDelete, children }: { onDelete: () => void; children: Rea
 
 function updateEntry<T>(entries: T[], index: number, nextEntry: T, onChange: (entries: T[]) => void) {
   onChange(entries.map((entry, entryIndex) => entryIndex === index ? nextEntry : entry))
-}
-
-function SettingsTab({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <button className={clsx(
-      'w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-left',
-      active ? 'bg-brand-900 text-white shadow-lg' : 'text-brand-500 hover:bg-white hover:text-brand-900'
-    )}>
-      {icon}
-      <span>{label}</span>
-    </button>
-  )
 }
 
 function makeForm(profile: any) {
