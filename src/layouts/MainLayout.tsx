@@ -11,17 +11,76 @@ import {
   Menu, 
   X
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { clsx } from 'clsx'
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
+import { useQuery } from '@tanstack/react-query'
+import {
+  fetchNotifications,
+  loadSeenNotificationIds,
+  saveSeenNotificationIds,
+  type AppNotification,
+} from '@/lib/notifications'
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [seenNotificationIds, setSeenNotificationIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const { profile, signOut } = useAuthStore()
   const navigate = useNavigate()
+  const mobileNotificationsRef = useRef<HTMLDivElement>(null)
+  const desktopNotificationsRef = useRef<HTMLDivElement>(null)
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications', profile?.id],
+    enabled: Boolean(profile?.id),
+    queryFn: () => fetchNotifications(profile!.id),
+    refetchInterval: 30000,
+  })
+
+  useEffect(() => {
+    if (!profile?.id) {
+      setSeenNotificationIds(new Set())
+      return
+    }
+    setSeenNotificationIds(loadSeenNotificationIds(profile.id))
+  }, [profile?.id])
+
+  useEffect(() => {
+    if (!isNotificationsOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node
+      const clickedInsideMobile = mobileNotificationsRef.current?.contains(target)
+      const clickedInsideDesktop = desktopNotificationsRef.current?.contains(target)
+      if (!clickedInsideMobile && !clickedInsideDesktop) {
+        setIsNotificationsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [isNotificationsOpen])
+
+  const unseenNotifications = useMemo(
+    () => notifications.filter((notification) => !seenNotificationIds.has(notification.id)),
+    [notifications, seenNotificationIds]
+  )
+
+  const openNotifications = () => {
+    setIsNotificationsOpen((current) => {
+      const nextOpen = !current
+      if (nextOpen && profile?.id && notifications.length > 0) {
+        const ids = notifications.map((notification) => notification.id)
+        saveSeenNotificationIds(profile.id, ids)
+        setSeenNotificationIds(loadSeenNotificationIds(profile.id))
+      }
+      return nextOpen
+    })
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -103,10 +162,23 @@ export default function MainLayout() {
           </div>
         </Link>
         <div className="flex items-center gap-4">
-          <button className="text-brand-500 relative">
-            <Bell className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent-500 border-2 border-white rounded-full" />
-          </button>
+          <div className="relative" ref={mobileNotificationsRef}>
+            <NotificationBell
+              compact
+              hasUnseen={unseenNotifications.length > 0}
+              onClick={openNotifications}
+            />
+            {isNotificationsOpen && (
+              <NotificationsDropdown
+                notifications={notifications}
+                seenNotificationIds={seenNotificationIds}
+                onNavigate={(href) => {
+                  setIsNotificationsOpen(false)
+                  navigate(getNotificationTarget(href))
+                }}
+              />
+            )}
+          </div>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-brand-500">
             {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
@@ -168,10 +240,22 @@ export default function MainLayout() {
               />
             </form>
             <div className="flex items-center gap-4 ml-6 relative group">
-              <button className="w-12 h-12 flex items-center justify-center bg-white border border-brand-100 rounded-2xl text-brand-500 hover:text-brand-800 transition-all shadow-sm relative">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-3 right-3 w-3 h-3 bg-accent-500 border-2 border-white rounded-full" />
-              </button>
+              <div className="relative" ref={desktopNotificationsRef}>
+                <NotificationBell
+                  hasUnseen={unseenNotifications.length > 0}
+                  onClick={openNotifications}
+                />
+                {isNotificationsOpen && (
+                  <NotificationsDropdown
+                    notifications={notifications}
+                    seenNotificationIds={seenNotificationIds}
+                    onNavigate={(href) => {
+                      setIsNotificationsOpen(false)
+                      navigate(getNotificationTarget(href))
+                    }}
+                  />
+                )}
+              </div>
               
               {/* Profile Section with Dropdown */}
               <div className="relative py-2">
@@ -231,6 +315,107 @@ export default function MainLayout() {
       </nav>
     </div>
   )
+}
+
+function NotificationBell({
+  hasUnseen,
+  onClick,
+  compact,
+}: {
+  hasUnseen: boolean
+  onClick: () => void
+  compact?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        'flex items-center justify-center text-brand-500 hover:text-brand-800 transition-all relative',
+        compact ? 'w-8 h-8' : 'w-12 h-12 bg-white border border-brand-100 rounded-2xl shadow-sm'
+      )}
+      aria-label="Notifications"
+    >
+      <Bell className="w-6 h-6" />
+      {hasUnseen && (
+        <span className={clsx(
+          'absolute w-3 h-3 bg-accent-500 border-2 border-white rounded-full',
+          compact ? '-top-1 -right-1' : 'top-3 right-3'
+        )} />
+      )}
+    </button>
+  )
+}
+
+function NotificationsDropdown({
+  notifications,
+  seenNotificationIds,
+  onNavigate,
+}: {
+  notifications: AppNotification[]
+  seenNotificationIds: Set<string>
+  onNavigate: (href: string) => void
+}) {
+  return (
+    <div className="absolute right-0 top-full mt-3 w-[min(22rem,calc(100vw-2rem))] bg-white border border-brand-100 rounded-3xl shadow-xl z-[120] overflow-hidden">
+      <div className="px-5 py-4 border-b border-brand-50">
+        <h3 className="font-bold text-brand-900">Notifications</h3>
+      </div>
+      {notifications.length === 0 ? (
+        <div className="p-8 text-center">
+          <div className="w-14 h-14 gradient-soft rounded-2xl flex items-center justify-center text-brand-300 mx-auto mb-4">
+            <Bell className="w-7 h-7" />
+          </div>
+          <p className="text-brand-500 font-medium">No notifications yet.</p>
+        </div>
+      ) : (
+        <div className="max-h-96 overflow-y-auto p-2">
+          {notifications.map((notification) => {
+            const isSeen = seenNotificationIds.has(notification.id)
+            return (
+              <button
+                key={notification.id}
+                type="button"
+                onClick={() => onNavigate(notification.href)}
+                className={clsx(
+                  'w-full text-left p-4 rounded-2xl transition-all border',
+                  isSeen
+                    ? 'border-transparent text-brand-400 hover:bg-brand-50'
+                    : 'border-accent-100 bg-accent-50/60 text-brand-800 hover:bg-accent-50'
+                )}
+              >
+                <p className={clsx('text-sm leading-relaxed', isSeen ? 'font-medium' : 'font-bold')}>
+                  {notification.text}
+                </p>
+                {notification.createdAt && (
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-brand-300 mt-2">
+                    {formatNotificationTime(notification.createdAt)}
+                  </p>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatNotificationTime(value: string) {
+  const date = new Date(value)
+  const diffMs = Date.now() - date.getTime()
+  const diffMinutes = Math.max(1, Math.floor(diffMs / 60000))
+  if (diffMinutes < 60) return `${diffMinutes}m ago`
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h ago`
+  return date.toLocaleDateString()
+}
+
+function getNotificationTarget(href: string) {
+  const knownTargets = ['/feed', '/connections', '/messages']
+  if (href.startsWith('/messages/')) return href
+  if (knownTargets.includes(href)) return href
+  return '/feed'
 }
 
 function UsersIcon(props: any) {
