@@ -24,6 +24,8 @@ CREATE TABLE profiles (
   coursework JSONB DEFAULT '[]'::jsonb,
   experience JSONB DEFAULT '[]'::jsonb,
   projects JSONB DEFAULT '[]'::jsonb,
+  class_materials JSONB DEFAULT '[]'::jsonb,
+  research JSONB DEFAULT '[]'::jsonb,
   transfer_goals TEXT, -- For students
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

@@ -26,6 +26,7 @@ import { usePostInteractions } from '@/hooks/usePostInteractions'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function Feed() {
   const [isEditorOpen, setIsEditorOpen] = useState(false)
@@ -51,7 +52,7 @@ export default function Feed() {
             content,
             created_at,
             user_id,
-            profiles (full_name, username)
+            profiles (full_name, username, avatar_url)
           )
         `)
         .order('created_at', { ascending: false })
@@ -234,9 +235,7 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
       >
         <div className="px-8 py-6 border-b border-brand-50 flex items-center justify-between bg-brand-50/30">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-lg shadow-sm">
-              {profile?.full_name?.charAt(0)}
-            </div>
+            <ProfileAvatar profile={profile} className="w-10 h-10 rounded-xl gradient-brand text-white font-bold text-lg shadow-sm" />
             <div>
               <h3 className="font-bold text-brand-900 leading-tight">Create Post</h3>
               <p className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">Post to Academic Feed</p>
@@ -348,9 +347,7 @@ function SuggestionItem({ name, role, school }: any) {
   return (
     <div className="flex items-center justify-between group">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-soft border border-brand-50 flex items-center justify-center text-brand-400 font-bold">
-          {name.charAt(0)}
-        </div>
+        <ProfileAvatar name={name} className="w-10 h-10 rounded-xl gradient-soft border border-brand-50 text-brand-400 font-bold text-sm" />
         <div className="flex flex-col">
           <span className="text-sm font-bold text-brand-900 leading-tight group-hover:text-accent-600 transition-colors">{name}</span>
           <span className="text-[10px] text-brand-400 font-medium">{role} • {school}</span>
@@ -374,6 +371,7 @@ function TrendingItem({ tag, count }: any) {
 
 function PostCard({ post }: { post: any }) {
   const { profiles, content, created_at, post_comments, image_url } = post
+  const { profile: currentProfile } = useAuthStore()
   const { toggleLike, addComment, isLiked, likeCount, commentCount } = usePostInteractions(post)
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -469,9 +467,7 @@ function PostCard({ post }: { post: any }) {
       {showComments && (
         <div className="px-6 py-6 bg-white border-t border-brand-50 animate-in slide-in-from-top duration-300">
           <form onSubmit={handleComment} className="flex gap-3 mb-6">
-            <div className="w-8 h-8 rounded-lg gradient-brand flex items-center justify-center text-white font-bold text-xs shrink-0 mt-1">
-              {profiles?.full_name?.charAt(0)}
-            </div>
+            <ProfileAvatar profile={currentProfile} className="w-8 h-8 rounded-lg gradient-brand text-white font-bold text-xs shrink-0 mt-1" />
             <div className="flex-1 relative">
               <input 
                 value={commentText}
@@ -488,9 +484,7 @@ function PostCard({ post }: { post: any }) {
           <div className="space-y-4">
             {post_comments?.map((comment: any) => (
               <div key={comment.id} className="flex gap-3 group">
-                <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-xs shrink-0">
-                  {comment.profiles?.full_name?.charAt(0)}
-                </div>
+                <ProfileAvatar profile={comment.profiles} className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 font-bold text-xs shrink-0" />
                 <div className="flex-1 bg-brand-50/50 p-3 rounded-2xl rounded-tl-none border border-brand-50">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-brand-900">{comment.profiles?.full_name}</span>

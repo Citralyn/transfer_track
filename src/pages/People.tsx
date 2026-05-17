@@ -11,6 +11,7 @@ import {
 import { Search, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useNavigate } from 'react-router-dom'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function People() {
   const [people, setPeople] = useState<any[]>([])
@@ -289,9 +290,10 @@ function UserCard({ person, actionButton }: { person: any; actionButton?: ReactN
       className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
     >
       <div className="relative mb-6">
-        <div className="w-24 h-24 rounded-[2rem] gradient-brand flex items-center justify-center text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300">
-          {person.full_name?.charAt(0)}
-        </div>
+        <ProfileAvatar
+          profile={person}
+          className="w-24 h-24 rounded-[2rem] gradient-brand text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+        />
         <div className={clsx(
           "absolute -bottom-2 -right-2 w-10 h-10 rounded-xl border-4 border-white flex items-center justify-center shadow-md",
           isProfessor ? "bg-accent-500 text-white" : "bg-brand-500 text-white"

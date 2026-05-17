@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   fetchAcceptedConnections,
@@ -233,6 +234,11 @@ function RequestList({
           const summary = otherProfile?.bio || (role === 'professor' ? otherProfile?.department : otherProfile?.academic_year)
           const createdAt = request.created_at || request.requestedAt
           const canOpenProfile = Boolean(username)
+          const displayProfile = otherProfile || {
+            full_name: fallbackName,
+            username: fallbackUsername,
+            email: fallbackEmail,
+          }
 
           return (
             <div
@@ -256,9 +262,7 @@ function RequestList({
             >
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
-                  <div className="w-14 h-14 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-sm">
-                    {name.charAt(0)}
-                  </div>
+                  <ProfileAvatar profile={displayProfile} name={name} className="w-14 h-14 rounded-2xl gradient-brand text-white font-bold text-xl shadow-sm" />
                   {role && (
                     <div className={clsx(
                       'absolute -bottom-1 -right-1 w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center shadow-sm',

@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
+import { filterBySearchQuery } from '@/lib/search'
 
 export default function Opportunities() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -36,7 +38,7 @@ export default function Opportunities() {
   const { profile } = useAuthStore()
 
   const { data: opportunities, isLoading, refetch } = useQuery({
-    queryKey: ['opportunities', searchQuery, filters],
+    queryKey: ['opportunities', filters],
     queryFn: async () => {
       let query = supabase
         .from('opportunities')
@@ -50,10 +52,6 @@ export default function Opportunities() {
           )
         `)
       
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`)
-      }
-
       if (filters.department) {
         query = query.ilike('department', `%${filters.department}%`)
       }
@@ -75,6 +73,8 @@ export default function Opportunities() {
       return data
     }
   })
+
+  const visibleOpportunities = filterBySearchQuery(opportunities, searchQuery)
 
   const clearFilters = () => {
     setFilters({ department: '', university: '', professor: '' })
@@ -110,7 +110,7 @@ export default function Opportunities() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search titles..."
+              placeholder="Search opportunities..."
               className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
             />
           </div>
@@ -182,8 +182,8 @@ export default function Opportunities() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
         {isLoading ? (
           [1, 2, 3, 4].map(i => <OpportunitySkeleton key={i} />)
-        ) : opportunities && opportunities.length > 0 ? (
-          opportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} onClick={() => setSelectedOpportunity(opp)} />)
+        ) : visibleOpportunities.length > 0 ? (
+          visibleOpportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} onClick={() => setSelectedOpportunity(opp)} />)
         ) : (
           <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-brand-100">
              <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">

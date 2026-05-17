@@ -33,6 +33,24 @@ export interface ProjectEntry {
   link?: string
 }
 
+export interface ClassMaterialEntry {
+  id: string
+  course_name: string
+  course_code?: string
+  title: string
+  description?: string
+  link?: string
+}
+
+export interface ResearchEntry {
+  id: string
+  title: string
+  publication?: string
+  year?: string
+  description?: string
+  link?: string
+}
+
 export interface ProfilePayload {
   id: string
   role: Role
@@ -52,6 +70,8 @@ export interface ProfilePayload {
   coursework?: CourseworkEntry[] | null
   experience?: ExperienceEntry[] | null
   projects?: ProjectEntry[] | null
+  class_materials?: ClassMaterialEntry[] | null
+  research?: ResearchEntry[] | null
   gender?: string | null
 }
 
@@ -189,6 +209,8 @@ export async function upsertProfile(profile: ProfilePayload) {
     coursework: normalizeArray(profile.coursework),
     experience: normalizeArray(profile.experience),
     projects: normalizeArray(profile.projects),
+    class_materials: normalizeArray(profile.class_materials),
+    research: normalizeArray(profile.research),
     transfer_goals: profile.transfer_goals || null,
     bio: profile.bio || null,
     avatar_url: profile.avatar_url || null,
@@ -629,7 +651,7 @@ export async function fetchProfilesByIds(profileIds: string[]) {
     const { data, error } = await withTimeout(
       supabase
         .from('profiles')
-        .select('id, role, full_name, username, email, school_name, academic_year, department, bio')
+        .select('id, role, full_name, username, email, avatar_url, school_name, academic_year, department, bio')
         .in('id', ids),
       'Supabase connection profile lookup'
     )
@@ -759,6 +781,8 @@ export function makeProfilePayload(input: {
   coursework?: CourseworkEntry[] | null
   experience?: ExperienceEntry[] | null
   projects?: ProjectEntry[] | null
+  class_materials?: ClassMaterialEntry[] | null
+  research?: ResearchEntry[] | null
   transfer_goals?: string | null
   bio?: string | null
   avatar_url?: string | null
@@ -783,6 +807,8 @@ export function makeProfilePayload(input: {
     coursework: normalizeArray(input.coursework),
     experience: normalizeArray(input.experience),
     projects: normalizeArray(input.projects),
+    class_materials: input.role === 'professor' ? normalizeArray(input.class_materials) : [],
+    research: input.role === 'professor' ? normalizeArray(input.research) : [],
     transfer_goals: input.role === 'student' ? input.transfer_goals || null : null,
     bio: input.bio || null,
     avatar_url: input.avatar_url || null,
