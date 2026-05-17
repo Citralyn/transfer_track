@@ -155,6 +155,7 @@ function App() {
               <Route path="/professor-dashboard" element={<Profile />} />
               <Route path="/messages/:conversationId?" element={<Messages />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/*" element={<Navigate to="/settings" replace />} />
             </Route>
           </Route>
 
