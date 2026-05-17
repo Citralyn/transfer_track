@@ -14,6 +14,7 @@ import {
 import { clsx } from 'clsx'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
+  fetchAcceptedConnections,
   fetchIncomingRequests,
   fetchProfilesByIds,
   fetchSentRequests,
@@ -27,6 +28,7 @@ export default function Connections() {
   const { profile } = useAuthStore()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('connections')
+  const [acceptedConnections, setAcceptedConnections] = useState<any[]>([])
   const [incomingRequests, setIncomingRequests] = useState<any[]>([])
   const [sentRequests, setSentRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,12 +43,13 @@ export default function Connections() {
     if (!profile?.id) return
 
     setLoading(true)
-    const [incoming, sent] = await Promise.all([
+    const [accepted, incoming, sent] = await Promise.all([
+      fetchAcceptedConnections(profile.id),
       fetchIncomingRequests(profile.id),
       fetchSentRequests(profile.id),
     ])
     const local = loadLocalConnectionRequests()
-    const profileIds = [...incoming, ...sent].flatMap((request) => [
+    const profileIds = [...accepted, ...incoming, ...sent].flatMap((request) => [
       request.requester_id,
       request.receiver_id,
     ])
@@ -57,16 +60,37 @@ export default function Connections() {
       requester: request.requester || profilesById.get(request.requester_id),
       receiver: request.receiver || profilesById.get(request.receiver_id),
     }))
+    const pendingOutgoing = (requests: any[]) => requests.filter((request) =>
+      (request.requester_id === profile.id || request.requesterId === profile.id) && request.status === 'pending'
+    )
+    const pendingIncoming = (requests: any[]) => requests.filter((request) =>
+      (request.receiver_id === profile.id || request.receiverId === profile.id || request.receiverUsername === profile.username) &&
+      request.status === 'pending'
+    )
+    const acceptedForProfile = (requests: any[]) => requests.filter((request) =>
+      (request.requester_id === profile.id ||
+        request.receiver_id === profile.id ||
+        request.requesterId === profile.id ||
+        request.receiverId === profile.id ||
+        request.receiverUsername === profile.username) &&
+      request.status === 'accepted'
+    )
+
+    setAcceptedConnections(
+      accepted.length > 0
+        ? attachProfiles(accepted)
+        : acceptedForProfile(local)
+    )
 
     setIncomingRequests(
       incoming.length > 0
-        ? attachProfiles(incoming)
-        : local.filter((request) => request.receiverId === profile.id || request.receiverUsername === profile.username)
+        ? pendingIncoming(attachProfiles(incoming))
+        : pendingIncoming(local)
     )
     setSentRequests(
       sent.length > 0
-        ? attachProfiles(sent)
-        : local.filter((request) => request.requesterId === profile.id)
+        ? pendingOutgoing(attachProfiles(sent))
+        : pendingOutgoing(local)
     )
     setLoading(false)
   }
@@ -89,11 +113,10 @@ export default function Connections() {
     return <div className="py-20 text-center">Profile not found</div>
   }
 
-  const acceptedConnections = [...incomingRequests, ...sentRequests].filter((request) => request.status === 'accepted')
   const tabs = [
     { id: 'connections' as const, label: 'Connections', icon: <Users className="w-4 h-4" />, count: acceptedConnections.length },
     { id: 'received' as const, label: 'Requests Received', icon: <UserRoundCheck className="w-4 h-4" />, count: incomingRequests.length },
-    { id: 'sent' as const, label: 'Requests Sent', icon: <Send className="w-4 h-4" />, count: sentRequests.length },
+    { id: 'sent' as const, label: 'Pending Requests', icon: <Send className="w-4 h-4" />, count: sentRequests.length },
   ]
 
   const visibleRequests = activeTab === 'connections'
@@ -187,7 +210,7 @@ function RequestList({
             ? 'Accepted connections will appear here.'
             : mode === 'received'
               ? 'Incoming requests will appear here.'
-              : 'Requests you send will appear here.'}
+              : 'Outgoing requests awaiting a response will appear here.'}
         </p>
       </div>
     )

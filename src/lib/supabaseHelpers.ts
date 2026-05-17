@@ -533,14 +533,15 @@ export async function fetchIncomingRequests(professorId: string) {
         .from('connections')
         .select('id, requester_id, receiver_id, status, created_at')
         .eq('receiver_id', professorId)
+        .eq('status', 'pending')
         .order('created_at', { ascending: false }),
-      'Supabase incoming requests'
+      'Supabase pending incoming requests'
     )
 
     if (error || !data) return []
     return data
   } catch (error) {
-    console.warn('Incoming requests lookup failed:', error)
+    console.warn('Pending incoming requests lookup failed:', error)
     return []
   }
 }
@@ -554,14 +555,37 @@ export async function fetchSentRequests(requesterId: string) {
         .from('connections')
         .select('id, requester_id, receiver_id, status, created_at')
         .eq('requester_id', requesterId)
+        .eq('status', 'pending')
         .order('created_at', { ascending: false }),
-      'Supabase sent requests'
+      'Supabase pending outgoing requests'
     )
 
     if (error || !data) return []
     return data
   } catch (error) {
-    console.warn('Sent requests lookup failed:', error)
+    console.warn('Pending outgoing requests lookup failed:', error)
+    return []
+  }
+}
+
+export async function fetchAcceptedConnections(profileId: string) {
+  if (!isSupabaseConfigured()) return []
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('connections')
+        .select('id, requester_id, receiver_id, status, created_at')
+        .eq('status', 'accepted')
+        .or(`requester_id.eq.${profileId},receiver_id.eq.${profileId}`)
+        .order('created_at', { ascending: false }),
+      'Supabase accepted connections'
+    )
+
+    if (error || !data) return []
+    return data
+  } catch (error) {
+    console.warn('Accepted connections lookup failed:', error)
     return []
   }
 }
