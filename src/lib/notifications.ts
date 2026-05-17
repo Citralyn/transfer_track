@@ -119,7 +119,7 @@ async function fetchReactionNotifications(profileId: string): Promise<AppNotific
       actorName,
       text: `${actorName} liked your post.`,
       createdAt: like.created_at,
-      href: '/feed',
+      href: `/feed/${like.post_id}`,
     }
   })
 }
@@ -184,7 +184,7 @@ async function fetchAcceptedConnectionNotifications(profileId: string): Promise<
       actorName,
       text: `${actorName} accepted your connection request.`,
       createdAt: connection.updated_at || connection.created_at,
-      href: '/connections',
+      href: connection.profiles?.username ? `/profile/${connection.profiles.username}` : '/connections',
     }
   })
 }

@@ -415,6 +415,9 @@ function formatNotificationTime(value: string) {
 function getNotificationTarget(href: string) {
   const knownTargets = ['/feed', '/connections', '/messages']
   if (href.startsWith('/messages/')) return href
+  if (href.startsWith('/feed/')) return href
+  if (href.startsWith('/profile/')) return href
+  if (href.startsWith('/opportunities/')) return href
   if (knownTargets.includes(href)) return href
   return '/feed'
 }
