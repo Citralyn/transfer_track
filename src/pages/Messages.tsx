@@ -67,10 +67,13 @@ export default function Messages() {
 
     const subscription = subscribeToMessages(conversationId, (msg) => {
       setMessages(prev => {
-        // Avoid duplicate messages if the one we just sent also comes back via websocket
         if (prev.some(m => m.id === msg.id)) return prev
         return [...prev, msg]
       })
+      // Increment message count for this conversation in the sidebar
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+      ))
     })
 
     return () => {
@@ -92,6 +95,10 @@ export default function Messages() {
       const sentMsg = await sendMessage(conversationId, profile.id, newMessage)
       setMessages(prev => [...prev, sentMsg])
       setNewMessage('')
+      // Increment message count for this conversation in the sidebar
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+      ))
     } catch (error) {
       console.error('Failed to send message:', error)
     } finally {
@@ -100,6 +107,12 @@ export default function Messages() {
   }
 
   const filteredConversations = conversations.filter(c => {
+    // Only show conversations that have messages OR are currently selected (active)
+    const hasMessages = (c.messageCount || 0) > 0
+    const isActive = c.id === conversationId
+    
+    if (!hasMessages && !isActive) return false
+
     const otherParticipant = c.participants[0]?.profiles
     return otherParticipant?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            otherParticipant?.username.toLowerCase().includes(searchQuery.toLowerCase())

@@ -22,6 +22,7 @@ export interface Conversation {
     }
   }[]
   last_message?: Message
+  messageCount?: number
 }
 
 /**
@@ -110,6 +111,9 @@ export async function fetchConversations(userId: string) {
             avatar_url,
             role
           )
+        ),
+        messages (
+          id
         )
       )
     `)
@@ -125,7 +129,8 @@ export async function fetchConversations(userId: string) {
     return {
       id: conv.id,
       created_at: conv.created_at,
-      participants: conv.conversation_participants.filter((p: any) => p.user_id !== userId)
+      participants: conv.conversation_participants.filter((p: any) => p.user_id !== userId),
+      messageCount: conv.messages?.length || 0
     }
   })
 }
