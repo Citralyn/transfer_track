@@ -6,6 +6,8 @@ import {
   fetchMessages, 
   sendMessage, 
   subscribeToMessages,
+  subscribeToAllUserMessages,
+  fetchConversation,
   type Message,
   type Conversation
 } from '@/lib/messaging'
@@ -51,6 +53,40 @@ export default function Messages() {
     loadConvs()
   }, [profile?.id])
 
+  // 1.5 Global message listener for sidebar updates
+  useEffect(() => {
+    if (!profile?.id) return
+
+    const subscription = subscribeToAllUserMessages(async (msg) => {
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === msg.conversation_id)
+        
+        if (exists) {
+          // Update count for existing conversation
+          return prev.map(c => 
+            c.id === msg.conversation_id ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+          )
+        } else {
+          // This might be a brand new conversation for the recipient!
+          // We need to fetch the details to add it to the sidebar.
+          fetchConversation(msg.conversation_id, profile.id).then(newConv => {
+            if (newConv) {
+              setConversations(current => {
+                if (current.some(c => c.id === newConv.id)) return current
+                return [newConv, ...current]
+              })
+            }
+          })
+          return prev
+        }
+      })
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [profile?.id])
+
   // 2. Fetch messages for active conversation & subscribe to new ones
   useEffect(() => {
     if (!conversationId) {
@@ -67,10 +103,13 @@ export default function Messages() {
 
     const subscription = subscribeToMessages(conversationId, (msg) => {
       setMessages(prev => {
-        // Avoid duplicate messages if the one we just sent also comes back via websocket
         if (prev.some(m => m.id === msg.id)) return prev
         return [...prev, msg]
       })
+      // Increment message count for this conversation in the sidebar
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+      ))
     })
 
     return () => {
@@ -92,6 +131,10 @@ export default function Messages() {
       const sentMsg = await sendMessage(conversationId, profile.id, newMessage)
       setMessages(prev => [...prev, sentMsg])
       setNewMessage('')
+      // Increment message count for this conversation in the sidebar
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+      ))
     } catch (error) {
       console.error('Failed to send message:', error)
     } finally {
@@ -100,6 +143,12 @@ export default function Messages() {
   }
 
   const filteredConversations = conversations.filter(c => {
+    // Only show conversations that have messages OR are currently selected (active)
+    const hasMessages = (c.messageCount || 0) > 0
+    const isActive = c.id === conversationId
+    
+    if (!hasMessages && !isActive) return false
+
     const otherParticipant = c.participants[0]?.profiles
     return otherParticipant?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            otherParticipant?.username.toLowerCase().includes(searchQuery.toLowerCase())
