@@ -51,10 +51,9 @@ function App() {
           setProfile(null)
         }
       } catch (error) {
-        console.warn('Auth initialization fell back to local profile:', error)
-        const localProfile = loadLocalProfile()
-        setProfile(localProfile)
-        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        console.warn('Auth initialization failed:', error)
+        setProfile(null)
+        setUser(null)
         setSession(null)
       } finally {
         setLoading(false)
@@ -68,6 +67,7 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      setProfile(null)
       if (session?.user) {
         await fetchProfile(session.user.id)
       } else {
@@ -91,13 +91,13 @@ function App() {
       )
 
       if (error) {
-        console.warn('Supabase profile lookup failed, using local profile:', error.message)
+        console.warn('Supabase profile lookup failed:', error.message)
       }
 
       setProfile(data || null)
     } catch (error) {
-      console.warn('Supabase profile lookup unavailable, using local profile:', error)
-      setProfile(loadLocalProfile())
+      console.warn('Supabase profile lookup unavailable:', error)
+      setProfile(null)
     } finally {
       setLoading(false)
     }
@@ -143,12 +143,6 @@ function ProtectedRoute() {
 
   if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
   
-  const isOnboardingPath = location.pathname.startsWith('/onboarding')
-  
-  if (!profile && !isOnboardingPath) {
-    return <Navigate to="/onboarding" replace />
-  }
-
   return <Outlet />
 }
 

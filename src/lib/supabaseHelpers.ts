@@ -57,6 +57,7 @@ export interface AuthBridgeInput {
   password?: string
   name?: string
   role?: Role
+  mode?: 'login' | 'signup'
 }
 
 export interface LocalAuthUser {
@@ -94,6 +95,7 @@ export async function signInOrSignUpDemo(input: string | AuthBridgeInput) {
   const payload = typeof input === 'string' ? { email: input } : input
   const email = payload.email.trim().toLowerCase()
   const password = payload.password || DEMO_PASSWORD
+  const mode = payload.mode || 'signup'
 
   if (!email) {
     return { data: null, error: new Error('Email is required for demo login.') }
@@ -104,17 +106,7 @@ export async function signInOrSignUpDemo(input: string | AuthBridgeInput) {
   }
 
   try {
-    const signInResponse = await withTimeout(
-      supabase.auth.signInWithPassword({ email, password }),
-      'Supabase sign-in'
-    )
-
-    if (signInResponse.data?.user) {
-      return { data: signInResponse.data, error: null }
-    }
-
-    if (signInResponse.error) {
-      console.warn('Supabase sign-in failed, trying sign-up:', signInResponse.error.message)
+    if (mode === 'signup') {
       const signUpResponse = await withTimeout(
         supabase.auth.signUp({
           email,
@@ -133,26 +125,22 @@ export async function signInOrSignUpDemo(input: string | AuthBridgeInput) {
         return { data: signUpResponse.data, error: null }
       }
 
-      if (signUpResponse.error?.message?.toLowerCase().includes('already registered')) {
-        const retryResponse = await withTimeout(
-          supabase.auth.signInWithPassword({ email, password }),
-          'Supabase sign-in retry'
-        )
-
-        if (retryResponse.data?.user) {
-          return { data: retryResponse.data, error: null }
-        }
-      }
-
-      console.warn('Supabase sign-up failed, using local demo auth:', signUpResponse.error?.message)
-      return { data: makeLocalAuthData(email), error: null, fallback: true }
+      return { data: null, error: signUpResponse.error || new Error('Unable to create account.') }
     }
 
-    console.warn('Supabase auth returned no user, using local demo auth.')
-    return { data: makeLocalAuthData(email), error: null, fallback: true }
+    const signInResponse = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      'Supabase sign-in'
+    )
+
+    if (signInResponse.data?.user) {
+      return { data: signInResponse.data, error: null }
+    }
+
+    return { data: null, error: signInResponse.error || new Error('Unable to sign in.') }
   } catch (error) {
-    console.warn('Supabase auth unavailable, using local demo auth:', error)
-    return { data: makeLocalAuthData(email), error: null, fallback: true }
+    console.warn('Supabase auth unavailable:', error)
+    return { data: null, error: error instanceof Error ? error : new Error('Supabase auth is unavailable.') }
   }
 }
 
@@ -176,9 +164,8 @@ export async function upsertProfile(profile: ProfilePayload) {
     gender: profile.gender || null,
   }
 
-  saveLocalProfile(normalizedProfile)
-
   if (!isSupabaseConfigured()) {
+    saveLocalProfile(normalizedProfile)
     return { data: normalizedProfile, error: null, fallback: true }
   }
 
@@ -193,14 +180,14 @@ export async function upsertProfile(profile: ProfilePayload) {
     )
 
     if (error) {
-      console.warn('Supabase profile upsert failed, keeping local profile:', error.message)
-      return { data: normalizedProfile, error: null, fallback: true }
+      console.warn('Supabase profile upsert failed:', error.message)
+      return { data: null, error }
     }
 
     return { data: data || normalizedProfile, error: null }
   } catch (error) {
-    console.warn('Supabase profile upsert unavailable, keeping local profile:', error)
-    return { data: normalizedProfile, error: null, fallback: true }
+    console.warn('Supabase profile upsert unavailable:', error)
+    return { data: null, error: error instanceof Error ? error : new Error('Profile save failed.') }
   }
 }
 

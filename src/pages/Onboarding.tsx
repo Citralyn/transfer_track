@@ -83,6 +83,14 @@ export default function Onboarding() {
       setError('College or university is required.')
       return false
     }
+    if (currentStep === 'about' && formData.role === 'student' && !formData.department.trim()) {
+      setError('Major is required for students.')
+      return false
+    }
+    if (currentStep === 'about' && formData.role === 'student' && !formData.academic_year.trim()) {
+      setError('Academic year is required for students.')
+      return false
+    }
     if (currentStep === 'about' && formData.role === 'professor' && !formData.department.trim()) {
       setError('Department is required for professors.')
       return false
@@ -109,8 +117,12 @@ export default function Onboarding() {
       })
 
       const { data, error } = await upsertProfile(profileData)
-      if (error) console.warn('Onboarding save failed, using local profile:', (error as Error).message)
-      setProfile(data || profileData)
+      if (error || !data) {
+        console.warn('Onboarding save failed:', error)
+        setError('We could not save your profile. Please check your Supabase profile permissions.')
+        return false
+      }
+      setProfile(data)
       if (avatarFile) {
         setAvatarFile(null)
         setAvatarPreview(null)
@@ -139,6 +151,14 @@ export default function Onboarding() {
   const handleBack = () => {
     if (isFirstStep) return
     navigate(`/onboarding/${steps[stepIndex - 1]}`)
+  }
+
+  const handleSkip = () => {
+    if (isFinalStep) {
+      navigate('/profile', { replace: true })
+      return
+    }
+    navigate(`/onboarding/${steps[stepIndex + 1]}`)
   }
 
   return (
@@ -188,13 +208,24 @@ export default function Onboarding() {
               </button>
             ) : <div />}
 
-            <button
-              onClick={handleNext}
-              disabled={loading}
-              className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
-            >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : isFinalStep ? <>Finish <Check className="w-5 h-5" /></> : <>Next <ArrowRight className="w-5 h-5" /></>}
-            </button>
+            <div className="flex items-center gap-3">
+              {currentStep !== 'about' && (
+                <button
+                  onClick={handleSkip}
+                  disabled={loading}
+                  className="px-6 py-4 rounded-2xl font-bold text-brand-500 hover:bg-brand-50 transition-colors disabled:opacity-50"
+                >
+                  Skip
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={loading}
+                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
+              >
+                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : isFinalStep ? <>Finish <Check className="w-5 h-5" /></> : <>Next <ArrowRight className="w-5 h-5" /></>}
+              </button>
+            </div>
           </div>
         </div>
       </div>

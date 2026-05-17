@@ -45,8 +45,12 @@ export default function Settings() {
       })
 
       const { data, error } = await upsertProfile(profileData)
-      if (error) console.warn('Profile update failed, using local update:', (error as Error).message)
-      setProfile(data || profileData)
+      if (error || !data) {
+        console.warn('Profile update failed:', error)
+        setError('We could not save your profile. Please check your Supabase profile permissions.')
+        return
+      }
+      setProfile(data)
       if (avatarFile) {
         setAvatarFile(null)
         setAvatarPreview(null)

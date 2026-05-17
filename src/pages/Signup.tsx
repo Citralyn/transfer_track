@@ -56,6 +56,7 @@ export default function Signup() {
         password: formData.password,
         name: formData.full_name,
         role: formData.role,
+        mode: 'signup',
       })
 
       if (authError) {
@@ -81,14 +82,13 @@ export default function Signup() {
 
       const { data: profile, error: profileError } = await upsertProfile(profileData)
 
-      if (profileError) {
+      if (profileError || !profile) {
         console.warn('Profile save failed:', (profileError as Error).message)
-        setProfile(profileData)
-        navigate('/onboarding/about')
-      } else {
-        setProfile(profile)
-        navigate('/onboarding/about')
+        setError('Account created, but we could not create your profile. Please check your Supabase profile permissions.')
+        return
       }
+      setProfile(profile)
+      navigate('/onboarding/about')
     } catch (error) {
       console.warn('Signup failed:', error)
       setError('Sign-up hit a snag. Please try again.')

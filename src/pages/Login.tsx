@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { isProfileOnboardingComplete, makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { ArrowRight, Loader2, Lock } from 'lucide-react'
@@ -20,9 +20,12 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSession(null)
+    setUser(null)
+    setProfile(null)
 
     try {
-      const { data, error: authError } = await signInOrSignUpDemo({ email, password, role: 'student' })
+      const { data, error: authError } = await signInOrSignUpDemo({ email, password, role: 'student', mode: 'login' })
 
       if (authError) {
         setError(authError.message)
@@ -50,7 +53,7 @@ export default function Login() {
           )
           profile = existingProfile
         } catch (error) {
-          console.warn('Supabase profile lookup failed, using local profile:', error)
+          console.warn('Supabase profile lookup failed:', error)
         }
       }
 
@@ -60,12 +63,16 @@ export default function Login() {
           role: 'student',
           email: data.user.email || email,
         })
-        const { data: upsertedProfile } = await upsertProfile(profilePayload)
+        const { data: upsertedProfile, error: profileError } = await upsertProfile(profilePayload)
+        if (profileError || !upsertedProfile) {
+          setError('Signed in, but we could not create your profile. Please check your Supabase profile permissions.')
+          return
+        }
         profile = upsertedProfile
       }
 
       setProfile(profile)
-      navigate(isProfileOnboardingComplete(profile) ? (profile?.role === 'professor' ? '/professor-dashboard' : from) : '/onboarding/about', { replace: true })
+      navigate(profile?.role === 'professor' ? '/professor-dashboard' : from, { replace: true })
     } catch (error) {
       console.warn('Login failed:', error)
       setError('Sign-in hit a snag. Please try again.')
