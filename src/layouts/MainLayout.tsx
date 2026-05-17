@@ -12,18 +12,29 @@ import {
   X
 } from 'lucide-react'
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { clsx } from 'clsx'
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { profile, signOut } = useAuthStore()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
+  }
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const query = searchQuery.trim()
+    if (query) {
+      navigate(`/search?q=${encodeURIComponent(query)}`)
+      setIsMobileMenuOpen(false)
+    }
   }
 
   const navItems = [
@@ -105,6 +116,16 @@ export default function MainLayout() {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-[65px] bg-white z-40 p-6 animate-in slide-in-from-top duration-300">
+          <form onSubmit={handleSearch} className="relative mb-5">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search everything..."
+              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-brand-50 border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+            />
+          </form>
           <nav className="space-y-4">
             {navItems.map((item) => (
               <NavLink
@@ -136,14 +157,16 @@ export default function MainLayout() {
         <div className="max-w-4xl mx-auto">
           {/* Header with Search and Profile */}
           <div className="hidden md:flex items-center justify-between mb-8">
-            <div className="relative flex-1 max-w-md">
+            <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
               <input 
                 type="text" 
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search students, professors, labs..."
                 className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               />
-            </div>
+            </form>
             <div className="flex items-center gap-4 ml-6 relative group">
               <button className="w-12 h-12 flex items-center justify-center bg-white border border-brand-100 rounded-2xl text-brand-500 hover:text-brand-800 transition-all shadow-sm relative">
                 <Bell className="w-6 h-6" />
