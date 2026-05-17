@@ -53,8 +53,10 @@ function App() {
       } catch (error) {
         console.warn('Auth initialization fell back to local profile:', error)
         const localProfile = loadLocalProfile()
-        setProfile(localProfile)
-        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        if (localProfile) {
+          setProfile(localProfile)
+          setUser({ id: localProfile.id, email: localProfile.email })
+        }
         setSession(null)
       } finally {
         setLoading(false)
@@ -92,13 +94,13 @@ function App() {
       )
 
       if (error) {
-        console.warn('Supabase profile lookup failed, using local profile:', error.message)
+        console.warn('Supabase profile lookup failed, trying local profile:', error.message)
       }
 
       setProfile(data || loadLocalProfile(userId))
     } catch (error) {
-      console.warn('Supabase profile lookup unavailable, using local profile:', error)
-      setProfile(loadLocalProfile())
+      console.warn('Supabase profile lookup unavailable, trying local profile:', error)
+      setProfile(loadLocalProfile(userId))
     } finally {
       setLoading(false)
     }
