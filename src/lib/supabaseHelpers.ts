@@ -19,6 +19,7 @@ export interface ProfilePayload {
   academic_year?: string | null
   department?: string | null
   bio?: string | null
+  avatar_url?: string | null
   transfer_goals?: string | null
   research_areas?: string[] | null
   interests?: string[] | null
@@ -171,6 +172,7 @@ export async function upsertProfile(profile: ProfilePayload) {
     skills: profile.skills || null,
     transfer_goals: profile.transfer_goals || null,
     bio: profile.bio || null,
+    avatar_url: profile.avatar_url || null,
     gender: profile.gender || null,
   }
 
@@ -424,6 +426,35 @@ export async function getExistingConnection(requesterId: string, receiverId: str
     console.warn('Existing connection lookup failed:', error)
     return null
   }
+}
+
+export async function uploadProfileImage(profileId: string, image: File) {
+  if (!isSupabaseConfigured()) {
+    return readFileAsDataUrl(image)
+  }
+
+  const fileExt = image.name.split('.').pop() || 'jpg'
+  const fileName = `avatars/${profileId}-${Date.now()}.${fileExt}`
+  const { data, error } = await supabase.storage
+    .from('post_images')
+    .upload(fileName, image)
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('post_images')
+    .getPublicUrl(data.path)
+
+  return publicUrl
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error || new Error('Unable to read image file.'))
+    reader.readAsDataURL(file)
+  })
 }
 
 export async function getRelationshipStatus(currentProfileId: string, otherProfileId: string): Promise<RelationshipStatus> {
@@ -680,6 +711,7 @@ export function makeProfilePayload(input: {
   skills?: string[] | null
   transfer_goals?: string | null
   bio?: string | null
+  avatar_url?: string | null
   gender?: string | null
 }): ProfilePayload {
   const email = input.email || ''
@@ -694,14 +726,21 @@ export function makeProfilePayload(input: {
     school_name: input.school_name || null,
     school_type: input.school_type || (input.role === 'student' ? 'community_college' : null),
     academic_year: input.role === 'student' ? input.academic_year || null : null,
-    department: input.role === 'professor' ? input.department || null : null,
+    department: input.department || null,
     research_areas: input.role === 'professor' ? input.research_areas || null : null,
     interests: input.role === 'student' ? input.interests || null : null,
     skills: input.role === 'student' ? input.skills || null : null,
     transfer_goals: input.role === 'student' ? input.transfer_goals || null : null,
     bio: input.bio || null,
+    avatar_url: input.avatar_url || null,
     gender: input.gender || null,
   }
+}
+
+export function isProfileOnboardingComplete(profile?: Partial<ProfilePayload> | null) {
+  if (!profile?.role || !profile.full_name || !profile.username || !profile.school_name) return false
+  if (profile.role === 'professor' && !profile.department) return false
+  return true
 }
 
 export function isUuid(value?: string | null) {

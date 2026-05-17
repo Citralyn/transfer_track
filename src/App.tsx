@@ -112,7 +112,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<Navigate to="/onboarding/about" replace />} />
+            <Route path="/onboarding/:step" element={<Onboarding />} />
             <Route element={<MainLayout />}>
               <Route path="/feed" element={<Feed />} />
               <Route path="/opportunities" element={<Opportunities />} />
@@ -142,14 +143,10 @@ function ProtectedRoute() {
 
   if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
   
-  const isOnboardingPath = location.pathname === '/onboarding'
+  const isOnboardingPath = location.pathname.startsWith('/onboarding')
   
   if (!profile && !isOnboardingPath) {
     return <Navigate to="/onboarding" replace />
-  }
-
-  if (profile && isOnboardingPath) {
-    return <Navigate to="/feed" replace />
   }
 
   return <Outlet />

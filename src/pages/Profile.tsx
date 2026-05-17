@@ -153,7 +153,11 @@ export default function Profile() {
         </div>
         <div className="px-8 pb-8 flex flex-col md:flex-row items-end gap-6 -mt-16 relative z-10">
           <div className="w-40 h-40 rounded-[3rem] border-8 border-white gradient-brand flex items-center justify-center text-white font-bold text-6xl shadow-xl">
-            {profile.full_name?.charAt(0)}
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-[2.5rem]" />
+            ) : (
+              profile.full_name?.charAt(0)
+            )}
           </div>
           <div className="flex-1 pb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -211,34 +215,35 @@ export default function Profile() {
             </h3>
             <div className="space-y-5">
               <InfoItem icon={<Building2 className="w-5 h-5" />} label="Institution" value={profile.school_name} />
-              {isProfessor ? (
-                <InfoItem icon={<GraduationCap className="w-5 h-5" />} label="Department" value={profile.department} />
-              ) : (
-                <InfoItem icon={<BookOpen className="w-5 h-5" />} label="Year" value={profile.academic_year} />
-              )}
+              <InfoItem icon={<GraduationCap className="w-5 h-5" />} label={isProfessor ? 'Department' : 'Major'} value={profile.department} />
+              {!isProfessor && <InfoItem icon={<BookOpen className="w-5 h-5" />} label="Year" value={profile.academic_year} />}
               <InfoItem icon={<MapPin className="w-5 h-5" />} label="Location" value="California, USA" />
               <InfoItem icon={<Users className="w-5 h-5" />} label="Connections" value={connectionCount.toString()} />
             </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-brand-900 mb-6">Interests</h3>
-            <div className="flex flex-wrap gap-2">
-              {(profile.interests || profile.research_areas || ['STEM', 'Research', 'Transfer Prep', 'Networking']).map((tag: string) => (
-                <span key={tag} className="bg-accent-50 text-accent-700 px-4 py-2 rounded-xl text-sm font-bold border border-accent-100">
-                  {tag}
-                </span>
-              ))}
+          {(profile.interests?.length || profile.research_areas?.length) && (
+            <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
+              <h3 className="text-lg font-bold text-brand-900 mb-6">Interests</h3>
+              <div className="flex flex-wrap gap-2">
+                {(profile.interests || profile.research_areas || []).map((tag: string) => (
+                  <span key={tag} className="bg-accent-50 text-accent-700 px-4 py-2 rounded-xl text-sm font-bold border border-accent-100">
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="md:col-span-2 space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10">
             <h3 className="text-2xl font-bold text-brand-900 mb-6">Biography</h3>
-            <p className="text-brand-700 leading-relaxed text-lg whitespace-pre-wrap">
-              {profile.bio || `Welcome to ${profile.full_name}'s profile. This user is a ${profile.role} at ${profile.school_name || 'Transfer Track'}.`}
-            </p>
+            {profile.bio ? (
+              <p className="text-brand-700 leading-relaxed text-lg whitespace-pre-wrap">{profile.bio}</p>
+            ) : (
+              <p className="text-brand-400 leading-relaxed text-lg">No biography added yet.</p>
+            )}
 
             {isProfessor && profile.research_areas && (
               <div className="mt-8 pt-8 border-t border-brand-50">
@@ -267,14 +272,14 @@ export default function Profile() {
               </div>
             ) : (
               <div className="space-y-6 relative z-10">
-                <div className="p-6 bg-brand-50 rounded-3xl border border-brand-100">
+                {profile.transfer_goals && <div className="p-6 bg-brand-50 rounded-3xl border border-brand-100">
                   <h4 className="font-bold text-brand-900 mb-2">Target Universities</h4>
-                  <p className="text-brand-600">{profile.transfer_goals || 'UC Berkeley, UCLA, Stanford University'}</p>
-                </div>
-                <div className="p-6 bg-accent-50/50 rounded-3xl border border-accent-100">
+                  <p className="text-brand-600 whitespace-pre-wrap">{profile.transfer_goals}</p>
+                </div>}
+                {profile.interests?.length && <div className="p-6 bg-accent-50/50 rounded-3xl border border-accent-100">
                   <h4 className="font-bold text-accent-800 mb-2">Academic Interests</h4>
-                  <p className="text-accent-700">{profile.interests?.join(', ') || 'Machine Learning, Physics, Mathematical Modeling'}</p>
-                </div>
+                  <p className="text-accent-700">{profile.interests.join(', ')}</p>
+                </div>}
               </div>
             )}
           </div>

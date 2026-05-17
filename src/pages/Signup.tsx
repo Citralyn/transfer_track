@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { FALLBACK_SCHOOLS, makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { makeProfilePayload, signInOrSignUpDemo, upsertProfile } from '@/lib/supabaseHelpers'
 import { useAuthStore } from '@/store/useAuthStore'
 import { 
   GraduationCap, 
@@ -14,51 +13,23 @@ import {
   Mail,
   AtSign,
   Lock,
-  Building2
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 export default function Signup() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [schools, setSchools] = useState<any[]>(FALLBACK_SCHOOLS)
   const [error, setError] = useState<string | null>(null)
   const { setSession, setUser, setProfile } = useAuthStore()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     role: '' as 'student' | 'professor' | '',
-    school_name: '',
-    school_type: '',
     full_name: '',
     username: '',
     email: '',
     password: '',
-    academic_year: '',
-    department: '',
-    gender: 'prefer-not-to-say'
   })
-
-  useEffect(() => {
-    const fetchSchools = async () => {
-      if (!isSupabaseConfigured()) return
-
-      try {
-        const { data, error } = await withTimeout(
-          supabase.from('schools').select('*'),
-          'Supabase schools lookup'
-        )
-        if (error) {
-          console.warn('Supabase schools lookup failed, using fallback schools:', error.message)
-          return
-        }
-        if (data?.length) setSchools(data)
-      } catch (error) {
-        console.warn('Supabase schools unavailable, using fallback schools:', error)
-      }
-    }
-    fetchSchools()
-  }, [])
 
   const handleNext = () => {
     setError(null)
@@ -106,11 +77,6 @@ export default function Signup() {
         full_name: formData.full_name,
         username: formData.username,
         email: formData.email,
-        school_name: formData.school_name,
-        school_type: formData.school_type,
-        academic_year: formData.academic_year || null,
-        department: formData.department || null,
-        gender: formData.gender
       })
 
       const { data: profile, error: profileError } = await upsertProfile(profileData)
@@ -118,10 +84,10 @@ export default function Signup() {
       if (profileError) {
         console.warn('Profile save failed:', (profileError as Error).message)
         setProfile(profileData)
-        navigate(profileData.role === 'professor' ? '/professor-dashboard' : '/feed')
+        navigate('/onboarding/about')
       } else {
         setProfile(profile)
-        navigate(profile?.role === 'professor' ? '/professor-dashboard' : '/feed')
+        navigate('/onboarding/about')
       }
     } catch (error) {
       console.warn('Signup failed:', error)
@@ -142,7 +108,7 @@ export default function Signup() {
             <span className="text-2xl font-bold text-brand-900 tracking-tight">Transfer Track</span>
           </Link>
           <div className="flex items-center justify-center gap-2 mb-2">
-             {[1, 2, 3].map(s => (
+             {[1, 2].map(s => (
                <div key={s} className={clsx(
                  "h-1.5 rounded-full transition-all duration-300",
                  step === s ? "w-8 gradient-brand" : "w-2 bg-brand-200"
@@ -166,14 +132,14 @@ export default function Signup() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
                 <RoleCard 
                   active={formData.role === 'student'}
-                  onClick={() => setFormData({ ...formData, role: 'student', school_type: 'community_college' })}
+                  onClick={() => setFormData({ ...formData, role: 'student' })}
                   icon={<BookOpen className="w-10 h-10" />}
                   title="Community College Student"
                   description="I'm preparing to transfer to a 4-year university."
                 />
                 <RoleCard 
                   active={formData.role === 'professor'}
-                  onClick={() => setFormData({ ...formData, role: 'professor', school_type: 'university' })}
+                  onClick={() => setFormData({ ...formData, role: 'professor' })}
                   icon={<GraduationCap className="w-10 h-10" />}
                   title="University Professor"
                   description="I'm teaching at a 4-year university and want to connect."
@@ -183,59 +149,6 @@ export default function Signup() {
           )}
 
           {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2 text-center">School Selection</h2>
-              <p className="text-brand-600 mb-8 text-center">Where are you currently {formData.role === 'student' ? 'studying' : 'teaching'}?</p>
-              
-              <div className="space-y-6 flex-1 max-w-md mx-auto w-full">
-                <div>
-                  <label className="block text-sm font-semibold text-brand-900 mb-3">
-                    California {formData.role === 'student' ? 'Community College' : 'University'}
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
-                    <select 
-                      value={formData.school_name}
-                      onChange={(e) => setFormData({ ...formData, school_name: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white appearance-none text-lg text-brand-900 shadow-sm"
-                    >
-                      <option value="">Select a school...</option>
-                      {schools
-                        .filter(s => s.type === formData.school_type)
-                        .map(s => (
-                          <option key={s.id} value={s.name}>{s.name}</option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                </div>
-
-                {formData.role === 'student' && (
-                  <div>
-                    <label className="block text-sm font-semibold text-brand-900 mb-3 text-center">Academic Year</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {['Freshman', 'Sophomore', 'Junior', 'Senior'].map(year => (
-                        <button
-                          key={year}
-                          onClick={() => setFormData({ ...formData, academic_year: year })}
-                          className={clsx(
-                            "px-4 py-3 rounded-xl border font-bold text-sm transition-all",
-                            formData.academic_year === year 
-                              ? "bg-accent-50 border-accent-200 text-accent-700 shadow-sm" 
-                              : "border-brand-100 text-brand-500 hover:border-brand-200 hover:bg-brand-50"
-                          )}
-                        >
-                          {year}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
               <h2 className="text-3xl font-bold text-brand-900 mb-2 text-center">Account Details</h2>
               <p className="text-brand-600 mb-8 text-center">Create your login information</p>
@@ -276,29 +189,6 @@ export default function Signup() {
                   onChange={v => setFormData({...formData, password: v})}
                 />
 
-                {formData.role === 'professor' && (
-                  <InputWithIcon 
-                    icon={<GraduationCap className="w-5 h-5" />}
-                    label="Department"
-                    placeholder="e.g. Computer Science"
-                    value={formData.department}
-                    onChange={v => setFormData({...formData, department: v})}
-                  />
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold text-brand-400 uppercase tracking-widest mb-2 ml-1">Gender</label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-4 py-3.5 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white shadow-sm text-brand-900"
-                  >
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="non-binary">Non-binary</option>
-                  </select>
-                </div>
               </form>
             </div>
           )}
@@ -318,9 +208,9 @@ export default function Signup() {
               </Link>
             )}
 
-            {step < 3 ? (
+            {step < 2 ? (
               <button
-                disabled={step === 1 ? !formData.role : !formData.school_name}
+                disabled={!formData.role}
                 onClick={handleNext}
                 className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
               >
