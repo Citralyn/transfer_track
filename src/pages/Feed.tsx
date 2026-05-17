@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, useRef } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
@@ -29,6 +29,7 @@ import ReactMarkdown from 'react-markdown'
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function Feed() {
+  const { postId } = useParams()
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const { profile } = useAuthStore()
 
@@ -62,6 +63,17 @@ export default function Feed() {
     }
   })
 
+  const selectedPostExists = posts?.some((post) => post.id === postId)
+  const missingRoutePost = Boolean(postId && !isLoading && posts && !selectedPostExists)
+
+  useEffect(() => {
+    if (!postId || isLoading || !selectedPostExists) return
+    document.getElementById(`post-${postId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }, [postId, isLoading, selectedPostExists])
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
@@ -82,13 +94,19 @@ export default function Feed() {
 
         {/* Posts List */}
         <div className="space-y-6 pb-20 md:pb-10">
+          {missingRoutePost && (
+            <div className="rounded-[2rem] border border-amber-100 bg-amber-50 px-5 py-4 font-semibold text-amber-800">
+              This post could not be found.
+            </div>
+          )}
+
           {isLoading ? (
             <div className="flex justify-center py-20">
                <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
             </div>
           ) : posts && posts.length > 0 ? (
             posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} isHighlighted={post.id === postId} />
             ))
           ) : (
             <div className="py-20 text-center bg-white rounded-[2rem] border border-brand-100">
@@ -369,7 +387,7 @@ function TrendingItem({ tag, count }: any) {
   )
 }
 
-function PostCard({ post }: { post: any }) {
+function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: boolean }) {
   const { profiles, content, created_at, post_comments, image_url } = post
   const { profile: currentProfile } = useAuthStore()
   const { toggleLike, addComment, isLiked, likeCount, commentCount } = usePostInteractions(post)
@@ -385,7 +403,13 @@ function PostCard({ post }: { post: any }) {
   }
 
   return (
-    <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+    <div
+      id={`post-${post.id}`}
+      className={clsx(
+        "bg-white rounded-[2rem] border shadow-sm hover:shadow-md transition-all overflow-hidden scroll-mt-24",
+        isHighlighted ? "border-accent-300 ring-4 ring-accent-100" : "border-brand-100"
+      )}
+    >
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

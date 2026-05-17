@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
@@ -25,6 +25,8 @@ import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 import { filterBySearchQuery } from '@/lib/search'
 
 export default function Opportunities() {
+  const { opportunityId } = useParams()
+  const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
   const [showFilters, setShowFilters] = useState(false)
@@ -75,6 +77,13 @@ export default function Opportunities() {
   })
 
   const visibleOpportunities = filterBySearchQuery(opportunities, searchQuery)
+  const selectedRouteOpportunity = opportunities?.find((opportunity) => opportunity.id === opportunityId)
+  const missingRouteOpportunity = Boolean(opportunityId && !isLoading && opportunities && !selectedRouteOpportunity)
+
+  useEffect(() => {
+    if (!opportunityId || isLoading) return
+    setSelectedOpportunity(selectedRouteOpportunity || null)
+  }, [opportunityId, isLoading, selectedRouteOpportunity])
 
   const clearFilters = () => {
     setFilters({ department: '', university: '', professor: '' })
@@ -179,11 +188,23 @@ export default function Opportunities() {
       </div>
 
       {/* Grid */}
+      {missingRouteOpportunity && (
+        <div className="rounded-[2rem] border border-amber-100 bg-amber-50 px-5 py-4 font-semibold text-amber-800">
+          This opportunity could not be found.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
         {isLoading ? (
           [1, 2, 3, 4].map(i => <OpportunitySkeleton key={i} />)
         ) : visibleOpportunities.length > 0 ? (
-          visibleOpportunities.map(opp => <OpportunityCard key={opp.id} opportunity={opp} onClick={() => setSelectedOpportunity(opp)} />)
+          visibleOpportunities.map(opp => (
+            <OpportunityCard
+              key={opp.id}
+              opportunity={opp}
+              onClick={() => navigate(`/opportunities/${opp.id}`)}
+            />
+          ))
         ) : (
           <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-brand-100">
              <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">
@@ -211,7 +232,10 @@ export default function Opportunities() {
         {selectedOpportunity && (
           <OpportunityDetailModal 
             opportunity={selectedOpportunity} 
-            onClose={() => setSelectedOpportunity(null)} 
+            onClose={() => {
+              setSelectedOpportunity(null)
+              if (opportunityId) navigate('/opportunities')
+            }} 
           />
         )}
       </AnimatePresence>

@@ -142,7 +142,9 @@ function App() {
             <Route path="/onboarding/:step" element={<Onboarding />} />
             <Route element={<MainLayout />}>
               <Route path="/feed" element={<Feed />} />
+              <Route path="/feed/:postId" element={<Feed />} />
               <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/opportunities/:opportunityId" element={<Opportunities />} />
               <Route path="/people" element={<People />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/search/:searchSlug" element={<SearchResults />} />

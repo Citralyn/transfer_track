@@ -168,7 +168,7 @@ export default function SearchResults() {
             onViewMore={() => showMore('opportunities')}
           >
             {visibleResults.opportunities.map((opportunity: any) => (
-              <Link key={opportunity.id} to="/opportunities" className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
+              <Link key={opportunity.id} to={`/opportunities/${opportunity.id}`} className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
                 <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{opportunity.title}</p>
                 <p className="text-sm text-brand-500 mt-1">{opportunity.university} - {opportunity.department}</p>
                 <p className="text-sm text-brand-600 mt-3 line-clamp-2">{opportunity.description}</p>
@@ -184,7 +184,7 @@ export default function SearchResults() {
             onViewMore={() => showMore('posts')}
           >
             {visibleResults.posts.map((post: any) => (
-              <Link key={post.id} to="/feed" className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
+              <Link key={post.id} to={`/feed/${post.id}`} className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
                 <div className="flex items-center gap-3 mb-3">
                   <ProfileAvatar profile={post.profiles} className="w-10 h-10 rounded-xl gradient-brand text-white font-bold text-sm shrink-0" />
                   <div>
