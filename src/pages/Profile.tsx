@@ -214,7 +214,11 @@ export default function Profile() {
     <div className="space-y-8 pb-20">
       <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm overflow-hidden">
         <div className="h-40 gradient-brand relative">
-          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+          {profile.banner_url ? (
+            <img src={profile.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+          )}
         </div>
         <div className="px-8 pb-8 flex flex-col md:flex-row items-end gap-6 -mt-16 relative z-10">
           <ProfileAvatar profile={profile} className="w-40 h-40 rounded-[3rem] border-8 border-white gradient-brand text-white font-bold text-6xl shadow-xl" />
