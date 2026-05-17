@@ -3,12 +3,12 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
+  getRelationshipStatus,
   sendConnectionRequest,
-  getExistingConnection,
   getConnectionCount,
-  loadLocalConnectionRequests,
   upsertProfile,
   withTimeout,
+  type RelationshipStatus,
 } from '@/lib/supabaseHelpers'
 import {
   MapPin,
@@ -31,7 +31,7 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [connectionCount, setConnectionCount] = useState(0)
-  const [requestState, setRequestState] = useState<'idle' | 'sending' | 'sent' | 'fallback' | 'error'>('idle')
+  const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus | 'sending' | 'error'>('none')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
@@ -48,7 +48,7 @@ export default function Profile() {
       loggedInProfile?.id &&
       profile.id !== loggedInProfile.id
     ) {
-      checkExistingRequest()
+      checkRelationshipStatus()
     }
   }, [profile?.id, loggedInProfile?.id])
 
@@ -89,31 +89,21 @@ export default function Profile() {
 
   const loadConnectionCount = async (profileId: string) => {
     const count = await getConnectionCount(profileId)
-    if (count) {
-      setConnectionCount(count)
-      return
-    }
-
-    const localCount = loadLocalConnectionRequests().filter((request) =>
-      request.requesterId === profileId || request.receiverId === profileId || request.receiverUsername === profile?.username
-    ).length
-    setConnectionCount(localCount)
+    setConnectionCount(count)
   }
 
-  const checkExistingRequest = async () => {
+  const checkRelationshipStatus = async () => {
     if (!loggedInProfile?.id || !profile?.id) return
 
-    const existing = await getExistingConnection(loggedInProfile.id, profile.id)
-    if (existing) {
-      setRequestState('sent')
-      setRequestMessage('Request Sent.')
-    }
+    const status = await getRelationshipStatus(loggedInProfile.id, profile.id)
+    setRelationshipStatus(status)
+    setRequestMessage(null)
   }
 
   const handleConnect = async () => {
     if (!loggedInProfile || !profile?.id) return
 
-    setRequestState('sending')
+    setRelationshipStatus('sending')
     setRequestMessage(null)
 
     await upsertProfile(loggedInProfile)
@@ -125,14 +115,18 @@ export default function Profile() {
       username: profile.username,
     })
 
-    if (result.success || result.duplicate) {
-      setRequestState('sent')
-    } else if (result.fallback) {
-      setRequestState('fallback')
+    if (result.message === 'Already connected.') {
+      setRelationshipStatus('connected')
+      setRequestMessage(null)
+    } else if (result.success || result.duplicate || result.fallback) {
+      const nextStatus = await getRelationshipStatus(loggedInProfile.id, profile.id)
+      setRelationshipStatus(nextStatus === 'connected' ? 'connected' : 'pending_outgoing')
+      setRequestMessage(nextStatus === 'connected' ? null : result.message)
     } else {
-      setRequestState('error')
+      const nextStatus = await getRelationshipStatus(loggedInProfile.id, profile.id)
+      setRelationshipStatus(nextStatus === 'none' ? 'error' : nextStatus)
+      setRequestMessage(result.message)
     }
-    setRequestMessage(result.message)
   }
 
   if (loading) {
@@ -171,8 +165,8 @@ export default function Profile() {
               </div>
               <ProfileActions
                 isOwnProfile={isOwnProfile}
-                canConnect={Boolean(loggedInProfile?.id && loggedInProfile.id !== profile.id)}
-                requestState={requestState}
+                canConnect={Boolean(loggedInProfile && !isSameProfile(loggedInProfile, profile))}
+                relationshipStatus={relationshipStatus}
                 onEdit={() => navigate('/settings')}
                 onConnect={handleConnect}
               />
@@ -184,7 +178,7 @@ export default function Profile() {
       {requestMessage && (
         <div className={clsx(
           'rounded-3xl border px-5 py-4 shadow-sm',
-          requestState === 'error' ? 'border-red-100 bg-red-50 text-red-700' : 'border-brand-100 bg-brand-50 text-brand-700'
+          relationshipStatus === 'error' ? 'border-red-100 bg-red-50 text-red-700' : 'border-brand-100 bg-brand-50 text-brand-700'
         )}>
           {requestMessage}
         </div>
@@ -293,13 +287,13 @@ export default function Profile() {
 function ProfileActions({
   isOwnProfile,
   canConnect,
-  requestState,
+  relationshipStatus,
   onEdit,
   onConnect,
 }: {
   isOwnProfile: boolean
   canConnect: boolean
-  requestState: 'idle' | 'sending' | 'sent' | 'fallback' | 'error'
+  relationshipStatus: RelationshipStatus | 'sending' | 'error'
   onEdit: () => void
   onConnect: () => void
 }) {
@@ -315,22 +309,36 @@ function ProfileActions({
   }
 
   if (canConnect) {
+    const isDisabled = relationshipStatus === 'sending' ||
+      relationshipStatus === 'pending_outgoing' ||
+      relationshipStatus === 'pending_incoming' ||
+      relationshipStatus === 'connected'
+    const buttonLabel = relationshipStatus === 'sending'
+      ? 'Sending...'
+      : relationshipStatus === 'connected'
+        ? 'Connected'
+        : relationshipStatus === 'pending_outgoing'
+          ? 'Request Sent'
+          : relationshipStatus === 'pending_incoming'
+            ? 'Request Received'
+            : 'Connect'
+
     return (
       <div className="flex gap-3">
         <button
           onClick={onConnect}
-          disabled={requestState === 'sending' || requestState === 'sent'}
+          disabled={isDisabled}
           className={clsx(
             'px-8 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2',
-            requestState === 'sent' ? 'gradient-soft text-brand-700' : 'gradient-brand text-white'
+            isDisabled ? 'bg-white border border-brand-100 text-brand-400 shadow-sm' : 'gradient-brand text-white'
           )}
         >
-          {requestState === 'sending' ? (
+          {relationshipStatus === 'sending' ? (
             <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
-          ) : requestState === 'sent' ? (
-            <><Check className="w-5 h-5" /> Request Sent</>
+          ) : relationshipStatus === 'connected' ? (
+            <><Check className="w-5 h-5" /> Connected</>
           ) : (
-            'Connect'
+            buttonLabel
           )}
         </button>
         <button className="bg-white border border-brand-100 text-brand-800 px-4 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all">
@@ -344,6 +352,14 @@ function ProfileActions({
     <button className="bg-white border border-brand-100 text-brand-700 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all">
       View Profile
     </button>
+  )
+}
+
+function isSameProfile(currentProfile: any, profile: any) {
+  return Boolean(
+    currentProfile.id === profile.id ||
+    (currentProfile.email && profile.email && currentProfile.email.toLowerCase() === profile.email.toLowerCase()) ||
+    (currentProfile.username && profile.username && currentProfile.username.toLowerCase() === profile.username.toLowerCase())
   )
 }
 

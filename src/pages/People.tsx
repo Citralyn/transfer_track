@@ -1,7 +1,13 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
-import { sendConnectionRequest, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import {
+  getRelationshipStatusMap,
+  sendConnectionRequest,
+  upsertProfile,
+  withTimeout,
+  type RelationshipStatus,
+} from '@/lib/supabaseHelpers'
 import { Search, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useNavigate } from 'react-router-dom'
@@ -11,13 +17,17 @@ export default function People() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'student' | 'professor'>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusMap, setStatusMap] = useState<Record<string, 'idle' | 'sending' | 'sent'>>({})
+  const [statusMap, setStatusMap] = useState<Record<string, RelationshipStatus | 'sending'>>({})
   const [message, setMessage] = useState<string | null>(null)
   const { profile: currentProfile } = useAuthStore()
 
   useEffect(() => {
     fetchPeople()
   }, [filter])
+
+  useEffect(() => {
+    loadRelationshipStatuses()
+  }, [people, currentProfile?.id])
 
   const fetchPeople = async () => {
     setLoading(true)
@@ -59,6 +69,16 @@ export default function People() {
     }
   }
 
+  const loadRelationshipStatuses = async () => {
+    if (!currentProfile?.id || people.length === 0) return
+
+    const relationships = await getRelationshipStatusMap(
+      currentProfile.id,
+      people.map((person) => person.id)
+    )
+    setStatusMap((prev) => ({ ...relationships, ...pickSendingStatuses(prev) }))
+  }
+
   const handleConnect = async (person: any) => {
     if (!currentProfile) return
     setMessage(null)
@@ -74,16 +94,19 @@ export default function People() {
         username: person.username,
       })
 
-      if (result.success || result.duplicate || result.fallback) {
-        setStatusMap((prev) => ({ ...prev, [person.id]: 'sent' }))
+      if (result.message === 'Already connected.') {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'connected' }))
+        setMessage(null)
+      } else if (result.success || result.duplicate || result.fallback) {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'pending_outgoing' }))
         setMessage(result.message)
       } else {
-        setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'none' }))
         setMessage(result.message)
       }
     } catch (error) {
       console.warn('Connection request failed:', error)
-      setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+      setStatusMap((prev) => ({ ...prev, [person.id]: 'none' }))
       setMessage('Demo request could not be saved. Please try again.')
     }
   }
@@ -145,8 +168,18 @@ export default function People() {
           [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
         ) : filteredPeople.length > 0 ? (
           filteredPeople.map(person => {
-            const canConnect = Boolean(currentProfile?.id && currentProfile.id !== person.id)
-            const status = statusMap[person.id] ?? 'idle'
+            const canConnect = Boolean(currentProfile && !isSameProfile(currentProfile, person))
+            const status = statusMap[person.id] ?? 'none'
+            const isDisabled = status === 'sending' || status === 'pending_outgoing' || status === 'pending_incoming' || status === 'connected'
+            const buttonLabel = status === 'sending'
+              ? 'Sending...'
+              : status === 'connected'
+                ? 'Connected'
+                : status === 'pending_outgoing'
+                  ? 'Request Sent'
+                  : status === 'pending_incoming'
+                    ? 'Request Received'
+                    : 'Connect'
 
             return (
               <UserCard
@@ -156,17 +189,18 @@ export default function People() {
                   <button
                     onClick={(event) => {
                       event.stopPropagation()
+                      if (isDisabled) return
                       handleConnect(person)
                     }}
-                    disabled={status === 'sending' || status === 'sent'}
+                    disabled={isDisabled}
                     className={clsx(
                       "w-full rounded-2xl py-3.5 font-bold transition-all flex items-center justify-center gap-2",
-                      status === 'sent'
-                        ? 'bg-brand-100 text-brand-700 cursor-default'
+                      isDisabled
+                        ? 'bg-white border border-brand-100 text-brand-400 cursor-default shadow-sm'
                         : 'gradient-brand text-white hover:shadow-lg'
                     )}
                   >
-                    {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Request Sent' : 'Connect'}
+                    {buttonLabel}
                   </button>
                 ) : undefined}
               />
@@ -183,6 +217,18 @@ export default function People() {
         )}
       </div>
     </div>
+  )
+}
+
+function pickSendingStatuses(statusMap: Record<string, RelationshipStatus | 'sending'>) {
+  return Object.fromEntries(Object.entries(statusMap).filter(([, status]) => status === 'sending'))
+}
+
+function isSameProfile(currentProfile: any, person: any) {
+  return Boolean(
+    currentProfile.id === person.id ||
+    (currentProfile.email && person.email && currentProfile.email.toLowerCase() === person.email.toLowerCase()) ||
+    (currentProfile.username && person.username && currentProfile.username.toLowerCase() === person.username.toLowerCase())
   )
 }
 

@@ -37,7 +37,7 @@ export interface LocalConnectionRequest {
   receiverName?: string
   receiverUsername?: string
   requestedAt: string
-  status: 'pending'
+  status: 'pending' | 'accepted' | 'declined' | 'canceled'
   message: string
 }
 
@@ -48,6 +48,8 @@ export interface ConnectionResult {
   message: string
   connection?: any
 }
+
+export type RelationshipStatus = 'none' | 'pending_outgoing' | 'pending_incoming' | 'connected' | 'declined'
 
 export interface AuthBridgeInput {
   email: string
@@ -256,7 +258,11 @@ export async function sendConnectionRequest(
     return { success: false, message: 'Missing requester id.' }
   }
 
-  if (target.id && target.id === requesterId) {
+  if (
+    target.id === requesterId ||
+    (requester.email && target.email && requester.email.toLowerCase() === target.email.toLowerCase()) ||
+    (requester.username && target.username && requester.username.toLowerCase() === target.username.toLowerCase())
+  ) {
     return { success: false, message: 'You cannot request a connection with yourself.' }
   }
 
@@ -314,6 +320,38 @@ export async function sendConnectionRequest(
       return { success: false, message: 'You cannot request a connection with yourself.' }
     }
 
+    const existingConnection = await getExistingConnection(requesterId, receiverId)
+    const existingStatus = getRelationshipStatusFromConnection(existingConnection, requesterId)
+    if (existingStatus === 'connected') {
+      return { success: true, duplicate: true, message: 'Already connected.', connection: existingConnection }
+    }
+    if (existingStatus === 'pending_outgoing') {
+      return { success: true, duplicate: true, message: 'Request Sent.', connection: existingConnection }
+    }
+    if (existingStatus === 'pending_incoming') {
+      return { success: false, duplicate: true, message: 'This person already sent you a request.' }
+    }
+    if (existingStatus === 'declined') {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('connections')
+          .update({
+            requester_id: requesterId,
+            receiver_id: receiverId,
+            status: 'pending',
+          })
+          .eq('id', existingConnection.id)
+          .select()
+          .single(),
+        'Supabase connection retry'
+      )
+
+      if (!error) {
+        saveLocalConnectionRequest({ ...requestPayload, id: data.id || requestPayload.id })
+        return { success: true, message: 'Request Sent.', connection: data }
+      }
+    }
+
     const { data, error } = await withTimeout(
       supabase
         .from('connections')
@@ -333,7 +371,14 @@ export async function sendConnectionRequest(
       const message = error.message || 'Unable to send connection request.'
       const duplicate = error.code === '23505' || message.toLowerCase().includes('duplicate')
       if (duplicate) {
-        return { success: true, duplicate: true, message: 'Request Sent.' }
+        const relationship = await getRelationshipStatus(requesterId, receiverId)
+        if (relationship !== 'connected') saveLocalConnectionRequest(requestPayload)
+        return {
+          success: true,
+          duplicate: true,
+          message: relationship === 'connected' ? 'Already connected.' : 'Request Sent.',
+          connection: data,
+        }
       }
 
       console.warn('Supabase connection insert failed, saving locally:', message)
@@ -345,6 +390,7 @@ export async function sendConnectionRequest(
       }
     }
 
+    saveLocalConnectionRequest({ ...requestPayload, id: data.id || requestPayload.id })
     return { success: true, message: 'Request Sent.', connection: data }
   } catch (error) {
     console.warn('Supabase connection flow unavailable, saving locally:', error)
@@ -365,8 +411,9 @@ export async function getExistingConnection(requesterId: string, receiverId: str
       supabase
         .from('connections')
         .select('*')
-        .eq('requester_id', requesterId)
-        .eq('receiver_id', receiverId)
+        .or(`and(requester_id.eq.${requesterId},receiver_id.eq.${receiverId}),and(requester_id.eq.${receiverId},receiver_id.eq.${requesterId})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle(),
       'Supabase existing connection lookup'
     )
@@ -379,6 +426,65 @@ export async function getExistingConnection(requesterId: string, receiverId: str
   }
 }
 
+export async function getRelationshipStatus(currentProfileId: string, otherProfileId: string): Promise<RelationshipStatus> {
+  if (!currentProfileId || !otherProfileId || currentProfileId === otherProfileId) return 'none'
+
+  const localStatus = getLocalRelationshipStatus(currentProfileId, otherProfileId)
+
+  if (!isSupabaseConfigured()) return localStatus
+
+  const connection = await getExistingConnection(currentProfileId, otherProfileId)
+  const liveStatus = getRelationshipStatusFromConnection(connection, currentProfileId)
+  return liveStatus === 'none' ? localStatus : liveStatus
+}
+
+export async function getRelationshipStatusMap(currentProfileId: string, otherProfileIds: string[]) {
+  const uniqueIds = Array.from(new Set(otherProfileIds.filter((id) => id && id !== currentProfileId)))
+  const statusMap: Record<string, RelationshipStatus> = {}
+
+  uniqueIds.forEach((id) => {
+    statusMap[id] = 'none'
+  })
+
+  if (!currentProfileId || uniqueIds.length === 0) return statusMap
+
+  const applyLocalStatuses = () => {
+    uniqueIds.forEach((id) => {
+      const localStatus = getLocalRelationshipStatus(currentProfileId, id)
+      if (localStatus !== 'none' && statusMap[id] === 'none') statusMap[id] = localStatus
+    })
+  }
+
+  if (!isSupabaseConfigured()) {
+    applyLocalStatuses()
+    return statusMap
+  }
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('connections')
+        .select('id, requester_id, receiver_id, status, created_at')
+        .or(`requester_id.eq.${currentProfileId},receiver_id.eq.${currentProfileId}`)
+        .order('created_at', { ascending: false }),
+      'Supabase relationship status map'
+    )
+
+    if (error || !data) return statusMap
+
+    data.forEach((connection: any) => {
+      const otherId = connection.requester_id === currentProfileId ? connection.receiver_id : connection.requester_id
+      if (!uniqueIds.includes(otherId) || statusMap[otherId] !== 'none') return
+      statusMap[otherId] = getRelationshipStatusFromConnection(connection, currentProfileId)
+    })
+  } catch (error) {
+    console.warn('Relationship status map lookup failed:', error)
+  }
+
+  applyLocalStatuses()
+  return statusMap
+}
+
 export async function getConnectionCount(profileId: string) {
   if (!isSupabaseConfigured()) return 0
 
@@ -387,6 +493,7 @@ export async function getConnectionCount(profileId: string) {
       supabase
         .from('connections')
         .select('id', { count: 'exact', head: true })
+        .eq('status', 'accepted')
         .or(`requester_id.eq.${profileId},receiver_id.eq.${profileId}`),
       'Supabase connection count'
     )
@@ -478,11 +585,37 @@ export async function updateConnectionStatus(connectionId: string, status: 'acce
       'Supabase connection status update'
     )
 
+    if (!error && data) updateLocalConnectionStatus(connectionId, status)
     return { data, error }
   } catch (error) {
     console.warn('Connection status update failed:', error)
     return { data: null, error: new Error('Live request update is unavailable right now.') }
   }
+}
+
+function getRelationshipStatusFromConnection(connection: any, currentProfileId: string): RelationshipStatus {
+  if (!connection) return 'none'
+  if (connection.status === 'accepted') return 'connected'
+  if (connection.status === 'pending') {
+    return connection.requester_id === currentProfileId ? 'pending_outgoing' : 'pending_incoming'
+  }
+  if (connection.status === 'declined' || connection.status === 'canceled') return 'declined'
+  return 'none'
+}
+
+function getLocalRelationshipStatus(currentProfileId: string, otherProfileId: string): RelationshipStatus {
+  const local = loadLocalConnectionRequests().find((request) =>
+    (request.requesterId === currentProfileId && request.receiverId === otherProfileId) ||
+    (request.requesterId === otherProfileId && request.receiverId === currentProfileId)
+  )
+
+  if (!local) return 'none'
+  if (local.status === 'accepted') return 'connected'
+  if (local.status === 'pending') {
+    return local.requesterId === currentProfileId ? 'pending_outgoing' : 'pending_incoming'
+  }
+  if (local.status === 'declined' || local.status === 'canceled') return 'declined'
+  return 'none'
 }
 
 export function saveLocalConnectionRequest(request: LocalConnectionRequest) {
@@ -494,6 +627,13 @@ export function saveLocalConnectionRequest(request: LocalConnectionRequest) {
       item.receiverUsername === request.receiverUsername)
   )
   const next = existing ? current : [...current, request]
+  window.localStorage.setItem(LOCAL_CONNECTION_REQUESTS_KEY, JSON.stringify(next))
+}
+
+export function updateLocalConnectionStatus(connectionId: string, status: LocalConnectionRequest['status']) {
+  const next = loadLocalConnectionRequests().map((request) =>
+    request.id === connectionId ? { ...request, status } : request
+  )
   window.localStorage.setItem(LOCAL_CONNECTION_REQUESTS_KEY, JSON.stringify(next))
 }
 
