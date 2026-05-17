@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
 import { 
@@ -27,10 +27,23 @@ import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
+import { opportunities as fallbackOpportunities } from '@/data/opportunities'
+import { professors } from '@/data/professors'
+import {
+  getRelationshipStatusMap,
+  sendConnectionRequest,
+  upsertProfile,
+  withTimeout,
+  type RelationshipStatus,
+} from '@/lib/supabaseHelpers'
+
+const EMPTY_LIST: any[] = []
 
 export default function Feed() {
   const { postId } = useParams()
+  const navigate = useNavigate()
   const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [connectionStatuses, setConnectionStatuses] = useState<Record<string, RelationshipStatus | 'sending'>>({})
   const { profile } = useAuthStore()
 
   const { data: posts, isLoading, refetch } = useQuery({
@@ -62,6 +75,117 @@ export default function Feed() {
       return data
     }
   })
+
+  const { data: suggestedProfilesData } = useQuery({
+    queryKey: ['feed-suggested-profiles', profile?.id],
+    queryFn: async () => {
+      if (!profile) return []
+      if (!isSupabaseConfigured()) return getFallbackProfiles(profile)
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from('profiles')
+            .select('id, role, full_name, username, email, avatar_url, school_name, academic_year, department, bio')
+            .neq('id', profile.id)
+            .order('full_name', { ascending: true })
+            .limit(8),
+          'Supabase feed profile suggestions'
+        )
+
+        if (error) throw error
+        return data && data.length > 0 ? data : getFallbackProfiles(profile)
+      } catch (error) {
+        console.warn('Feed profile suggestions unavailable:', error)
+        return getFallbackProfiles(profile)
+      }
+    },
+    enabled: Boolean(profile?.id),
+  })
+
+  const { data: sidebarOpportunitiesData } = useQuery({
+    queryKey: ['feed-sidebar-opportunities'],
+    queryFn: async () => {
+      if (!isSupabaseConfigured()) return getFallbackOpportunities()
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from('opportunities')
+            .select('id, title, description, university, department, tags')
+            .order('created_at', { ascending: false })
+            .limit(4),
+          'Supabase feed opportunities'
+        )
+
+        if (error) throw error
+        return data && data.length > 0 ? data : getFallbackOpportunities()
+      } catch (error) {
+        console.warn('Feed opportunities unavailable:', error)
+        return getFallbackOpportunities()
+      }
+    },
+  })
+
+  const suggestedProfiles = suggestedProfilesData ?? EMPTY_LIST
+  const sidebarOpportunities = sidebarOpportunitiesData ?? EMPTY_LIST
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadConnectionStatuses() {
+      if (!profile?.id || suggestedProfiles.length === 0) {
+        setConnectionStatuses({})
+        return
+      }
+
+      const statusMap = await getRelationshipStatusMap(
+        profile.id,
+        suggestedProfiles.map((person: any) => person.id)
+      )
+
+      if (!isMounted) return
+      setConnectionStatuses((prev) => ({ ...statusMap, ...pickSendingStatuses(prev) }))
+    }
+
+    loadConnectionStatuses()
+
+    return () => {
+      isMounted = false
+    }
+  }, [profile?.id, suggestedProfiles])
+
+  const handleConnect = async (person: any) => {
+    if (!profile) return
+
+    setConnectionStatuses((prev) => ({ ...prev, [person.id]: 'sending' }))
+
+    try {
+      await upsertProfile(profile)
+      const result = await sendConnectionRequest(profile, {
+        id: person.id,
+        email: person.email,
+        full_name: person.full_name,
+        username: person.username,
+      })
+
+      setConnectionStatuses((prev) => ({
+        ...prev,
+        [person.id]: result.message === 'Already connected.' ? 'connected' : 'pending_outgoing',
+      }))
+    } catch (error) {
+      console.warn('Feed connection request failed:', error)
+      setConnectionStatuses((prev) => ({ ...prev, [person.id]: 'none' }))
+    }
+  }
+
+  const visibleSuggestedProfiles = suggestedProfiles
+    .filter((person: any) => !isSameProfile(profile, person))
+    .filter((person: any) => {
+      const status = connectionStatuses[person.id] ?? 'none'
+      return status === 'none' || status === 'sending'
+    })
+    .slice(0, 3)
 
   const selectedPostExists = posts?.some((post) => post.id === postId)
   const missingRoutePost = Boolean(postId && !isLoading && posts && !selectedPostExists)
@@ -127,18 +251,31 @@ export default function Feed() {
             Suggested Connections
           </h3>
           <div className="space-y-4">
-            <SuggestionItem name="Dr. Sarah Chen" role="Professor" school="UC Berkeley" />
-            <SuggestionItem name="Marcus Rivera" role="Student" school="Santa Monica College" />
-            <SuggestionItem name="Dr. Emily Watts" role="Professor" school="UCLA" />
+            {visibleSuggestedProfiles.length > 0 ? (
+              visibleSuggestedProfiles.map((person: any) => (
+                <SuggestionItem
+                  key={person.id}
+                  profile={person}
+                  status={connectionStatuses[person.id] ?? 'none'}
+                  onConnect={() => handleConnect(person)}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-brand-500 leading-relaxed">No new profile suggestions right now.</p>
+            )}
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-[2rem] border border-brand-100 shadow-sm">
-          <h3 className="font-bold text-brand-900 mb-4 text-sm uppercase tracking-wider">Trending</h3>
+          <h3 className="font-bold text-brand-900 mb-4 text-sm uppercase tracking-wider">Opportunities For You</h3>
           <div className="space-y-3">
-            <TrendingItem tag="#UCApplications" count="1.2k posts" />
-            <TrendingItem tag="#STEMResearch" count="850 posts" />
-            <TrendingItem tag="#TransferTips" count="640 posts" />
+            {sidebarOpportunities.slice(0, 4).map((opportunity: any) => (
+              <OpportunitySidebarItem
+                key={opportunity.id}
+                opportunity={opportunity}
+                onClick={() => navigate(`/opportunities/${opportunity.id}`)}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -361,30 +498,98 @@ function ToolbarButton({ onClick, icon, title }: { onClick: () => void, icon: Re
   )
 }
 
-function SuggestionItem({ name, role, school }: any) {
+function SuggestionItem({ profile, status, onConnect }: { profile: any; status: RelationshipStatus | 'sending'; onConnect: () => void }) {
+  const roleLabel = profile.role === 'professor' ? 'Professor' : 'Student'
+  const isSending = status === 'sending'
+
   return (
-    <div className="flex items-center justify-between group">
-      <div className="flex items-center gap-3">
-        <ProfileAvatar name={name} className="w-10 h-10 rounded-xl gradient-soft border border-brand-50 text-brand-400 font-bold text-sm" />
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-brand-900 leading-tight group-hover:text-accent-600 transition-colors">{name}</span>
-          <span className="text-[10px] text-brand-400 font-medium">{role} • {school}</span>
+    <div className="flex items-center justify-between gap-3 group">
+      <Link to={`/profile/${profile.username}`} className="min-w-0 flex items-center gap-3">
+        <ProfileAvatar profile={profile} className="w-10 h-10 rounded-xl gradient-soft border border-brand-50 text-brand-400 font-bold text-sm shrink-0" />
+        <div className="min-w-0 flex flex-col">
+          <span className="text-sm font-bold text-brand-900 leading-tight group-hover:text-accent-600 transition-colors truncate">{profile.full_name}</span>
+          <span className="text-[10px] text-brand-400 font-medium truncate">{roleLabel} - {profile.school_name}</span>
         </div>
-      </div>
-      <button className="p-1.5 rounded-lg bg-brand-50 text-brand-500 hover:bg-brand-900 hover:text-white transition-all">
-        <Plus className="w-4 h-4" />
+      </Link>
+      <button
+        onClick={onConnect}
+        disabled={isSending}
+        aria-label={`Connect with ${profile.full_name}`}
+        className="p-1.5 rounded-lg bg-brand-50 text-brand-500 hover:bg-brand-900 hover:text-white transition-all disabled:opacity-50 shrink-0"
+      >
+        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
       </button>
     </div>
   )
 }
 
-function TrendingItem({ tag, count }: any) {
+function OpportunitySidebarItem({ opportunity, onClick }: { opportunity: any; onClick: () => void }) {
   return (
-    <div className="flex flex-col hover:bg-brand-50 p-2 rounded-xl transition-colors cursor-pointer group">
-      <span className="text-sm font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{tag}</span>
-      <span className="text-[10px] text-brand-400 font-medium">{count}</span>
-    </div>
+    <button
+      onClick={onClick}
+      className="w-full text-left flex flex-col hover:bg-brand-50 p-2 rounded-xl transition-colors cursor-pointer group"
+    >
+      <span className="text-sm font-bold text-brand-900 group-hover:text-accent-600 transition-colors line-clamp-2">{opportunity.title}</span>
+      <span className="text-[10px] text-brand-400 font-medium mt-1">
+        {[opportunity.university, opportunity.department].filter(Boolean).join(' - ')}
+      </span>
+      {opportunity.description && (
+        <span className="text-xs text-brand-500 mt-2 line-clamp-2">{opportunity.description}</span>
+      )}
+    </button>
   )
+}
+
+function pickSendingStatuses(statusMap: Record<string, RelationshipStatus | 'sending'>) {
+  return Object.fromEntries(Object.entries(statusMap).filter(([, status]) => status === 'sending'))
+}
+
+function isSameProfile(currentProfile: any, person: any) {
+  return Boolean(
+    currentProfile?.id === person.id ||
+    (currentProfile?.email && person.email && currentProfile.email.toLowerCase() === person.email.toLowerCase()) ||
+    (currentProfile?.username && person.username && currentProfile.username.toLowerCase() === person.username.toLowerCase())
+  )
+}
+
+function getFallbackProfiles(currentProfile: any) {
+  return [
+    ...professors.slice(0, 5).map((professor) => ({
+      id: professor.id,
+      role: 'professor',
+      full_name: professor.name,
+      username: professor.name.toLowerCase().replace(/^dr\.\s*/, '').replace(/\s+/g, '-'),
+      email: `${professor.name.toLowerCase().replace(/^dr\.\s*/, '').replace(/\s+/g, '.')}@example.edu`,
+      school_name: professor.university,
+      department: professor.department,
+      bio: professor.bio,
+    })),
+    {
+      id: 'mock-student-jane-doe',
+      role: 'student',
+      full_name: 'Jane Doe',
+      username: 'jane-doe',
+      email: 'jane@example.com',
+      school_name: 'Santa Monica College',
+      academic_year: 'Sophomore',
+      bio: 'Preparing to transfer into computer science.',
+    },
+  ].filter((person) => !isSameProfile(currentProfile, person))
+}
+
+function getFallbackOpportunities() {
+  return fallbackOpportunities.slice(0, 4).map((opportunity) => {
+    const professor = professors.find((item) => item.id === opportunity.professorId)
+
+    return {
+      id: opportunity.id,
+      title: opportunity.title,
+      description: opportunity.description,
+      university: professor?.university,
+      department: professor?.department,
+      tags: opportunity.tags,
+    }
+  })
 }
 
 function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: boolean }) {
