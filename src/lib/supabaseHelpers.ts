@@ -63,6 +63,7 @@ export interface ProfilePayload {
   department?: string | null
   bio?: string | null
   avatar_url?: string | null
+  banner_url?: string | null
   transfer_goals?: string | null
   research_areas?: string[] | null
   interests?: string[] | null
@@ -214,6 +215,7 @@ export async function upsertProfile(profile: ProfilePayload) {
     transfer_goals: profile.transfer_goals || null,
     bio: profile.bio || null,
     avatar_url: profile.avatar_url || null,
+    banner_url: profile.banner_url || null,
     gender: profile.gender || null,
   }
 
@@ -469,12 +471,20 @@ export async function getExistingConnection(requesterId: string, receiverId: str
 }
 
 export async function uploadProfileImage(profileId: string, image: File) {
+  return uploadProfileMedia(profileId, image, 'avatars')
+}
+
+export async function uploadProfileBanner(profileId: string, image: File) {
+  return uploadProfileMedia(profileId, image, 'banners')
+}
+
+async function uploadProfileMedia(profileId: string, image: File, folder: 'avatars' | 'banners') {
   if (!isSupabaseConfigured()) {
     return readFileAsDataUrl(image)
   }
 
   const fileExt = image.name.split('.').pop() || 'jpg'
-  const fileName = `avatars/${profileId}-${Date.now()}.${fileExt}`
+  const fileName = `${folder}/${profileId}-${Date.now()}.${fileExt}`
   const { data, error } = await supabase.storage
     .from('post_images')
     .upload(fileName, image)
@@ -786,6 +796,7 @@ export function makeProfilePayload(input: {
   transfer_goals?: string | null
   bio?: string | null
   avatar_url?: string | null
+  banner_url?: string | null
   gender?: string | null
 }): ProfilePayload {
   const email = input.email || ''
@@ -812,6 +823,7 @@ export function makeProfilePayload(input: {
     transfer_goals: input.role === 'student' ? input.transfer_goals || null : null,
     bio: input.bio || null,
     avatar_url: input.avatar_url || null,
+    banner_url: input.banner_url || null,
     gender: input.gender || null,
   }
 }

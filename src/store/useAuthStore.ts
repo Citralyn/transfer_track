@@ -11,6 +11,7 @@ export interface Profile {
   username: string
   email: string
   avatar_url?: string | null
+  banner_url?: string | null
   school_name?: string | null
   school_type?: string | null
   academic_year?: string | null

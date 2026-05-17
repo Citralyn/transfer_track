@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   makeProfilePayload,
+  uploadProfileBanner,
   uploadProfileImage,
   upsertProfile,
   type ClassMaterialEntry,
@@ -21,6 +22,8 @@ export default function Settings() {
   const [formData, setFormData] = useState(() => makeForm(profile))
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
 
   useEffect(() => {
     setFormData(makeForm(profile))
@@ -36,6 +39,7 @@ export default function Settings() {
 
     try {
       const avatarUrl = avatarFile ? await uploadProfileImage(profile.id, avatarFile) : formData.avatar_url
+      const bannerUrl = bannerFile ? await uploadProfileBanner(profile.id, bannerFile) : formData.banner_url
       const profileData = makeProfilePayload({
         id: profile.id,
         email: profile.email,
@@ -50,6 +54,7 @@ export default function Settings() {
         interests: splitTags(formData.interestsText),
         transfer_goals: profile.role === 'student' ? formData.transfer_goals : null,
         avatar_url: avatarUrl,
+        banner_url: bannerUrl,
         gender: formData.gender,
         coursework: formData.coursework,
         experience: formData.experience,
@@ -68,8 +73,12 @@ export default function Settings() {
       if (avatarFile) {
         setAvatarFile(null)
         setAvatarPreview(null)
-        setFormData((current) => ({ ...current, avatar_url: avatarUrl }))
       }
+      if (bannerFile) {
+        setBannerFile(null)
+        setBannerPreview(null)
+      }
+      setFormData((current) => ({ ...current, avatar_url: avatarUrl, banner_url: bannerUrl }))
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (error) {
@@ -127,6 +136,34 @@ export default function Settings() {
                     />
                   </label>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Banner</label>
+                <div className="h-40 rounded-[2rem] gradient-brand overflow-hidden border border-brand-100 shadow-sm mb-4">
+                  {bannerPreview || formData.banner_url ? (
+                    <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+                  )}
+                </div>
+                <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Choose Banner
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (!file) return
+                      setBannerFile(file)
+                      const reader = new FileReader()
+                      reader.onloadend = () => setBannerPreview(reader.result as string)
+                      reader.readAsDataURL(file)
+                    }}
+                  />
+                </label>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -383,6 +420,7 @@ function makeForm(profile: any) {
     interestsText: Array.isArray(profile?.interests) ? profile.interests.join(', ') : '',
     transfer_goals: profile?.transfer_goals || '',
     avatar_url: profile?.avatar_url || '',
+    banner_url: profile?.banner_url || '',
     gender: profile?.gender || 'prefer-not-to-say',
     coursework: normalizeEntries<CourseworkEntry>(profile?.coursework),
     experience: normalizeEntries<ExperienceEntry>(profile?.experience),

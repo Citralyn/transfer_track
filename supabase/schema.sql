@@ -13,6 +13,7 @@ CREATE TABLE profiles (
   email TEXT UNIQUE NOT NULL,
   gender TEXT,
   avatar_url TEXT,
+  banner_url TEXT,
   bio TEXT,
   school_name TEXT,
   school_type TEXT, -- 'community_college' or 'university'
