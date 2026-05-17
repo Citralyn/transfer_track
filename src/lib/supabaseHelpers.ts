@@ -1,9 +1,9 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export const DEMO_PASSWORD = 'transfer-track-demo-password'
+export const LOCAL_PROFILE_KEY = 'transfer-track-demo-profile'
+export const LOCAL_USER_KEY = 'transfer-track-demo-auth-user'
 const LOCAL_CONNECTION_REQUESTS_KEY = 'transfer-track-demo-connection-requests'
-const LOCAL_PROFILE_KEY = 'transfer-track-demo-profile'
-const LOCAL_USER_KEY = 'transfer-track-demo-auth-user'
 const SUPABASE_TIMEOUT_MS = 4000
 
 export type Role = 'student' | 'professor'

@@ -3,7 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
-import { loadLocalProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { 
+  loadLocalProfile, 
+  withTimeout, 
+  isProfileOnboardingComplete,
+  LOCAL_USER_KEY
+} from '@/lib/supabaseHelpers'
 
 // Pages
 import Landing from '@/pages/Landing'
@@ -20,46 +25,49 @@ import Settings from '@/pages/Settings'
 
 // Layouts
 import MainLayout from '@/layouts/MainLayout'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 const queryClient = new QueryClient()
 
 function App() {
-  const { setSession, setUser, setProfile, setLoading } = useAuthStore((state) => ({
-    setSession: state.setSession,
-    setUser: state.setUser,
-    setProfile: state.setProfile,
-    setLoading: state.setLoading,
-  }))
+  const { loading, setSession, setUser, setProfile, setLoading } = useAuthStore()
 
   useEffect(() => {
     const initAuth = async () => {
+      setLoading(true)
       try {
+        // 1. Try to restore local demo user/profile immediately
+        const rawUser = window.localStorage.getItem(LOCAL_USER_KEY)
+        const localUser = rawUser ? JSON.parse(rawUser) : null
+
+        if (localUser) {
+          setUser(localUser)
+          const profile = loadLocalProfile(localUser.id)
+          if (profile) setProfile(profile)
+        }
+
         if (!isSupabaseConfigured()) {
-          const localProfile = loadLocalProfile()
-          setProfile(localProfile)
-          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
           setSession(null)
           return
         }
 
+        // 2. Check for a live Supabase session
         const { data: { session } } = await withTimeout(supabase.auth.getSession(), 'Supabase session lookup')
-        setSession(session)
-        setUser(session?.user ?? null)
+        
         if (session?.user) {
+          setSession(session)
+          setUser(session.user)
           await fetchProfile(session.user.id)
-        } else {
+        } else if (!localUser) {
+          setSession(null)
+          setUser(null)
           setProfile(null)
         }
       } catch (error) {
-        console.warn('Auth initialization fell back to local profile:', error)
-        const localProfile = loadLocalProfile()
-        if (localProfile) {
-          setProfile(localProfile)
-          setUser({ id: localProfile.id, email: localProfile.email })
-        }
-        setSession(null)
+        console.warn('Auth initialization encountered an error:', error)
       } finally {
-        setLoading(false)
+        // Minimum delay to ensure the loading screen is visible and session is settled
+        setTimeout(() => setLoading(false), 800)
       }
     }
 
@@ -67,15 +75,17 @@ function App() {
 
     if (!isSupabaseConfigured()) return
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setProfile(null)
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          setSession(session)
+          setUser(session.user)
+          await fetchProfile(session.user.id)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setUser(null)
         setProfile(null)
-        setLoading(false)
       }
     })
 
@@ -94,16 +104,26 @@ function App() {
       )
 
       if (error) {
-        console.warn('Supabase profile lookup failed, trying local profile:', error.message)
+        console.warn('Supabase profile lookup failed, falling back to local:', error.message)
       }
 
-      setProfile(data || loadLocalProfile(userId))
+      if (data) {
+        setProfile(data)
+      } else {
+        const local = loadLocalProfile(userId)
+        if (local) setProfile(local)
+      }
     } catch (error) {
-      console.warn('Supabase profile lookup unavailable, trying local profile:', error)
-      setProfile(loadLocalProfile(userId))
-    } finally {
-      setLoading(false)
+      console.warn('Supabase profile lookup unavailable, falling back to local:', error)
+      const local = loadLocalProfile(userId)
+      if (local) setProfile(local)
     }
+  }
+
+  // GLOBAL LOADING STATE
+  // Shows while we determine if you are logged in
+  if (loading) {
+    return <LoadingScreen />
   }
 
   return (
@@ -137,15 +157,25 @@ function App() {
 }
 
 function ProtectedRoute() {
-  const { session, profile, loading } = useAuthStore()
+  const { user, profile } = useAuthStore()
   const location = useLocation()
 
-  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-brand-50">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-500"></div>
-  </div>
-
-  if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
+  // Case: No user = not logged in
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />
   
+  const isOnboardingPath = location.pathname.startsWith('/onboarding')
+  const onboardingComplete = isProfileOnboardingComplete(profile)
+  
+  // Case: User exists but profile is missing/incomplete
+  if (!onboardingComplete && !isOnboardingPath) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  // Case: Profile complete, block onboarding
+  if (onboardingComplete && isOnboardingPath) {
+    return <Navigate to="/feed" replace />
+  }
+
   return <Outlet />
 }
 
