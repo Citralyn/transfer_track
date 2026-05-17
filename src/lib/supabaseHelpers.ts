@@ -666,12 +666,15 @@ export function loadLocalConnectionRequests(): LocalConnectionRequest[] {
 }
 
 export function saveLocalProfile(profile: ProfilePayload) {
+  window.localStorage.setItem(`${LOCAL_PROFILE_KEY}-${profile.id}`, JSON.stringify(profile))
+  // Also keep a "current" pointer for App init
   window.localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(profile))
 }
 
-export function loadLocalProfile(): ProfilePayload | null {
+export function loadLocalProfile(id?: string): ProfilePayload | null {
   try {
-    const raw = window.localStorage.getItem(LOCAL_PROFILE_KEY)
+    const key = id ? `${LOCAL_PROFILE_KEY}-${id}` : LOCAL_PROFILE_KEY
+    const raw = window.localStorage.getItem(key)
     return raw ? JSON.parse(raw) as ProfilePayload : null
   } catch {
     return null
@@ -679,6 +682,8 @@ export function loadLocalProfile(): ProfilePayload | null {
 }
 
 export function clearLocalAuth() {
+  // We don't necessarily want to delete ALL saved profiles, 
+  // just the current session indicators
   window.localStorage.removeItem(LOCAL_PROFILE_KEY)
   window.localStorage.removeItem(LOCAL_USER_KEY)
 }
@@ -736,7 +741,7 @@ export function isUuid(value?: string | null) {
 
 export function makeUsername(email?: string, fullName?: string, id?: string) {
   if (email) {
-    const fromEmail = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase()
+    const fromEmail = email.split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/gi, '')
     if (fromEmail) return fromEmail
   }
 
@@ -754,7 +759,9 @@ export function makeUsername(email?: string, fullName?: string, id?: string) {
 
 function makeLocalAuthData(email: string) {
   const existing = loadLocalUser()
-  const user = existing?.email === email ? existing : { id: `local-${makeUsername(email)}`, email }
+  // Use a simple hash-like string or just the full sanitized email to make the ID unique
+  const uniqueId = `local-${email.toLowerCase().replace(/[^a-z0-9]/gi, '-')}`
+  const user = existing?.email === email ? existing : { id: uniqueId, email }
   window.localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(user))
   return { user, session: null }
 }

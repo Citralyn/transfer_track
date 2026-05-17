@@ -58,6 +58,11 @@ export default function Login() {
       }
 
       if (!profile) {
+        // Try to load a previously saved local profile for THIS specific user
+        profile = loadLocalProfile(data.user.id)
+      }
+
+      if (!profile) {
         const profilePayload = makeProfilePayload({
           id: data.user.id,
           role: 'student',
