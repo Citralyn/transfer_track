@@ -16,9 +16,10 @@ import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 export default function People() {
   const [people, setPeople] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'student' | 'professor'>('all')
+  const [filter, setFilter] = useState<'connections' | 'student' | 'professor'>('connections')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusMap, setStatusMap] = useState<Record<string, RelationshipStatus | 'sending'>>({})
+  const [relationshipsLoading, setRelationshipsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const { profile: currentProfile } = useAuthStore()
 
@@ -40,7 +41,7 @@ export default function People() {
 
       let query = supabase.from('profiles').select('*')
 
-      if (filter !== 'all') {
+      if (filter !== 'connections') {
         query = query.eq('role', filter)
       }
 
@@ -71,13 +72,18 @@ export default function People() {
   }
 
   const loadRelationshipStatuses = async () => {
-    if (!currentProfile?.id || people.length === 0) return
+    if (!currentProfile?.id || people.length === 0) {
+      setRelationshipsLoading(false)
+      return
+    }
 
+    setRelationshipsLoading(true)
     const relationships = await getRelationshipStatusMap(
       currentProfile.id,
       people.map((person) => person.id)
     )
     setStatusMap((prev) => ({ ...relationships, ...pickSendingStatuses(prev) }))
+    setRelationshipsLoading(false)
   }
 
   const handleConnect = async (person: any) => {
@@ -113,6 +119,8 @@ export default function People() {
   }
 
   const filteredPeople = people.filter(person => {
+    if (filter === 'connections' && statusMap[person.id] !== 'connected') return false
+
     const searchLower = searchQuery.toLowerCase()
     return (
       person.full_name?.toLowerCase().includes(searchLower) ||
@@ -138,16 +146,20 @@ export default function People() {
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex bg-white p-1.5 rounded-2xl border border-brand-100 shadow-sm shrink-0">
-          {(['all', 'student', 'professor'] as const).map((t) => (
+          {([
+            { id: 'connections', label: 'Connections' },
+            { id: 'student', label: 'Students' },
+            { id: 'professor', label: 'Professors' },
+          ] as const).map((tab) => (
             <button
-              key={t}
-              onClick={() => setFilter(t)}
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
               className={clsx(
-                "px-6 py-2 rounded-xl font-bold text-sm transition-all capitalize",
-                filter === t ? "gradient-brand text-white shadow-md" : "text-brand-500 hover:text-brand-800"
+                "px-6 py-2 rounded-xl font-bold text-sm transition-all",
+                filter === tab.id ? "gradient-brand text-white shadow-md" : "text-brand-500 hover:text-brand-800"
               )}
             >
-              {t}s
+              {tab.label}
             </button>
           ))}
         </div>
@@ -165,7 +177,7 @@ export default function People() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-        {loading ? (
+        {loading || (filter === 'connections' && relationshipsLoading) ? (
           [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
         ) : filteredPeople.length > 0 ? (
           filteredPeople.map(person => {
@@ -213,7 +225,9 @@ export default function People() {
                 <Sparkles className="w-10 h-10" />
              </div>
              <h3 className="text-xl font-bold text-brand-900">No one found</h3>
-             <p className="text-brand-500 mt-2">Try a different filter or search term.</p>
+             <p className="text-brand-500 mt-2">
+              {filter === 'connections' ? 'Accepted connections will appear here.' : 'Try a different filter or search term.'}
+             </p>
           </div>
         )}
       </div>
@@ -233,7 +247,7 @@ function isSameProfile(currentProfile: any, person: any) {
   )
 }
 
-function getFallbackPeople(filter: 'all' | 'student' | 'professor') {
+function getFallbackPeople(filter: 'connections' | 'student' | 'professor') {
   const people = [
     {
       id: 'mock-professor-maya-chen',
@@ -267,7 +281,7 @@ function getFallbackPeople(filter: 'all' | 'student' | 'professor') {
     },
   ]
 
-  return filter === 'all' ? people : people.filter((person) => person.role === filter)
+  return filter === 'connections' ? people : people.filter((person) => person.role === filter)
 }
 
 function UserCard({ person, actionButton }: { person: any; actionButton?: ReactNode }) {
