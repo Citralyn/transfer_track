@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
-import { withTimeout, isUuid } from './supabaseHelpers'
+import { isUuid } from './supabaseHelpers'
 
 export interface Message {
   id: string

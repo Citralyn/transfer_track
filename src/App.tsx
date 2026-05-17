@@ -6,7 +6,6 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { 
   loadLocalProfile, 
   withTimeout, 
-  isProfileOnboardingComplete,
   LOCAL_USER_KEY
 } from '@/lib/supabaseHelpers'
 
@@ -54,7 +53,7 @@ function App() {
         }
 
         // 2. Check for a live Supabase session
-        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 'Supabase session lookup')
+        const { data: { session } } = await supabase.auth.getSession()
         
         if (session?.user) {
           setSession(session)
@@ -78,13 +77,14 @@ function App() {
     if (!isSupabaseConfigured()) return
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
         if (session?.user) {
           setSession(session)
           setUser(session.user)
           await fetchProfile(session.user.id)
         }
       } else if (event === 'SIGNED_OUT') {
+        if (window.localStorage.getItem(LOCAL_USER_KEY)) return
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -161,24 +161,11 @@ function App() {
 }
 
 function ProtectedRoute() {
-  const { user, profile } = useAuthStore()
+  const { user } = useAuthStore()
   const location = useLocation()
 
   // Case: No user = not logged in
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />
-  
-  const isOnboardingPath = location.pathname.startsWith('/onboarding')
-  const onboardingComplete = isProfileOnboardingComplete(profile)
-  
-  // Case: User exists but profile is missing/incomplete
-  if (!onboardingComplete && !isOnboardingPath) {
-    return <Navigate to="/onboarding" replace />
-  }
-
-  // Case: Profile complete, block onboarding
-  if (onboardingComplete && isOnboardingPath) {
-    return <Navigate to="/feed" replace />
-  }
 
   return <Outlet />
 }
