@@ -1,83 +1,93 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #fdf8f6;
-  --color-brand-100: #f2e8e5;
-  --color-brand-200: #eaddd7;
-  --color-brand-300: #dac7be;
-  --color-brand-400: #c7a392;
-  --color-brand-500: #b48169;
-  --color-brand-600: #a3745f;
-  --color-brand-700: #87604f;
-  --color-brand-800: #6d4e40;
-  --color-brand-900: #594035;
-  --color-brand-950: #2f211c;
+  /* Colors for Tailwind 4 Utility Classes */
+  --color-background: #3d322c;    /* Medium-Dark Rugged Brown */
+  --color-foreground: #ffffff;    /* White Body Text */
+  
+  --color-card: #8b9073;          /* Olive Green Widgets */
+  --color-card-foreground: #000000; /* BLACK Text on Olive/White Cards */
+  
+  --color-brand-50: #ffffff;      /* Text areas remain white */
+  --color-brand-100: #f2e8e5;     
+  --color-brand-200: #1a1512;     /* Dark Brown/Black Borders (Reverted from White) */
+  --color-brand-300: #000000;     
+  --color-brand-400: #1a1512;
+  --color-brand-500: #705d51;
+  --color-brand-600: #877265;
+  --color-brand-700: #a38e81;
+  --color-brand-800: #1a1512;
+  --color-brand-900: #000000;     
+  --color-brand-950: #000000;
 
-  --color-accent-50: #fffafb;
-  --color-accent-100: #feeff3;
-  --color-accent-200: #fde0e9;
-  --color-accent-300: #fbc2d4;
-  --color-accent-400: #f891b0;
-  --color-accent-500: #f1628d;
-  --color-accent-600: #de3d6e;
-  --color-accent-700: #ba2b56;
-  --color-accent-800: #9a274a;
-  --color-accent-900: #822442;
-  --color-accent-950: #491021;
+  --color-accent-50: #2b1500;
+  --color-accent-100: #4d2600;
+  --color-accent-200: #7a3d00;
+  --color-accent-300: #a85400;
+  --color-accent-400: #d66b00;
+  --color-accent-500: #ff7e00;     
+  --color-accent-600: #ff9129;
+  
+  /* Status Colors */
+  --color-red-50: #ffffff;
+  --color-red-100: #fee2e2;
+  --color-red-500: #ef4444;
+  --color-amber-50: #ffffff;
+  --color-amber-100: #fef3c7;
+  --color-amber-500: #f59e0b;
 
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  /* Sharp Lines */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+
+  /* Dark Solid Borders */
+  --border-width-default: 4px;
+
+  /* Shadows with Mild Blur for depth */
+  --shadow-sm: 4px 4px 8px rgba(0,0,0,0.3);
+  --shadow-md: 6px 6px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 8px 8px 16px rgba(0,0,0,0.5);
+  --shadow-xl: 10px 10px 20px rgba(0,0,0,0.6);
+  --shadow-2xl: 14px 14px 28px rgba(0,0,0,0.7);
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff5f2;
-  color: #1f2937;
-
-  --background: 20 33% 98%;
-  --foreground: 20 14% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 20 14% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14% 10%;
-  --primary: 20 31% 56%;
-  --primary-foreground: 20 33% 98%;
-  --secondary: 345 74% 66%;
-  --secondary-foreground: 345 33% 98%;
-  --muted: 20 10% 90%;
-  --muted-foreground: 20 10% 40%;
-  --accent: 345 74% 94%;
-  --accent-foreground: 345 74% 30%;
+  
+  /* HSL Mappings for CSS Variables */
+  --background: 20 16% 21%;    
+  --foreground: 0 0% 100%;    
+  
+  --card: 68 11% 51%;         
+  --card-foreground: 0 0% 0%; 
+  
+  --popover: 68 11% 51%;
+  --popover-foreground: 0 0% 0%;
+  
+  --primary: 30 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 120 50% 30%;
+  --secondary-foreground: 120 20% 95%;
+  
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 20%;
+  
+  --accent: 30 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 20 15% 90%;
-  --input: 20 15% 90%;
-  --ring: 20 31% 56%;
-  --radius: 0.75rem;
-}
-
-.dark {
-  --background: 20 14% 10%;
-  --foreground: 20 33% 98%;
-  --card: 20 14% 12%;
-  --card-foreground: 20 33% 98%;
-  --popover: 20 14% 12%;
-  --popover-foreground: 20 33% 98%;
-  --primary: 20 31% 56%;
-  --primary-foreground: 20 33% 98%;
-  --secondary: 345 74% 66%;
-  --secondary-foreground: 345 33% 98%;
-  --muted: 20 14% 20%;
-  --muted-foreground: 20 10% 70%;
-  --accent: 345 74% 20%;
-  --accent-foreground: 345 74% 94%;
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 20 14% 20%;
-  --input: 20 14% 20%;
-  --ring: 20 31% 56%;
+  
+  --border: 28 24% 8%;       /* DARK SOLID BORDER */
+  --input: 0 0% 100%;        
+  --ring: 30 100% 50%;
+  --radius: 0px;
 }
 
 @layer base {
@@ -88,37 +98,30 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background: radial-gradient(circle at top, rgba(255, 209, 220, 0.45), transparent 30%),
-      linear-gradient(180deg, #ffffff 0%, #fff5f2 100%);
+    background-color: #3d322c;
+    background-image: 
+      linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 100%),
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 2px);
     background-attachment: fixed;
-    color: hsl(var(--foreground));
+    color: #ffffff;
   }
 
   * {
-    border-color: hsl(var(--border));
+    border-color: #1a1512;
   }
 }
 
 .gradient-brand {
-  background-image: linear-gradient(135deg, #b48169 0%, #f1628d 100%);
+  background-image: linear-gradient(135deg, #ff7e00 0%, #2e7d32 100%);
 }
 
 .gradient-soft {
-  background-image: linear-gradient(135deg, #fdf8f6 0%, #feeff3 100%);
-}
-
-.dark .gradient-soft {
-  background-image: linear-gradient(135deg, #2f211c 0%, #491021 100%);
+  background-image: linear-gradient(135deg, #8b9073 0%, #7a8262 100%);
 }
 
 .glass {
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.dark .glass {
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Added mild blur to the widget container background */
+  background-color: rgba(139, 144, 115, 0.8);
+  backdrop-filter: blur(4px);
+  border: 4px solid #1a1512;
 }

@@ -129,31 +129,31 @@ export default function Connections() {
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-bold text-brand-900">Connections</h1>
-        <p className="text-brand-500 mt-1 font-medium">Manage your network requests and accepted connections.</p>
+        <h1 className="text-3xl font-bold text-black">Connections</h1>
+        <p className="text-slate-900 mt-1 font-medium">Manage your network requests and accepted connections.</p>
       </div>
 
       {message && (
-        <div className="rounded-3xl border border-brand-100 bg-brand-50 px-5 py-4 text-brand-700 shadow-sm">
+        <div className="rounded-none border-4 border-brand-200 shadow-lg bg-white px-5 py-4 text-black shadow-sm">
           {message}
         </div>
       )}
 
-      <div className="flex flex-wrap bg-white p-1.5 rounded-2xl border border-brand-100 shadow-sm w-fit">
+      <div className="flex flex-wrap bg-card p-1.5 rounded-none border-4 border-brand-200 shadow-lg shadow-sm w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={clsx(
-              'px-5 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2',
-              activeTab === tab.id ? 'gradient-brand text-white shadow-md' : 'text-brand-500 hover:text-brand-800'
+              'px-5 py-2 rounded-none font-bold text-sm transition-all flex items-center gap-2',
+              activeTab === tab.id ? 'gradient-brand text-white shadow-md' : 'text-slate-900 hover:text-black'
             )}
           >
             {tab.icon}
             {tab.label}
             <span className={clsx(
-              'px-2 py-0.5 rounded-full text-xs',
-              activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-500'
+              'px-2 py-0.5 rounded-none text-xs',
+              activeTab === tab.id ? 'bg-card/20 text-white' : 'bg-white text-slate-900'
             )}>
               {tab.count}
             </span>
@@ -193,20 +193,20 @@ function RequestList({
 }) {
   if (loading) {
     return (
-      <div className="rounded-3xl border border-brand-100 bg-white shadow-sm p-8 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-500" />
+      <div className="rounded-none border-4 border-brand-200 shadow-lg bg-card shadow-sm p-8 text-center">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-900" />
       </div>
     )
   }
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-[2.5rem] border border-brand-100 bg-white shadow-sm p-10 text-center">
-        <div className="w-16 h-16 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-5">
+      <div className="rounded-none border-4 border-brand-200 shadow-lg bg-card shadow-sm p-10 text-center">
+        <div className="w-16 h-16 gradient-soft rounded-none flex items-center justify-center text-brand-300 mx-auto mb-5">
           <Users className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-bold text-brand-900">Nothing here yet</h3>
-        <p className="text-brand-500 mt-2">
+        <h3 className="text-xl font-bold text-black">Nothing here yet</h3>
+        <p className="text-slate-900 mt-2">
           {mode === 'connections'
             ? 'Accepted connections will appear here.'
             : mode === 'received'
@@ -218,7 +218,7 @@ function RequestList({
   }
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
+    <div className="bg-card rounded-none border-4 border-brand-200 shadow-lg shadow-sm p-8">
       <div className="space-y-4">
         {requests.map((request: any) => {
           const isSentByCurrentUser = request.requester_id === currentProfileId || request.requesterId === currentProfileId
@@ -256,32 +256,32 @@ function RequestList({
               role={canOpenProfile ? 'button' : undefined}
               tabIndex={canOpenProfile ? 0 : undefined}
               className={clsx(
-                'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-brand-100 bg-brand-50 group hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500',
+                'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-none border-4 border-brand-200 shadow-lg bg-white group hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500',
                 canOpenProfile && 'cursor-pointer'
               )}
             >
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
-                  <ProfileAvatar profile={displayProfile} name={name} className="w-14 h-14 rounded-2xl gradient-brand text-white font-bold text-xl shadow-sm" />
+                  <ProfileAvatar profile={displayProfile} name={name} className="w-14 h-14 rounded-none gradient-brand text-white font-bold text-xl shadow-sm" />
                   {role && (
                     <div className={clsx(
-                      'absolute -bottom-1 -right-1 w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center shadow-sm',
-                      role === 'professor' ? 'bg-accent-500 text-white' : 'bg-brand-500 text-white'
+                      'absolute -bottom-1 -right-1 w-7 h-7 rounded-none border-4 border-brand-200 shadow-lg flex items-center justify-center shadow-sm',
+                      role === 'professor' ? 'bg-accent-500 text-white' : 'bg-white0 text-white'
                     )}>
                       {role === 'professor' ? <GraduationCap className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{name}</p>
+                  <p className="font-bold text-black group-hover:text-accent-600 transition-colors">{name}</p>
                   <p className="text-xs font-bold text-brand-400 uppercase tracking-widest">
                     {role || 'Profile'} - {request.status}
                   </p>
-                  <p className="text-sm text-brand-600 mt-1">
+                  <p className="text-sm text-black mt-1">
                     {email} - {createdAt ? new Date(createdAt).toLocaleDateString() : 'No date'}
                   </p>
                   {(school || summary) && (
-                    <p className="text-sm text-brand-500 mt-1 flex items-center gap-1">
+                    <p className="text-sm text-slate-900 mt-1 flex items-center gap-1">
                       {school && <><MapPin className="w-3.5 h-3.5 text-brand-300" /> {school}</>}
                       {school && summary ? ' - ' : ''}
                       {summary}
@@ -300,7 +300,7 @@ function RequestList({
                       onUpdateStatus(request.id, 'accepted')
                     }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-none font-bold text-sm transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
@@ -310,7 +310,7 @@ function RequestList({
                       onUpdateStatus(request.id, 'declined')
                     }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-none font-bold text-sm transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                   </button>

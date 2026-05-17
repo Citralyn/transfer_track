@@ -141,7 +141,7 @@ export default function ProfileConnections() {
   if (!profile) {
     return (
       <div className="py-20 text-center">
-        <p className="text-brand-900 font-bold">{error || 'Profile not found.'}</p>
+        <p className="text-black font-bold">{error || 'Profile not found.'}</p>
         <Link to="/people" className="inline-flex mt-4 text-accent-600 font-bold hover:underline">
           Browse people
         </Link>
@@ -153,39 +153,39 @@ export default function ProfileConnections() {
     <div className="space-y-6 pb-20">
       <Link
         to={`/profile/${profile.username}`}
-        className="inline-flex items-center gap-2 text-sm font-bold text-brand-500 hover:text-brand-900"
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-black"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to profile
       </Link>
 
-      <div className="bg-white border border-brand-100 rounded-[2rem] p-8 shadow-sm">
+      <div className="bg-card border-4 border-brand-200 shadow-lg rounded-none p-8 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-xs font-bold text-accent-600 uppercase tracking-wide">Connections</p>
-            <h1 className="text-3xl font-extrabold text-brand-900 mt-1">
+            <h1 className="text-3xl font-extrabold text-black mt-1">
               {profile.full_name}'s connections
             </h1>
-            <p className="text-brand-500 font-medium mt-2">
+            <p className="text-slate-900 font-medium mt-2">
               {connections.length} accepted {connections.length === 1 ? 'connection' : 'connections'}
             </p>
           </div>
-          <div className="w-14 h-14 rounded-2xl bg-accent-50 text-accent-600 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-none bg-accent-50 text-accent-600 flex items-center justify-center">
             <Users className="w-7 h-7" />
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl px-5 py-4 font-semibold">
+        <div className="bg-amber-50 border-4 border-brand-200 shadow-lg text-amber-800 rounded-none px-5 py-4 font-semibold">
           {error}
         </div>
       )}
 
       {connections.length === 0 ? (
-        <div className="bg-white border border-dashed border-brand-200 rounded-[2rem] p-10 text-center">
+        <div className="bg-card border border-dashed border-brand-200 rounded-none p-10 text-center">
           <Users className="w-10 h-10 text-brand-300 mx-auto mb-3" />
-          <p className="text-brand-900 font-bold">No accepted connections to show yet.</p>
+          <p className="text-black font-bold">No accepted connections to show yet.</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -206,16 +206,16 @@ function ConnectionCard({ connection }: { connection: DisplayConnection }) {
     : profile.academic_year || profile.school_name || 'Student'
 
   const content = (
-    <div className="bg-white border border-brand-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
+    <div className="bg-card border-4 border-brand-200 shadow-lg rounded-none p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
       <ProfileAvatar
         profile={profile}
         name={profile.full_name}
-        className="w-16 h-16 rounded-2xl gradient-brand text-white font-bold text-2xl shadow-sm shrink-0"
+        className="w-16 h-16 rounded-none gradient-brand text-white font-bold text-2xl shadow-sm shrink-0"
       />
       <div className="min-w-0">
-        <h2 className="font-extrabold text-brand-900 truncate">{profile.full_name || 'Unknown Profile'}</h2>
-        <p className="text-sm text-brand-500 font-semibold truncate">@{profile.username || 'profile'}</p>
-        <p className="text-sm text-brand-600 mt-2 flex items-center gap-2">
+        <h2 className="font-extrabold text-black truncate">{profile.full_name || 'Unknown Profile'}</h2>
+        <p className="text-sm text-slate-900 font-semibold truncate">@{profile.username || 'profile'}</p>
+        <p className="text-sm text-black mt-2 flex items-center gap-2">
           {profile.role === 'professor' ? <Building2 className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
           <span className="truncate">{subtitle}</span>
         </p>

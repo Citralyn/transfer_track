@@ -133,19 +133,19 @@ export default function People() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-brand-900">Network</h1>
-        <p className="text-brand-500 mt-1 font-medium">Discover students and professors in your academic field.</p>
+        <h1 className="text-3xl font-bold text-black">Network</h1>
+        <p className="text-slate-900 mt-1 font-medium">Discover students and professors in your academic field.</p>
       </div>
 
       {message && (
-        <div className="rounded-3xl border border-brand-100 bg-brand-50 px-5 py-4 text-brand-700 shadow-sm">
+        <div className="rounded-none border-4 border-brand-200 shadow-lg bg-white px-5 py-4 text-black shadow-sm">
           {message}
         </div>
       )}
 
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex bg-white p-1.5 rounded-2xl border border-brand-100 shadow-sm shrink-0">
+        <div className="flex bg-card p-1.5 rounded-none border-4 border-brand-200 shadow-lg shadow-sm shrink-0">
           {([
             { id: 'connections', label: 'Connections' },
             { id: 'student', label: 'Students' },
@@ -155,8 +155,8 @@ export default function People() {
               key={tab.id}
               onClick={() => setFilter(tab.id)}
               className={clsx(
-                "px-6 py-2 rounded-xl font-bold text-sm transition-all",
-                filter === tab.id ? "gradient-brand text-white shadow-md" : "text-brand-500 hover:text-brand-800"
+                "px-6 py-2 rounded-none font-bold text-sm transition-all",
+                filter === tab.id ? "gradient-brand text-white shadow-md" : "text-slate-900 hover:text-black"
               )}
             >
               {tab.label}
@@ -170,7 +170,7 @@ export default function People() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, school, or department..."
-            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
+            className="w-full pl-12 pr-4 py-3.5 rounded-none bg-card border-4 border-brand-200 shadow-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
           />
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function People() {
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
         {loading || (filter === 'connections' && relationshipsLoading) ? (
-          [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
+          [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-card rounded-none border-4 border-brand-200 shadow-lg p-8 h-[280px] animate-pulse" />)
         ) : filteredPeople.length > 0 ? (
           filteredPeople.map(person => {
             const canConnect = Boolean(currentProfile && !isSameProfile(currentProfile, person))
@@ -207,9 +207,9 @@ export default function People() {
                     }}
                     disabled={isDisabled}
                     className={clsx(
-                      "w-full rounded-2xl py-3.5 font-bold transition-all flex items-center justify-center gap-2",
+                      "w-full rounded-none py-3.5 font-bold transition-all flex items-center justify-center gap-2",
                       isDisabled
-                        ? 'bg-white border border-brand-100 text-brand-400 cursor-default shadow-sm'
+                        ? 'bg-card border-4 border-brand-200 shadow-lg text-brand-400 cursor-default shadow-sm'
                         : 'gradient-brand text-white hover:shadow-lg'
                     )}
                   >
@@ -221,11 +221,11 @@ export default function People() {
           })
         ) : (
           <div className="col-span-full py-20 text-center">
-             <div className="w-20 h-20 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-6">
+             <div className="w-20 h-20 gradient-soft rounded-none flex items-center justify-center text-brand-300 mx-auto mb-6">
                 <Sparkles className="w-10 h-10" />
              </div>
-             <h3 className="text-xl font-bold text-brand-900">No one found</h3>
-             <p className="text-brand-500 mt-2">
+             <h3 className="text-xl font-bold text-black">No one found</h3>
+             <p className="text-slate-900 mt-2">
               {filter === 'connections' ? 'Accepted connections will appear here.' : 'Try a different filter or search term.'}
              </p>
           </div>
@@ -301,35 +301,35 @@ function UserCard({ person, actionButton }: { person: any; actionButton?: ReactN
       }}
       role="button"
       tabIndex={0}
-      className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
+      className="bg-card rounded-none border-4 border-brand-200 shadow-lg shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
     >
       <div className="relative mb-6">
         <ProfileAvatar
           profile={person}
-          className="w-24 h-24 rounded-[2rem] gradient-brand text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+          className="w-24 h-24 rounded-none gradient-brand text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300"
         />
         <div className={clsx(
-          "absolute -bottom-2 -right-2 w-10 h-10 rounded-xl border-4 border-white flex items-center justify-center shadow-md",
-          isProfessor ? "bg-accent-500 text-white" : "bg-brand-500 text-white"
+          "absolute -bottom-2 -right-2 w-10 h-10 rounded-none border-4 border-brand-200 shadow-lg flex items-center justify-center shadow-md",
+          isProfessor ? "bg-accent-500 text-white" : "bg-white0 text-white"
         )}>
           {isProfessor ? <GraduationCap className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
         </div>
       </div>
 
-      <h3 className="text-lg font-bold text-brand-900 mb-1 group-hover:text-accent-600 transition-colors">{person.full_name}</h3>
+      <h3 className="text-lg font-bold text-black mb-1 group-hover:text-accent-600 transition-colors">{person.full_name}</h3>
       <p className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-4">{person.role}</p>
       
       <div className="space-y-2 mb-8 flex-1">
-        <div className="flex items-center justify-center gap-2 text-brand-600 text-sm font-medium">
+        <div className="flex items-center justify-center gap-2 text-black text-sm font-medium">
           <MapPin className="w-4 h-4 text-brand-300" /> {person.school_name}
         </div>
-        <p className="text-brand-500 text-sm line-clamp-2 leading-relaxed">
+        <p className="text-slate-900 text-sm line-clamp-2 leading-relaxed">
           {person.bio || (isProfessor ? `Professor in ${person.department}` : `${person.academic_year} Student`)}
         </p>
       </div>
 
       {actionButton ? actionButton : (
-        <button className="w-full bg-white border border-brand-100 text-brand-700 font-bold py-3.5 rounded-2xl shadow-sm transition-all hover:shadow-md">
+        <button className="w-full bg-card border-4 border-brand-200 shadow-lg text-black font-bold py-3.5 rounded-none shadow-sm transition-all hover:shadow-md">
           View Profile
         </button>
       )}

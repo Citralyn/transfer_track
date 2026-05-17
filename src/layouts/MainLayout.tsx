@@ -106,14 +106,14 @@ export default function MainLayout() {
   ]
 
   return (
-    <div className="min-h-screen bg-brand-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-brand-100 h-screen sticky top-0 p-6">
+      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-card border-r-4 border-brand-200 h-screen sticky top-0 p-6">
         <Link to="/feed" className="flex items-center gap-2 mb-10 px-2">
-          <div className="w-10 h-10 gradient-brand rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+          <div className="w-10 h-10 gradient-brand rounded-none flex items-center justify-center text-white font-bold text-xl shadow-lg">
             TT
           </div>
-          <span className="text-xl font-bold text-brand-900 tracking-tight">Transfer Track</span>
+          <span className="text-xl font-bold text-black tracking-tight">Transfer Track</span>
         </Link>
 
         <nav className="flex-1 space-y-2">
@@ -122,10 +122,10 @@ export default function MainLayout() {
               key={item.name}
               to={item.path}
               className={({ isActive }) => clsx(
-                "flex items-center gap-4 px-4 py-3.5 rounded-2xl font-semibold transition-all duration-200",
+                "flex items-center gap-4 px-4 py-3.5 rounded-none font-semibold transition-all duration-200",
                 isActive 
                   ? "gradient-brand text-white shadow-md shadow-brand-200" 
-                  : "text-brand-500 hover:text-brand-800 hover:bg-brand-50"
+                  : "text-slate-900 hover:text-black hover:bg-white"
               )}
             >
               {item.icon}
@@ -134,12 +134,12 @@ export default function MainLayout() {
           ))}
         </nav>
 
-        <div className="mt-auto space-y-2 pt-6 border-t border-brand-50">
+        <div className="mt-auto space-y-2 pt-6 border-t-4 border-brand-200">
           <NavLink
             to="/settings"
             className={({ isActive }) => clsx(
-              "flex items-center gap-4 px-4 py-3.5 rounded-2xl font-semibold transition-all",
-              isActive ? "bg-brand-50 text-brand-900" : "text-brand-500 hover:text-brand-800 hover:bg-brand-50"
+              "flex items-center gap-4 px-4 py-3.5 rounded-none font-semibold transition-all",
+              isActive ? "bg-white text-black" : "text-slate-900 hover:text-black hover:bg-white"
             )}
           >
             <Settings className="w-6 h-6" />
@@ -147,7 +147,7 @@ export default function MainLayout() {
           </NavLink>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-semibold text-brand-500 hover:text-red-600 hover:bg-red-50 transition-all"
+            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-none font-semibold text-slate-900 hover:text-red-600 hover:bg-red-50 transition-all"
           >
             <LogOut className="w-6 h-6" />
             <span>Logout</span>
@@ -156,9 +156,9 @@ export default function MainLayout() {
       </aside>
 
       {/* Mobile Top Header */}
-      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-brand-100 sticky top-0 z-50">
+      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-card border-b-4 border-brand-200 sticky top-0 z-50">
         <Link to="/feed" className="flex items-center gap-2">
-          <div className="w-8 h-8 gradient-brand rounded-lg flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-8 h-8 gradient-brand rounded-none flex items-center justify-center text-white font-bold text-lg">
             TT
           </div>
         </Link>
@@ -180,7 +180,7 @@ export default function MainLayout() {
               />
             )}
           </div>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-brand-500">
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-900">
             {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
         </div>
@@ -188,7 +188,7 @@ export default function MainLayout() {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-[65px] bg-white z-40 p-6 animate-in slide-in-from-top duration-300">
+        <div className="md:hidden fixed inset-0 top-[65px] bg-card z-40 p-6 animate-in slide-in-from-top duration-300">
           <form onSubmit={handleSearch} className="relative mb-5">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
             <input
@@ -196,7 +196,7 @@ export default function MainLayout() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search everything..."
-              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-brand-50 border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-none bg-white border-4 border-brand-200 shadow-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all"
             />
           </form>
           <nav className="space-y-4">
@@ -206,8 +206,8 @@ export default function MainLayout() {
                 to={item.path}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) => clsx(
-                  "flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-lg transition-all",
-                  isActive ? "gradient-brand text-white shadow-lg" : "text-brand-500 bg-brand-50"
+                  "flex items-center gap-4 px-6 py-4 rounded-none font-bold text-lg transition-all",
+                  isActive ? "gradient-brand text-white shadow-lg" : "text-slate-900 bg-white"
                 )}
               >
                 {item.icon}
@@ -216,7 +216,7 @@ export default function MainLayout() {
             ))}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-lg text-brand-500 bg-red-50"
+              className="w-full flex items-center gap-4 px-6 py-4 rounded-none font-bold text-lg text-slate-900 bg-red-50"
             >
               <LogOut className="w-6 h-6" />
               <span>Logout</span>
@@ -237,7 +237,7 @@ export default function MainLayout() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search students, professors, labs..."
-                className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border border-brand-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
+                className="w-full pl-12 pr-4 py-3 rounded-none bg-card border-4 border-brand-200 shadow-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all shadow-sm"
               />
             </form>
             <div className="flex items-center gap-4 ml-6 relative group">
@@ -262,28 +262,28 @@ export default function MainLayout() {
               <div className="relative py-2">
                 <Link 
                   to="/profile" 
-                  className="flex items-center gap-3 bg-white border border-brand-100 p-1.5 pr-4 rounded-2xl shadow-sm hover:border-brand-300 transition-all cursor-pointer relative z-[101]"
+                  className="flex items-center gap-3 bg-card border-4 border-brand-200 shadow-lg p-1.5 pr-4 rounded-none shadow-sm hover:border-brand-300 transition-all cursor-pointer relative z-[101]"
                 >
-                  <ProfileAvatar profile={profile} className="w-9 h-9 rounded-xl gradient-brand text-white font-bold" />
+                  <ProfileAvatar profile={profile} className="w-9 h-9 rounded-none gradient-brand text-white font-bold" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-brand-900 leading-tight">{profile?.full_name}</span>
+                    <span className="text-sm font-bold text-black leading-tight">{profile?.full_name}</span>
                     <span className="text-[10px] text-brand-400 font-medium uppercase tracking-wider">{profile?.role}</span>
                   </div>
                 </Link>
 
                 {/* Dropdown Menu - Wrapped in a hover bridge container */}
                 <div className="absolute right-0 top-full -mt-1 pt-3 w-48 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 delay-75 z-[100]">
-                  <div className="bg-white border border-brand-100 rounded-2xl shadow-xl p-2">
+                  <div className="bg-card border-4 border-brand-200 shadow-lg rounded-none shadow-xl p-2">
                     <Link 
                       to="/settings" 
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-brand-600 hover:bg-brand-50 hover:text-brand-900 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-none text-sm font-bold text-black hover:bg-white hover:text-black transition-colors"
                     >
                       <Settings className="w-4 h-4" />
                       Settings
                     </Link>
                     <button 
                       onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-brand-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-none text-sm font-bold text-black hover:bg-red-50 hover:text-red-600 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
                       Logout
@@ -299,13 +299,13 @@ export default function MainLayout() {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-100 flex items-center justify-around py-3 px-2 z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t-4 border-brand-200 flex items-center justify-around py-3 px-2 z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
          {navItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
               className={({ isActive }) => clsx(
-                "flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all",
+                "flex flex-col items-center gap-1 px-3 py-1 rounded-none transition-all",
                 isActive ? "text-accent-600" : "text-brand-400"
               )}
             >
@@ -332,15 +332,15 @@ function NotificationBell({
       type="button"
       onClick={onClick}
       className={clsx(
-        'flex items-center justify-center text-brand-500 hover:text-brand-800 transition-all relative',
-        compact ? 'w-8 h-8' : 'w-12 h-12 bg-white border border-brand-100 rounded-2xl shadow-sm'
+        'flex items-center justify-center text-slate-900 hover:text-black transition-all relative',
+        compact ? 'w-8 h-8' : 'w-12 h-12 bg-card border-4 border-brand-200 shadow-lg rounded-none shadow-sm'
       )}
       aria-label="Notifications"
     >
       <Bell className="w-6 h-6" />
       {hasUnseen && (
         <span className={clsx(
-          'absolute w-3 h-3 bg-accent-500 border-2 border-white rounded-full',
+          'absolute w-3 h-3 bg-accent-500 border-4 border-brand-200 shadow-lg rounded-none',
           compact ? '-top-1 -right-1' : 'top-3 right-3'
         )} />
       )}
@@ -358,16 +358,16 @@ function NotificationsDropdown({
   onNavigate: (href: string) => void
 }) {
   return (
-    <div className="absolute right-0 top-full mt-3 w-[min(22rem,calc(100vw-2rem))] bg-white border border-brand-100 rounded-3xl shadow-xl z-[120] overflow-hidden">
-      <div className="px-5 py-4 border-b border-brand-50">
-        <h3 className="font-bold text-brand-900">Notifications</h3>
+    <div className="absolute right-0 top-full mt-3 w-[min(22rem,calc(100vw-2rem))] bg-card border-4 border-brand-200 shadow-lg rounded-none shadow-xl z-[120] overflow-hidden">
+      <div className="px-5 py-4 border-b-4 border-brand-200">
+        <h3 className="font-bold text-black">Notifications</h3>
       </div>
       {notifications.length === 0 ? (
         <div className="p-8 text-center">
-          <div className="w-14 h-14 gradient-soft rounded-2xl flex items-center justify-center text-brand-300 mx-auto mb-4">
+          <div className="w-14 h-14 gradient-soft rounded-none flex items-center justify-center text-brand-300 mx-auto mb-4">
             <Bell className="w-7 h-7" />
           </div>
-          <p className="text-brand-500 font-medium">No notifications yet.</p>
+          <p className="text-slate-900 font-medium">No notifications yet.</p>
         </div>
       ) : (
         <div className="max-h-96 overflow-y-auto p-2">
@@ -379,10 +379,10 @@ function NotificationsDropdown({
                 type="button"
                 onClick={() => onNavigate(notification.href)}
                 className={clsx(
-                  'w-full text-left p-4 rounded-2xl transition-all border',
+                  'w-full text-left p-4 rounded-none transition-all border',
                   isSeen
-                    ? 'border-transparent text-brand-400 hover:bg-brand-50'
-                    : 'border-accent-100 bg-accent-50/60 text-brand-800 hover:bg-accent-50'
+                    ? 'border-transparent text-brand-400 hover:bg-white'
+                    : 'border-accent-100 bg-accent-50/60 text-black hover:bg-accent-50'
                 )}
               >
                 <p className={clsx('text-sm leading-relaxed', isSeen ? 'font-medium' : 'font-bold')}>

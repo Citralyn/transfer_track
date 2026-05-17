@@ -98,36 +98,36 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-50 px-6 py-12 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-background px-6 py-12 flex flex-col items-center justify-center">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 gradient-brand rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+            <div className="w-10 h-10 gradient-brand rounded-none flex items-center justify-center text-white font-bold text-xl shadow-lg">
               TT
             </div>
-            <span className="text-2xl font-bold text-brand-900 tracking-tight">Transfer Track</span>
+            <span className="text-2xl font-bold text-black tracking-tight">Transfer Track</span>
           </Link>
           <div className="flex items-center justify-center gap-2 mb-2">
              {[1, 2].map(s => (
                <div key={s} className={clsx(
-                 "h-1.5 rounded-full transition-all duration-300",
+                 "h-1.5 rounded-none transition-all duration-300",
                  step === s ? "w-8 gradient-brand" : "w-2 bg-brand-200"
                )} />
              ))}
           </div>
         </div>
 
-        <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-brand-100 min-h-[500px] flex flex-col">
+        <div className="bg-card p-8 md:p-12 rounded-none shadow-xl border-4 border-brand-200 shadow-lg min-h-[500px] flex flex-col">
           {error && (
-            <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100 animate-in fade-in zoom-in-95">
+            <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-none text-sm border-4 border-brand-200 shadow-lg animate-in fade-in zoom-in-95">
               {error}
             </div>
           )}
 
           {step === 1 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2 text-center">Join the Community</h2>
-              <p className="text-brand-600 mb-10 text-center">Are you a student or a professor?</p>
+              <h2 className="text-3xl font-bold text-black mb-2 text-center">Join the Community</h2>
+              <p className="text-black mb-10 text-center">Are you a student or a professor?</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
                 <RoleCard 
@@ -150,8 +150,8 @@ export default function Signup() {
 
           {step === 2 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2 text-center">Account Details</h2>
-              <p className="text-brand-600 mb-8 text-center">Create your login information</p>
+              <h2 className="text-3xl font-bold text-black mb-2 text-center">Account Details</h2>
+              <p className="text-black mb-8 text-center">Create your login information</p>
               
               <form onSubmit={handleSignup} className="space-y-4 max-w-lg mx-auto w-full">
                 <div className="grid grid-cols-2 gap-4">
@@ -198,12 +198,12 @@ export default function Signup() {
             {step > 1 ? (
               <button
                 onClick={handleBack}
-                className="px-8 py-4 rounded-2xl font-bold text-brand-600 hover:bg-brand-50 transition-colors flex items-center gap-2"
+                className="px-8 py-4 rounded-none font-bold text-black hover:bg-background transition-colors flex items-center gap-2"
               >
                 <ArrowLeft className="w-5 h-5" /> Back
               </button>
             ) : (
-              <Link to="/login" className="text-brand-600 font-bold hover:text-brand-900 px-4">
+              <Link to="/login" className="text-black font-bold hover:text-black px-4">
                 Login instead
               </Link>
             )}
@@ -212,7 +212,7 @@ export default function Signup() {
               <button
                 disabled={!formData.role}
                 onClick={handleNext}
-                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
+                className="px-10 py-4 gradient-brand text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
               >
                 Next Step <ArrowRight className="w-5 h-5" />
               </button>
@@ -220,7 +220,7 @@ export default function Signup() {
               <button
                 onClick={handleSignup}
                 disabled={loading || !formData.email || !formData.full_name || !formData.username}
-                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
+                className="px-10 py-4 gradient-brand text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
               >
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Create Account <Check className="w-5 h-5" /></>}
               </button>
@@ -237,20 +237,20 @@ function RoleCard({ active, onClick, icon, title, description }: any) {
     <button
       onClick={onClick}
       className={clsx(
-        "flex flex-col items-center text-center p-8 rounded-[2rem] border-2 transition-all duration-300 group",
+        "flex flex-col items-center text-center p-8 rounded-none border-4 transition-all duration-300 group",
         active 
           ? "border-accent-400 bg-accent-50 shadow-md ring-4 ring-accent-100" 
-          : "border-brand-50 hover:border-brand-200 hover:bg-brand-50"
+          : "border-brand-50 hover:border-brand-200 hover:bg-background"
       )}
     >
       <div className={clsx(
-        "w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110 duration-300",
-        active ? "gradient-brand text-white" : "bg-brand-50 text-brand-400"
+        "w-20 h-20 rounded-none flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110 duration-300",
+        active ? "gradient-brand text-white" : "bg-background text-brand-400"
       )}>
         {icon}
       </div>
-      <h3 className={clsx("text-xl font-bold mb-3", active ? "text-brand-900" : "text-brand-700")}>{title}</h3>
-      <p className="text-sm text-brand-500 leading-relaxed">{description}</p>
+      <h3 className={clsx("text-xl font-bold mb-3", active ? "text-black" : "text-black")}>{title}</h3>
+      <p className="text-sm text-slate-900 leading-relaxed">{description}</p>
     </button>
   )
 }
@@ -282,7 +282,7 @@ function InputWithIcon({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all shadow-sm text-brand-900 placeholder:text-brand-300"
+          className="w-full pl-12 pr-4 py-3.5 rounded-none border-4 border-brand-200 shadow-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all shadow-sm text-black placeholder:text-brand-300"
         />
       </div>
     </div>
