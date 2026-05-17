@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -13,6 +13,7 @@ import {
   getConnectionCount,
   upsertProfile,
   withTimeout,
+  type ProfilePayload,
   type RelationshipStatus,
 } from '@/lib/supabaseHelpers'
 import { getOrCreateConversation } from '@/lib/messaging'
@@ -32,40 +33,27 @@ import { clsx } from 'clsx'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
+type ProfessorOpportunity = {
+  id: string
+  title?: string | null
+  university?: string | null
+  department?: string | null
+  description?: string | null
+  deadline?: string | null
+}
+
 export default function Profile() {
   const { username } = useParams()
   const { profile: loggedInProfile } = useAuthStore()
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<ProfilePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [connectionCount, setConnectionCount] = useState(0)
-  const [professorOpportunities, setProfessorOpportunities] = useState<any[]>([])
+  const [professorOpportunities, setProfessorOpportunities] = useState<ProfessorOpportunity[]>([])
   const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus | 'sending' | 'error'>('none')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    fetchProfile()
-  }, [username, loggedInProfile])
-
-  useEffect(() => {
-    if (!profile?.id) return
-
-    loadConnectionCount(profile.id)
-    if (profile.role === 'professor') {
-      loadProfessorOpportunities(profile.id)
-    } else {
-      setProfessorOpportunities([])
-    }
-
-    if (
-      loggedInProfile?.id &&
-      profile.id !== loggedInProfile.id
-    ) {
-      checkRelationshipStatus()
-    }
-  }, [profile?.id, loggedInProfile?.id])
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true)
     const targetUsername = username || loggedInProfile?.username
 
@@ -98,15 +86,15 @@ export default function Profile() {
       setProfile(!username || loggedInProfile?.username === username ? loggedInProfile : null)
     }
     setLoading(false)
-  }
+  }, [username, loggedInProfile])
 
-  const loadConnectionCount = async (profileId: string) => {
+  const loadConnectionCount = useCallback(async (profileId: string) => {
     const count = await getConnectionCount(profileId)
     setConnectionCount(count)
-  }
+  }, [])
 
-  const loadProfessorOpportunities = async (profileId: string) => {
-    if (!isSupabaseConfigured()) {
+  const loadProfessorOpportunities = useCallback(async (profileId: string, role?: string) => {
+    if (role !== 'professor' || !isSupabaseConfigured()) {
       setProfessorOpportunities([])
       return
     }
@@ -132,15 +120,38 @@ export default function Profile() {
       console.warn('Professor opportunities lookup unavailable:', error)
       setProfessorOpportunities([])
     }
-  }
+  }, [])
 
-  const checkRelationshipStatus = async () => {
-    if (!loggedInProfile?.id || !profile?.id) return
-
-    const status = await getRelationshipStatus(loggedInProfile.id, profile.id)
+  const checkRelationshipStatus = useCallback(async (currentProfileId: string, viewedProfileId: string) => {
+    const status = await getRelationshipStatus(currentProfileId, viewedProfileId)
     setRelationshipStatus(status)
     setRequestMessage(null)
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
+
+  useEffect(() => {
+    if (!profile?.id) return
+
+    loadConnectionCount(profile.id)
+    loadProfessorOpportunities(profile.id, profile.role)
+
+    if (loggedInProfile?.id && profile.id !== loggedInProfile.id) {
+      checkRelationshipStatus(loggedInProfile.id, profile.id)
+    } else {
+      setRelationshipStatus('none')
+      setRequestMessage(null)
+    }
+  }, [
+    profile?.id,
+    profile?.role,
+    loggedInProfile?.id,
+    loadConnectionCount,
+    loadProfessorOpportunities,
+    checkRelationshipStatus,
+  ])
 
   const handleConnect = async () => {
     if (!loggedInProfile || !profile?.id) return
@@ -438,7 +449,7 @@ export default function Profile() {
   )
 }
 
-function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
+function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string | null }) {
   return (
     <div className="flex items-center gap-4 group">
       <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-400 group-hover:bg-brand-100 transition-colors">
@@ -484,7 +495,7 @@ function ProfileSection({
   )
 }
 
-function OpportunityPreview({ opportunity }: { opportunity: any }) {
+function OpportunityPreview({ opportunity }: { opportunity: ProfessorOpportunity }) {
   return (
     <div className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
       <h4 className="font-bold text-brand-900">{opportunity.title}</h4>
