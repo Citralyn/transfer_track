@@ -122,23 +122,23 @@ export default function SearchResults() {
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-bold text-brand-900">Search</h1>
-        <p className="text-brand-500 mt-1 font-medium">
+        <h1 className="text-3xl font-semibold text-[#1d1d1f]">Search</h1>
+        <p className="text-[#1d1d1f] mt-1 font-bold">
           {query ? `${totalResults} result${totalResults === 1 ? '' : 's'} for "${query}"` : 'Search posts, opportunities, and people.'}
         </p>
       </div>
 
       {isLoading ? (
-        <div className="rounded-[2.5rem] border border-brand-100 bg-white p-10 text-center shadow-sm">
-          <Loader2 className="w-7 h-7 animate-spin text-brand-500 mx-auto" />
+        <div className="rounded-xl border border-black/5 bg-white p-10 text-center shadow-xl">
+          <Loader2 className="w-7 h-7 animate-spin text-[#1d1d1f] mx-auto" />
         </div>
       ) : !query.trim() || totalResults === 0 ? (
-        <div className="rounded-[2.5rem] border border-brand-100 bg-white p-10 text-center shadow-sm">
-          <div className="w-16 h-16 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-5">
+        <div className="rounded-xl border border-black/5 bg-white p-10 text-center shadow-xl">
+          <div className="w-16 h-16 bg-[#34c759] rounded-full flex items-center justify-center text-[#1d1d1f] mx-auto mb-5">
             <Search className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-brand-900">{query ? 'No matches' : 'Start a search'}</h3>
-          <p className="text-brand-500 mt-2">Try a name, school, topic, description, department, tag, or post keyword.</p>
+          <h3 className="text-xl font-semibold text-[#1d1d1f]">{query ? 'No matches' : 'Start a search'}</h3>
+          <p className="text-[#1d1d1f] mt-2">Try a name, school, topic, description, department, tag, or post keyword.</p>
         </div>
       ) : (
         <>
@@ -150,11 +150,11 @@ export default function SearchResults() {
             onViewMore={() => showMore('people')}
           >
             {visibleResults.people.map((person: any) => (
-              <Link key={person.id} to={`/profile/${person.username}`} className="flex items-center gap-4 rounded-2xl border border-brand-100 bg-brand-50/60 p-4 hover:shadow-md transition-all group">
-                <ProfileAvatar profile={person} className="w-12 h-12 rounded-xl gradient-brand text-white font-bold text-lg shrink-0" />
+              <Link key={person.id} to={`/profile/${person.username}`} className="flex items-center gap-4 rounded-xl border border-black/5 bg-white/60 p-4 hover:shadow-xl transition-all group">
+                <ProfileAvatar profile={person} className="w-12 h-12 rounded-full bg-[#ff3b30] text-white font-semibold text-lg shrink-0" />
                 <div>
-                  <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{person.full_name}</p>
-                  <p className="text-sm text-brand-500">{person.role} - {person.school_name || person.department || 'Transfer Track'}</p>
+                  <p className="font-semibold text-[#1d1d1f] group-hover:text-[#4f46e5] transition-colors">{person.full_name}</p>
+                  <p className="text-sm text-[#1d1d1f]">{person.role} - {person.school_name || person.department || 'Transfer Track'}</p>
                 </div>
               </Link>
             ))}
@@ -168,10 +168,10 @@ export default function SearchResults() {
             onViewMore={() => showMore('opportunities')}
           >
             {visibleResults.opportunities.map((opportunity: any) => (
-              <Link key={opportunity.id} to={`/opportunities/${opportunity.id}`} className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
-                <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{opportunity.title}</p>
-                <p className="text-sm text-brand-500 mt-1">{opportunity.university} - {opportunity.department}</p>
-                <p className="text-sm text-brand-600 mt-3 line-clamp-2">{opportunity.description}</p>
+              <Link key={opportunity.id} to={`/opportunities/${opportunity.id}`} className="block rounded-xl border border-black/5 bg-white/60 p-5 hover:shadow-xl transition-all group">
+                <p className="font-semibold text-[#1d1d1f] group-hover:text-[#4f46e5] transition-colors">{opportunity.title}</p>
+                <p className="text-sm text-[#1d1d1f] mt-1">{opportunity.university} - {opportunity.department}</p>
+                <p className="text-sm text-[#1d1d1f] mt-3 line-clamp-2">{opportunity.description}</p>
               </Link>
             ))}
           </ResultSection>
@@ -184,15 +184,15 @@ export default function SearchResults() {
             onViewMore={() => showMore('posts')}
           >
             {visibleResults.posts.map((post: any) => (
-              <Link key={post.id} to={`/feed/${post.id}`} className="block rounded-2xl border border-brand-100 bg-brand-50/60 p-5 hover:shadow-md transition-all group">
+              <Link key={post.id} to={`/feed/${post.id}`} className="block rounded-xl border border-black/5 bg-white/60 p-5 hover:shadow-xl transition-all group">
                 <div className="flex items-center gap-3 mb-3">
-                  <ProfileAvatar profile={post.profiles} className="w-10 h-10 rounded-xl gradient-brand text-white font-bold text-sm shrink-0" />
+                  <ProfileAvatar profile={post.profiles} className="w-10 h-10 rounded-full bg-[#ff3b30] text-white font-semibold text-sm shrink-0" />
                   <div>
-                    <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{post.profiles?.full_name || 'Post'}</p>
-                    <p className="text-xs text-brand-400">{post.profiles?.school_name || 'Transfer Track'}</p>
+                    <p className="font-semibold text-[#1d1d1f] group-hover:text-[#4f46e5] transition-colors">{post.profiles?.full_name || 'Post'}</p>
+                    <p className="text-xs text-[#1d1d1f]">{post.profiles?.school_name || 'Transfer Track'}</p>
                   </div>
                 </div>
-                <p className="text-sm text-brand-600 line-clamp-3">{post.content}</p>
+                <p className="text-sm text-[#1d1d1f] line-clamp-3">{post.content}</p>
               </Link>
             ))}
           </ResultSection>
@@ -221,18 +221,18 @@ function ResultSection({
   const remainingCount = count - visibleCount
 
   return (
-    <section className="rounded-[2.5rem] border border-brand-100 bg-white p-8 shadow-sm">
-      <h2 className="text-xl font-bold text-brand-900 mb-5 flex items-center gap-2">
+    <section className="rounded-xl border border-black/5 bg-white p-8 shadow-xl">
+      <h2 className="text-xl font-semibold text-[#1d1d1f] mb-5 flex items-center gap-2">
         <span className="text-accent-500">{icon}</span>
         {title}
-        <span className="text-xs font-bold bg-brand-50 text-brand-500 px-2 py-1 rounded-full">{count}</span>
+        <span className="text-xs font-semibold bg-white text-[#1d1d1f] px-2 py-1 rounded-xl">{count}</span>
       </h2>
       <div className="space-y-4">{children}</div>
       {remainingCount > 0 && (
         <button
           type="button"
           onClick={onViewMore}
-          className="mt-5 w-full rounded-2xl border border-brand-100 bg-white px-5 py-3 text-sm font-bold text-brand-700 hover:border-accent-200 hover:text-accent-600 hover:shadow-sm transition-all"
+          className="mt-5 w-full rounded-xl border border-black/5 bg-white px-5 py-3 text-sm font-semibold text-[#1d1d1f] hover:border-accent-200 hover:text-[#4f46e5] hover:shadow-xl transition-all"
         >
           View more {Math.min(RESULT_INCREMENT, remainingCount)}
         </button>

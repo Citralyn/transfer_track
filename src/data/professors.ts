@@ -95,7 +95,7 @@ export const professors: Professor[] = [
   {
     id: 'prof-8',
     name: 'Dr. Elena Ruiz',
-    title: 'Assistant Professor of Applied AI',
+    title:1 'Assistant Professor of Applied AI',
     university: 'Capital City University',
     department: 'Computer Science',
     researchAreas: ['machine learning', 'educational AI', 'student success analytics'],

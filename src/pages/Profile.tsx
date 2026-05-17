@@ -209,33 +209,33 @@ export default function Profile() {
   const opportunityPreview = professorOpportunities.slice(0, 3)
   return (
     <div className="space-y-8 pb-20">
-      <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm overflow-hidden">
-        <div className="h-40 gradient-brand relative">
+      <div className="bg-white rounded-xl border border-black/5 shadow-xl overflow-hidden">
+        <div className="h-40 bg-[#ff3b30] relative">
           {profile.banner_url ? (
             <img src={profile.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
           )}
         </div>
-        <div className="px-8 pb-8 flex flex-col md:flex-row items-end gap-6 -mt-16 relative z-10">
-          <ProfileAvatar profile={profile} className="w-40 h-40 rounded-[3rem] border-8 border-white gradient-brand text-white font-bold text-6xl shadow-xl" />
-          <div className="flex-1 pb-4">
+        <div className="px-8 pb-8 flex flex-col md:flex-row items-end gap-6 -mt-10 relative z-10">
+          <ProfileAvatar profile={profile} className="w-40 h-40 rounded-full border-8 border-white bg-[#ff3b30] text-white font-semibold text-6xl shadow-xl" />
+          <div className="flex-1 pb-4 pt-14 md:pt-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-extrabold text-brand-900 leading-tight">{profile.full_name}</h1>
+                <h1 className="text-4xl font-bold text-[#1d1d1f] leading-tight">{profile.full_name}</h1>
                 <Link
                   to={isOwnProfile ? '/connections' : `/profile/${profile.username}/connections`}
-                  className="inline-flex items-center text-sm font-bold text-accent-600 hover:text-accent-700 hover:underline mt-3"
+                  className="inline-flex items-center text-sm font-semibold text-[#0066cc] hover:underline mt-3"
                 >
                   {connectionCount} connections
                 </Link>
-                <p className="text-brand-500 font-bold tracking-wide uppercase text-xs mt-1">@{profile.username} • {profile.role}</p>
+                <p className="text-[#86868b] font-semibold tracking-wide uppercase text-xs mt-1">@{profile.username} • {profile.role}</p>
               </div>
               <div className="flex gap-3">
                 {isOwnProfile ? (
                   <Link 
                     to="/settings"
-                    className="bg-brand-50 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-brand-100"
+                    className="bg-white text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2 border border-black/5"
                   >
                     <Settings className="w-5 h-5" /> Edit Profile
                   </Link>
@@ -245,8 +245,8 @@ export default function Profile() {
                       onClick={handleConnect}
                       disabled={relationshipStatus === 'sending' || relationshipStatus === 'connected'}
                       className={clsx(
-                        "px-8 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2",
-                        relationshipStatus === 'connected' ? "bg-brand-100 text-brand-700 shadow-none hover:shadow-none" : "gradient-brand text-white"
+                        "px-8 py-3 rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2",
+                        relationshipStatus === 'connected' ? "bg-[#ffcc00] text-[#1d1d1f]" : "bg-[#ff3b30] text-white"
                       )}
                     >
                       {relationshipStatus === 'sending' ? (
@@ -261,7 +261,7 @@ export default function Profile() {
                     </button>
                     <button 
                       onClick={handleStartMessage}
-                      className="bg-white border border-brand-100 text-brand-800 px-4 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all"
+                      className="bg-white border border-black/5 text-[#1d1d1f] px-4 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
                     >
                       <MessageSquare className="w-5 h-5" />
                     </button>
@@ -274,15 +274,15 @@ export default function Profile() {
       </div>
 
       {requestMessage && (
-        <div className="bg-brand-50 border border-brand-100 text-brand-700 px-6 py-4 rounded-3xl shadow-sm">
+        <div className="bg-white border border-black/5 text-[#1d1d1f] px-6 py-4 rounded-xl shadow-xl">
           {requestMessage}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-8">
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-brand-900 mb-6 flex items-center gap-2">
+          <div className="bg-white rounded-xl border border-black/5 shadow-xl p-8">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] mb-6 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-accent-500" /> About
             </h3>
             <div className="space-y-5">
@@ -296,11 +296,11 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-brand-900 mb-6">Interests</h3>
+          <div className="bg-white rounded-xl border border-black/5 shadow-xl p-8">
+            <h3 className="text-lg font-semibold text-[#1d1d1f] mb-6">Interests</h3>
             <div className="flex flex-wrap gap-2">
               {(profile.interests || ['STEM', 'Research', 'Transfer Prep', 'Networking']).map((tag: string) => (
-                <span key={tag} className="bg-accent-50 text-accent-700 px-4 py-2 rounded-xl text-sm font-bold border border-accent-100">
+                <span key={tag} className="bg-[#f5f5f7] text-[#1d1d1f] px-4 py-2 rounded-xl text-sm font-semibold border border-black/5">
                   {tag}
                 </span>
               ))}
@@ -309,9 +309,9 @@ export default function Profile() {
         </div>
 
         <div className="md:col-span-2 space-y-8">
-          <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10">
-            <h3 className="text-2xl font-bold text-brand-900 mb-6">Biography</h3>
-            <p className="text-brand-700 leading-relaxed text-lg whitespace-pre-wrap">
+          <div className="bg-white rounded-xl border border-black/5 shadow-xl p-10">
+            <h3 className="text-2xl font-semibold text-[#1d1d1f] mb-6">Biography</h3>
+            <p className="text-[#1d1d1f] leading-relaxed text-lg whitespace-pre-wrap">
               {profile.bio || `Welcome to ${profile.full_name}'s profile. This user is a ${profile.role} at ${profile.school_name}.`}
             </p>
           </div>
@@ -324,7 +324,7 @@ export default function Profile() {
                 emptyText="No opportunities posted yet."
                 hasEntries={opportunityPreview.length > 0}
                 action={(
-                  <Link to={`/profile/${profile.username}/opportunities`} className="bg-brand-50 text-brand-800 px-4 py-2 rounded-xl font-bold text-sm border border-brand-100 hover:shadow-sm transition-all">
+                  <Link to={`/profile/${profile.username}/opportunities`} className="bg-white text-[#1d1d1f] px-4 py-2 rounded-xl font-semibold text-sm border border-black/5 hover:shadow-lg transition-all">
                     View all opportunities
                   </Link>
                 )}
@@ -341,12 +341,12 @@ export default function Profile() {
                 hasEntries={classMaterials.length > 0}
               >
                 {classMaterials.map((item) => (
-                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                    <p className="text-sm font-bold text-brand-400 uppercase tracking-wider">
+                  <div key={item.id} className="p-5 rounded-xl border border-black/5 bg-white shadow-sm">
+                    <p className="text-sm font-semibold text-[#86868b] uppercase tracking-wider">
                       {[item.course_code, item.course_name].filter(Boolean).join(' - ') || 'Course material'}
                     </p>
-                    <h4 className="font-bold text-brand-900 mt-2">{item.title || 'Untitled material'}</h4>
-                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                    <h4 className="font-semibold text-[#1d1d1f] mt-2">{item.title || 'Untitled material'}</h4>
+                    {item.description && <p className="text-[#1d1d1f] mt-3 whitespace-pre-wrap">{item.description}</p>}
                     {item.link && <ExternalProfileLink href={item.link} label="Open material" />}
                   </div>
                 ))}
@@ -359,14 +359,14 @@ export default function Profile() {
                 hasEntries={research.length > 0}
               >
                 {research.map((item) => (
-                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                    <h4 className="font-bold text-brand-900">{item.title || 'Untitled research'}</h4>
+                  <div key={item.id} className="p-5 rounded-xl border border-black/5 bg-white shadow-sm">
+                    <h4 className="font-semibold text-[#1d1d1f]">{item.title || 'Untitled research'}</h4>
                     {(item.publication || item.year) && (
-                      <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">
+                      <p className="text-sm font-semibold text-[#86868b] uppercase tracking-wider mt-2">
                         {[item.publication, item.year].filter(Boolean).join(' - ')}
                       </p>
                     )}
-                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                    {item.description && <p className="text-[#1d1d1f] mt-3 whitespace-pre-wrap">{item.description}</p>}
                     {item.link && <ExternalProfileLink href={item.link} label="View research" />}
                   </div>
                 ))}
@@ -374,17 +374,17 @@ export default function Profile() {
             </>
           ) : (
             <>
-              <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10 overflow-hidden relative">
-                 <div className="absolute top-0 right-0 w-32 h-32 gradient-soft rounded-bl-full -z-0" />
-                 <h3 className="text-2xl font-bold text-brand-900 mb-8 relative z-10">Transfer Goals</h3>
+              <div className="bg-white rounded-xl border border-black/5 shadow-xl p-10 overflow-hidden relative">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#34c759]/10 rounded-full -z-0" />
+                 <h3 className="text-2xl font-semibold text-[#1d1d1f] mb-8 relative z-10">Transfer Goals</h3>
                  <div className="space-y-6 relative z-10">
-                   <div className="p-6 bg-brand-50 rounded-3xl border border-brand-100">
-                     <h4 className="font-bold text-brand-900 mb-2">Target Universities</h4>
-                     <p className="text-brand-600">{profile.transfer_goals || 'UC Berkeley, UCLA, Stanford University'}</p>
+                   <div className="p-6 bg-[#f5f5f7] rounded-xl border border-black/5">
+                     <h4 className="font-semibold text-[#1d1d1f] mb-2">Target Universities</h4>
+                     <p className="text-[#1d1d1f]">{profile.transfer_goals || 'UC Berkeley, UCLA, Stanford University'}</p>
                    </div>
-                   <div className="p-6 bg-accent-50/50 rounded-3xl border border-accent-100">
-                     <h4 className="font-bold text-accent-800 mb-2">Academic Interests</h4>
-                     <p className="text-accent-700">{(profile.interests || ['Machine Learning', 'Physics', 'Mathematical Modeling']).join(', ')}</p>
+                   <div className="p-6 bg-[#af52de]/10 rounded-xl border border-black/5">
+                     <h4 className="font-semibold text-[#af52de] mb-2">Academic Interests</h4>
+                     <p className="text-[#1d1d1f]">{(profile.interests || ['Machine Learning', 'Physics', 'Mathematical Modeling']).join(', ')}</p>
                    </div>
                  </div>
               </div>
@@ -396,10 +396,10 @@ export default function Profile() {
                 hasEntries={coursework.length > 0}
               >
                 {coursework.map((course) => (
-                  <div key={course.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                    <h4 className="font-bold text-brand-900">{course.course_name || 'Untitled course'}</h4>
-                    {course.course_code && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-1">{course.course_code}</p>}
-                    {course.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{course.description}</p>}
+                  <div key={course.id} className="p-5 rounded-xl border border-black/5 bg-white/60">
+                    <h4 className="font-semibold text-[#1d1d1f]">{course.course_name || 'Untitled course'}</h4>
+                    {course.course_code && <p className="text-sm font-semibold text-[#1d1d1f] uppercase tracking-wider mt-1">{course.course_code}</p>}
+                    {course.description && <p className="text-[#1d1d1f] mt-3 whitespace-pre-wrap">{course.description}</p>}
                   </div>
                 ))}
               </ProfileSection>
@@ -411,15 +411,15 @@ export default function Profile() {
                 hasEntries={experience.length > 0}
               >
                 {experience.map((item) => (
-                  <div key={item.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-                    <h4 className="font-bold text-brand-900">{item.title || 'Untitled role'}</h4>
-                    <p className="text-brand-600 mt-1">{item.organization || 'Organization not specified'}</p>
+                  <div key={item.id} className="p-5 rounded-xl border border-black/5 bg-white/60">
+                    <h4 className="font-semibold text-[#1d1d1f]">{item.title || 'Untitled role'}</h4>
+                    <p className="text-[#1d1d1f] mt-1">{item.organization || 'Organization not specified'}</p>
                     {(item.start_date || item.end_date || item.is_present) && (
-                      <p className="text-sm text-brand-400 font-bold mt-2">
+                      <p className="text-sm text-[#1d1d1f] font-semibold mt-2">
                         {item.start_date || 'Start'} - {item.is_present ? 'Present' : item.end_date || 'End'}
                       </p>
                     )}
-                    {item.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{item.description}</p>}
+                    {item.description && <p className="text-[#1d1d1f] mt-3 whitespace-pre-wrap">{item.description}</p>}
                   </div>
                 ))}
               </ProfileSection>
@@ -431,13 +431,13 @@ export default function Profile() {
                 hasEntries={projects.length > 0}
               >
                 {projects.map((project) => (
-                  <div key={project.id} className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
+                  <div key={project.id} className="p-5 rounded-xl border border-black/5 bg-white/60">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                      <h4 className="font-bold text-brand-900">{project.project_name || 'Untitled project'}</h4>
-                      {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-accent-600 hover:underline">View Project</a>}
+                      <h4 className="font-semibold text-[#1d1d1f]">{project.project_name || 'Untitled project'}</h4>
+                      {project.link && <a href={project.link} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#4f46e5] hover:underline">View Project</a>}
                     </div>
-                    {project.tech_stack && <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">{project.tech_stack}</p>}
-                    {project.description && <p className="text-brand-600 mt-3 whitespace-pre-wrap">{project.description}</p>}
+                    {project.tech_stack && <p className="text-sm font-semibold text-[#1d1d1f] uppercase tracking-wider mt-2">{project.tech_stack}</p>}
+                    {project.description && <p className="text-[#1d1d1f] mt-3 whitespace-pre-wrap">{project.description}</p>}
                   </div>
                 ))}
               </ProfileSection>
@@ -452,12 +452,12 @@ export default function Profile() {
 function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string | null }) {
   return (
     <div className="flex items-center gap-4 group">
-      <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-400 group-hover:bg-brand-100 transition-colors">
+      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1d1d1f] group-hover:bg-[#ffcc00] transition-colors">
         {icon}
       </div>
       <div>
-        <p className="text-[10px] uppercase tracking-widest font-bold text-brand-300 leading-none mb-1">{label}</p>
-        <p className="text-brand-900 font-bold">{value || 'Not specified'}</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#1d1d1f] leading-none mb-1">{label}</p>
+        <p className="text-[#1d1d1f] font-semibold">{value || 'Not specified'}</p>
       </div>
     </div>
   )
@@ -481,15 +481,15 @@ function ProfileSection({
   if (!hasEntries && !isOwnProfile) return null
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-10">
+    <div className="bg-white rounded-xl border border-black/5 shadow-xl p-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h3 className="text-2xl font-bold text-brand-900">{title}</h3>
+        <h3 className="text-2xl font-semibold text-[#1d1d1f]">{title}</h3>
         {action}
       </div>
       {hasEntries ? (
         <div className="space-y-4">{children}</div>
       ) : (
-        <p className="text-brand-400">{emptyText}</p>
+        <p className="text-[#1d1d1f]">{emptyText}</p>
       )}
     </div>
   )
@@ -497,14 +497,14 @@ function ProfileSection({
 
 function OpportunityPreview({ opportunity }: { opportunity: ProfessorOpportunity }) {
   return (
-    <div className="p-5 rounded-2xl border border-brand-100 bg-brand-50/60">
-      <h4 className="font-bold text-brand-900">{opportunity.title}</h4>
-      <p className="text-sm font-bold text-brand-400 uppercase tracking-wider mt-2">
+    <div className="p-5 rounded-xl border border-black/5 bg-white/60">
+      <h4 className="font-semibold text-[#1d1d1f]">{opportunity.title}</h4>
+      <p className="text-sm font-semibold text-[#1d1d1f] uppercase tracking-wider mt-2">
         {[opportunity.university, opportunity.department].filter(Boolean).join(' - ')}
       </p>
-      {opportunity.description && <p className="text-brand-600 mt-3 line-clamp-3">{opportunity.description}</p>}
+      {opportunity.description && <p className="text-[#1d1d1f] mt-3 line-clamp-3">{opportunity.description}</p>}
       {opportunity.deadline && (
-        <p className="text-sm text-brand-500 mt-3">Deadline: {new Date(opportunity.deadline).toLocaleDateString()}</p>
+        <p className="text-sm text-[#1d1d1f] mt-3">Deadline: {new Date(opportunity.deadline).toLocaleDateString()}</p>
       )}
     </div>
   )
@@ -516,7 +516,7 @@ function ExternalProfileLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-accent-600 hover:underline"
+      className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#4f46e5] hover:underline"
     >
       {label}
       <ExternalLink className="w-4 h-4" />

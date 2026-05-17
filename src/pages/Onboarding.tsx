@@ -162,29 +162,29 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-50 px-6 py-12 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#f5f5f7] px-6 py-12 flex flex-col items-center justify-center">
       <div className="w-full max-w-3xl">
         <div className="mb-10">
-          <p className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-3">Profile setup</p>
+          <p className="text-xs font-semibold text-[#1d1d1f] uppercase tracking-widest mb-3">Profile setup</p>
           <div className="flex items-center gap-3">
             {steps.map((item, index) => (
               <div key={item} className="flex items-center flex-1 last:flex-none">
                 <div className={clsx(
-                  'w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all',
-                  index <= stepIndex ? 'gradient-brand text-white shadow-lg' : 'bg-white text-brand-300 border border-brand-100'
+                  'w-10 h-10 rounded-xl flex items-center justify-center font-semibold transition-all',
+                  index <= stepIndex ? 'bg-[#ff3b30] text-white shadow-xl' : 'bg-white text-[#1d1d1f] border border-black/5'
                 )}>
                   {index < stepIndex ? <Check className="w-5 h-5" /> : index + 1}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={clsx('h-1 flex-1 mx-3 rounded-full', index < stepIndex ? 'gradient-brand' : 'bg-brand-100')} />
+                  <div className={clsx('h-1 flex-1 mx-3 rounded-xl', index < stepIndex ? 'bg-[#ff3b30]' : 'bg-[#ffcc00]')} />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-brand-100 min-h-[520px] flex flex-col">
-          {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">{error}</div>}
+        <div className="bg-white p-8 md:p-12 rounded-xl shadow-xl border border-black/5 min-h-[520px] flex flex-col">
+          {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-black/5">{error}</div>}
 
           <StepContent
             step={currentStep}
@@ -202,7 +202,7 @@ export default function Onboarding() {
             {!isFirstStep ? (
               <button
                 onClick={handleBack}
-                className="px-8 py-4 rounded-2xl font-bold text-brand-600 hover:bg-brand-50 transition-colors flex items-center gap-2"
+                className="px-8 py-4 rounded-xl font-semibold text-[#1d1d1f] hover:bg-white transition-colors flex items-center gap-2"
               >
                 <ArrowLeft className="w-5 h-5" /> Back
               </button>
@@ -213,7 +213,7 @@ export default function Onboarding() {
                 <button
                   onClick={handleSkip}
                   disabled={loading}
-                  className="px-6 py-4 rounded-2xl font-bold text-brand-500 hover:bg-brand-50 transition-colors disabled:opacity-50"
+                  className="px-6 py-4 rounded-xl font-semibold text-[#1d1d1f] hover:bg-white transition-colors disabled:opacity-50"
                 >
                   Skip
                 </button>
@@ -221,7 +221,7 @@ export default function Onboarding() {
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
+                className="px-10 py-4 bg-[#ff3b30] text-white rounded-full font-semibold shadow-xl hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
               >
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : isFinalStep ? <>Finish <Check className="w-5 h-5" /></> : <>Next <ArrowRight className="w-5 h-5" /></>}
               </button>
@@ -252,17 +252,17 @@ function StepContent({
     return (
       <div className="space-y-8 flex-1">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 mb-2">Academic details</h2>
-          <p className="text-brand-600">Add your school and role-specific academic information.</p>
+          <h2 className="text-3xl font-semibold text-[#1d1d1f] mb-2">Academic details</h2>
+          <p className="text-[#1d1d1f]">Add your school and role-specific academic information.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-brand-900 mb-2">{formData.role === 'professor' ? 'University' : 'College'}</label>
+            <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{formData.role === 'professor' ? 'University' : 'College'}</label>
             <select
               value={formData.school_name}
               onChange={(event) => setFormData({ ...formData, school_name: event.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white"
+              className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white"
             >
               <option value="">Select a school...</option>
               {schools
@@ -287,14 +287,14 @@ function StepContent({
     return (
       <div className="space-y-8 flex-1">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 mb-2">Write your biography</h2>
-          <p className="text-brand-600">Share a short introduction for people who visit your profile.</p>
+          <h2 className="text-3xl font-semibold text-[#1d1d1f] mb-2">Write your biography</h2>
+          <p className="text-[#1d1d1f]">Share a short introduction for people who visit your profile.</p>
         </div>
         <textarea
           rows={9}
           value={formData.bio}
           onChange={(event) => setFormData({ ...formData, bio: event.target.value })}
-          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          className="w-full px-5 py-4 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-[#1d1d1f]"
           placeholder="Tell your story, what you're studying, and what kinds of academic connections you're looking for."
         />
       </div>
@@ -305,14 +305,14 @@ function StepContent({
     return (
       <div className="space-y-8 flex-1">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 mb-2">Add your interests</h2>
-          <p className="text-brand-600">Separate interests with commas.</p>
+          <h2 className="text-3xl font-semibold text-[#1d1d1f] mb-2">Add your interests</h2>
+          <p className="text-[#1d1d1f]">Separate interests with commas.</p>
         </div>
         <textarea
           rows={7}
           value={formData.interestsText}
           onChange={(event) => setFormData({ ...formData, interestsText: event.target.value })}
-          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          className="w-full px-5 py-4 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-[#1d1d1f]"
           placeholder="Machine learning, biology, robotics, transfer advising"
         />
       </div>
@@ -323,14 +323,14 @@ function StepContent({
     return (
       <div className="space-y-8 flex-1">
         <div>
-          <h2 className="text-3xl font-bold text-brand-900 mb-2">Transfer goals</h2>
-          <p className="text-brand-600">Add target schools, target majors, and academic or career goals.</p>
+          <h2 className="text-3xl font-semibold text-[#1d1d1f] mb-2">Transfer goals</h2>
+          <p className="text-[#1d1d1f]">Add target schools, target majors, and academic or career goals.</p>
         </div>
         <textarea
           rows={9}
           value={formData.transfer_goals}
           onChange={(event) => setFormData({ ...formData, transfer_goals: event.target.value })}
-          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          className="w-full px-5 py-4 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-[#1d1d1f]"
           placeholder="UC Berkeley or UCLA for Computer Science; research in human-centered AI; prepare for graduate school."
         />
       </div>
@@ -340,14 +340,14 @@ function StepContent({
   return (
     <div className="space-y-8 flex-1">
       <div>
-        <h2 className="text-3xl font-bold text-brand-900 mb-2">Add a profile image</h2>
-        <p className="text-brand-600">Choose an image from your files.</p>
+        <h2 className="text-3xl font-semibold text-[#1d1d1f] mb-2">Add a profile image</h2>
+        <p className="text-[#1d1d1f]">Choose an image from your files.</p>
       </div>
       <div className="flex flex-col items-center gap-6">
-        <div className="w-36 h-36 rounded-[2.5rem] gradient-soft flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
-          {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-16 h-16 text-brand-300" />}
+        <div className="w-36 h-36 rounded-xl bg-[#34c759] flex items-center justify-center border border-black/5 shadow-xl overflow-hidden">
+          {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-16 h-16 text-[#1d1d1f]" />}
         </div>
-        <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+        <label className="cursor-pointer bg-white border border-black/5 text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-xl hover:shadow-xl transition-all flex items-center gap-2">
           <Camera className="w-5 h-5" />
           Choose Image
           <input
@@ -371,11 +371,11 @@ function StepContent({
 function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-brand-900 mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{label}</label>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
         placeholder={placeholder}
       />
     </div>

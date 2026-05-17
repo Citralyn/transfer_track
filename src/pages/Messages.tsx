@@ -156,29 +156,29 @@ export default function Messages() {
 
   if (loading) {
     return (
-      <div className="h-[calc(100vh-12rem)] flex items-center justify-center bg-white rounded-[3rem] border border-brand-100 shadow-sm">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+      <div className="h-[calc(100vh-12rem)] flex items-center justify-center bg-white rounded-xl border border-black/5 shadow-xl">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1d1d1f]" />
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-[3rem] border border-brand-100 shadow-sm h-[calc(100vh-12rem)] flex overflow-hidden">
+    <div className="bg-white rounded-xl border border-black/5 shadow-xl h-[calc(100vh-12rem)] flex overflow-hidden">
       {/* Conversations Sidebar */}
       <div className={clsx(
         "w-full md:w-80 lg:w-96 border-r border-brand-50 flex flex-col transition-all",
         conversationId ? "hidden md:flex" : "flex"
       )}>
         <div className="p-6 border-b border-brand-50">
-          <h2 className="text-2xl font-bold text-brand-900 mb-4">Messages</h2>
+          <h2 className="text-2xl font-semibold text-[#1d1d1f] mb-4">Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1d1d1f]" />
             <input 
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-brand-50 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -194,25 +194,25 @@ export default function Messages() {
                   key={conv.id}
                   onClick={() => navigate(`/messages/${conv.id}`)}
                   className={clsx(
-                    "p-4 flex gap-4 cursor-pointer hover:bg-brand-50 transition-colors border-l-4",
-                    isActive ? "bg-brand-50 border-accent-500" : "border-transparent"
+                    "p-4 flex gap-4 cursor-pointer hover:bg-white transition-colors border-l-4",
+                    isActive ? "bg-white border-accent-500" : "border-transparent"
                   )}
                 >
                   <ProfileAvatar 
                     profile={otherUser} 
-                    className="w-12 h-12 rounded-2xl gradient-brand text-white font-bold shrink-0 shadow-sm" 
+                    className="w-12 h-12 rounded-xl bg-[#ff3b30] text-white font-semibold shrink-0 shadow-xl" 
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
-                      <h4 className="font-bold text-brand-900 truncate">{otherUser?.full_name}</h4>
+                      <h4 className="font-semibold text-[#1d1d1f] truncate">{otherUser?.full_name}</h4>
                     </div>
-                    <p className="text-xs text-brand-400 font-medium uppercase tracking-wider">{otherUser?.role}</p>
+                    <p className="text-xs text-[#1d1d1f] font-bold uppercase tracking-wider">{otherUser?.role}</p>
                   </div>
                 </div>
               )
             })
           ) : (
-            <div className="p-10 text-center text-brand-400">
+            <div className="p-10 text-center text-[#1d1d1f]">
               <p className="text-sm">No conversations found.</p>
             </div>
           )}
@@ -221,7 +221,7 @@ export default function Messages() {
 
       {/* Message Area */}
       <div className={clsx(
-        "flex-1 flex flex-col bg-brand-50/30",
+        "flex-1 flex flex-col bg-white/30",
         !conversationId ? "hidden md:flex items-center justify-center p-12 text-center" : "flex"
       )}>
         {conversationId && activeConversation ? (
@@ -231,19 +231,19 @@ export default function Messages() {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/messages')}
-                  className="md:hidden p-2 hover:bg-brand-50 rounded-full transition-colors"
+                  className="md:hidden p-2 hover:bg-white rounded-xl transition-colors"
                 >
-                  <ChevronLeft className="w-6 h-6 text-brand-600" />
+                  <ChevronLeft className="w-6 h-6 text-[#1d1d1f]" />
                 </button>
                 <ProfileAvatar 
                   profile={activeConversation.participants[0]?.profiles} 
-                  className="w-10 h-10 rounded-xl gradient-brand text-white font-bold shadow-sm" 
+                  className="w-10 h-10 rounded-xl bg-[#ff3b30] text-white font-semibold shadow-xl" 
                 />
                 <div>
-                  <h3 className="font-bold text-brand-900 leading-tight">
+                  <h3 className="font-semibold text-[#1d1d1f] leading-tight">
                     {activeConversation.participants[0]?.profiles?.full_name}
                   </h3>
-                  <p className="text-[10px] text-brand-400 font-bold uppercase tracking-widest">
+                  <p className="text-[10px] text-[#1d1d1f] font-semibold uppercase tracking-widest">
                     {activeConversation.participants[0]?.profiles?.role}
                   </p>
                 </div>
@@ -251,11 +251,11 @@ export default function Messages() {
               <div className="flex gap-2">
                 <Link 
                   to={`/profile/${activeConversation.participants[0]?.profiles?.username}`}
-                  className="p-2 hover:bg-brand-50 rounded-xl transition-colors text-brand-400"
+                  className="p-2 hover:bg-white rounded-xl transition-colors text-[#1d1d1f]"
                 >
                   <User className="w-5 h-5" />
                 </Link>
-                <button className="p-2 hover:bg-brand-50 rounded-xl transition-colors text-brand-400">
+                <button className="p-2 hover:bg-white rounded-xl transition-colors text-[#1d1d1f]">
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
@@ -264,7 +264,7 @@ export default function Messages() {
             {/* Messages List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="flex justify-center mb-8">
-                 <div className="bg-white border border-brand-100 px-4 py-1.5 rounded-full text-[10px] font-bold text-brand-400 uppercase tracking-widest flex items-center gap-2">
+                 <div className="bg-white border border-black/5 px-4 py-1.5 rounded-xl text-[10px] font-semibold text-[#1d1d1f] uppercase tracking-widest flex items-center gap-2">
                     <Calendar className="w-3 h-3" />
                     Conversation Started {format(new Date(activeConversation.created_at), 'MMMM do, yyyy')}
                  </div>
@@ -281,14 +281,14 @@ export default function Messages() {
                     )}
                   >
                     <div className={clsx(
-                      "px-5 py-3 rounded-[2rem] text-sm leading-relaxed shadow-sm",
+                      "px-5 py-3 rounded-xl text-sm leading-relaxed shadow-xl",
                       isMe 
-                        ? "gradient-brand text-white rounded-tr-none" 
-                        : "bg-white border border-brand-100 text-brand-800 rounded-tl-none"
+                        ? "bg-[#ff3b30] text-white rounded-full" 
+                        : "bg-white border border-black/5 text-[#1d1d1f] rounded-xl"
                     )}>
                       {msg.content}
                     </div>
-                    <span className="text-[10px] text-brand-300 font-bold mt-1.5 px-2">
+                    <span className="text-[10px] text-[#1d1d1f] font-semibold mt-1.5 px-2">
                       {format(new Date(msg.created_at), 'h:mm a')}
                     </span>
                   </div>
@@ -305,12 +305,12 @@ export default function Messages() {
                   placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 bg-brand-50 px-6 py-4 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 transition-all text-brand-900"
+                  className="flex-1 bg-white px-6 py-4 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-all text-[#1d1d1f]"
                 />
                 <button 
                   type="submit"
                   disabled={!newMessage.trim() || sending}
-                  className="w-14 h-14 gradient-brand rounded-2xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 active:scale-95"
+                  className="w-14 h-14 bg-[#ff3b30] rounded-full flex items-center justify-center text-white shadow-xl hover:shadow-xl transition-all disabled:opacity-50 active:scale-95"
                 >
                   {sending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                 </button>
@@ -319,11 +319,11 @@ export default function Messages() {
           </>
         ) : (
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-white rounded-[2rem] shadow-inner flex items-center justify-center text-brand-100 mb-6">
+            <div className="w-20 h-20 bg-white rounded-xl shadow-inner flex items-center justify-center text-[#1d1d1f] mb-6">
               <MessageCircle className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-bold text-brand-900 mb-2">Your Conversations</h3>
-            <p className="text-brand-400 text-sm max-w-xs mx-auto font-medium">
+            <h3 className="text-xl font-semibold text-[#1d1d1f] mb-2">Your Conversations</h3>
+            <p className="text-[#1d1d1f] text-sm max-w-xs mx-auto font-bold">
               Select a chat from the sidebar or visit a profile to start a new conversation.
             </p>
           </div>

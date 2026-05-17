@@ -204,13 +204,13 @@ export default function Feed() {
         {/* Simple Trigger Input */}
         <div 
           onClick={() => setIsEditorOpen(true)}
-          className="bg-white p-6 rounded-[2rem] border border-brand-100 shadow-sm cursor-pointer hover:shadow-md transition-all group"
+          className="bg-white p-6 rounded-xl border border-black/5 shadow-xl cursor-pointer hover:shadow-xl transition-all group"
         >
           <div className="flex gap-4 items-center">
             <Link to={`/profile/${profile?.username}`} className="hover:scale-105 transition-transform shrink-0">
-              <ProfileAvatar profile={profile} className="w-12 h-12 rounded-2xl gradient-brand text-white font-bold text-xl shadow-md" />
+              <ProfileAvatar profile={profile} className="w-12 h-12 rounded-full bg-[#ff3b30] text-white font-semibold text-xl shadow-xl" />
             </Link>
-            <div className="flex-1 bg-brand-50 rounded-2xl px-6 py-3.5 text-brand-400 font-medium group-hover:bg-brand-100 transition-colors">
+            <div className="flex-1 bg-[#f5f5f7] rounded-full px-6 py-3.5 text-[#1d1d1f] font-bold group-hover:bg-[#ffcc00] transition-colors">
               What's on your mind, {profile?.full_name?.split(' ')[0]}?
             </div>
           </div>
@@ -219,26 +219,26 @@ export default function Feed() {
         {/* Posts List */}
         <div className="space-y-6 pb-20 md:pb-10">
           {missingRoutePost && (
-            <div className="rounded-[2rem] border border-amber-100 bg-amber-50 px-5 py-4 font-semibold text-amber-800">
+            <div className="rounded-xl border border-black/5 bg-amber-50 px-5 py-4 font-semibold text-amber-800">
               This post could not be found.
             </div>
           )}
 
           {isLoading ? (
             <div className="flex justify-center py-20">
-               <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+               <Loader2 className="w-8 h-8 animate-spin text-[#1d1d1f]" />
             </div>
           ) : posts && posts.length > 0 ? (
             posts.map((post) => (
               <PostCard key={post.id} post={post} isHighlighted={post.id === postId} />
             ))
           ) : (
-            <div className="py-20 text-center bg-white rounded-[2rem] border border-brand-100">
-               <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-300 mx-auto mb-4">
+            <div className="py-20 text-center bg-white rounded-xl border border-black/5 shadow-xl">
+               <div className="w-16 h-16 bg-[#f5f5f7] rounded-xl flex items-center justify-center text-[#1d1d1f] mx-auto mb-4">
                   <Type className="w-8 h-8" />
                </div>
-               <h3 className="font-bold text-brand-900">Your feed is empty</h3>
-               <p className="text-brand-500 text-sm">Be the first to share an update!</p>
+               <h3 className="font-semibold text-[#1d1d1f]">Your feed is empty</h3>
+               <p className="text-[#1d1d1f] text-sm">Be the first to share an update!</p>
             </div>
           )}
         </div>
@@ -246,8 +246,8 @@ export default function Feed() {
 
       {/* Right Sidebar */}
       <div className="hidden lg:block space-y-6">
-        <div className="bg-white p-6 rounded-[2rem] border border-brand-100 shadow-sm">
-          <h3 className="font-bold text-brand-900 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+        <div className="bg-white p-6 rounded-xl border border-black/5 shadow-xl">
+          <h3 className="font-semibold text-[#1d1d1f] mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
             Suggested Connections
           </h3>
           <div className="space-y-4">
@@ -261,13 +261,13 @@ export default function Feed() {
                 />
               ))
             ) : (
-              <p className="text-sm text-brand-500 leading-relaxed">No new profile suggestions right now.</p>
+              <p className="text-sm text-[#86868b] leading-relaxed">No new profile suggestions right now.</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-[2rem] border border-brand-100 shadow-sm">
-          <h3 className="font-bold text-brand-900 mb-4 text-sm uppercase tracking-wider">Opportunities For You</h3>
+        <div className="bg-white p-6 rounded-xl border border-black/5 shadow-xl">
+          <h3 className="font-semibold text-[#1d1d1f] mb-4 text-sm uppercase tracking-wider">Opportunities For You</h3>
           <div className="space-y-3">
             {sidebarOpportunities.slice(0, 4).map((opportunity: any) => (
               <OpportunitySidebarItem
@@ -380,25 +380,25 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-brand-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
+      className="fixed inset-0 bg-[#ff3b30]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
     >
       <motion.div 
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="px-8 py-6 border-b border-brand-50 flex items-center justify-between bg-brand-50/30">
+        <div className="px-8 py-6 border-b border-black/5 flex items-center justify-between bg-[#f5f5f7]">
           <div className="flex items-center gap-3">
-            <ProfileAvatar profile={profile} className="w-10 h-10 rounded-xl gradient-brand text-white font-bold text-lg shadow-sm" />
+            <ProfileAvatar profile={profile} className="w-10 h-10 rounded-full bg-[#ff3b30] text-white font-semibold text-lg shadow-xl" />
             <div>
-              <h3 className="font-bold text-brand-900 leading-tight">Create Post</h3>
-              <p className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">Post to Academic Feed</p>
+              <h3 className="font-semibold text-[#1d1d1f] leading-tight">Create Post</h3>
+              <p className="text-[10px] text-[#86868b] font-semibold uppercase tracking-wider">Post to Academic Feed</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white border border-brand-100 flex items-center justify-center text-brand-400 hover:text-brand-900 transition-all shadow-sm"
+            className="w-10 h-10 rounded-xl bg-white border border-black/5 flex items-center justify-center text-[#1d1d1f] hover:text-[#1d1d1f] transition-all shadow-xl"
           >
             <X className="w-5 h-5" />
           </button>
@@ -410,16 +410,16 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full min-h-[200px] text-xl text-brand-900 placeholder:text-brand-300 outline-none resize-none bg-transparent"
+            className="w-full min-h-[200px] text-xl text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none bg-transparent"
             autoFocus
           />
 
           {imagePreview && (
             <div className="relative group">
-              <img src={imagePreview} className="w-full h-auto rounded-3xl border border-brand-100 shadow-sm" alt="Preview" />
+              <img src={imagePreview} className="w-full h-auto rounded-xl border border-black/5 shadow-xl" alt="Preview" />
               <button 
                 onClick={() => { setImage(null); setImagePreview(null); }}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-black/50 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -427,15 +427,15 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
           )}
         </div>
 
-        <div className="p-6 bg-brand-50/50 border-t border-brand-50">
+        <div className="p-6 bg-[#f5f5f7] backdrop-blur-md border-t border-black/5">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-1 bg-white p-1.5 rounded-2xl border border-brand-100 shadow-sm">
+            <div className="flex items-center gap-1 bg-white p-1.5 rounded-xl border border-black/5 shadow-xl">
               <ToolbarButton onClick={() => insertText('**', '**')} icon={<Bold className="w-4 h-4" />} title="Bold" />
               <ToolbarButton onClick={() => insertText('*', '*')} icon={<Italic className="w-4 h-4" />} title="Italic" />
               <ToolbarButton onClick={() => insertText('# ')} icon={<Heading1 className="w-4 h-4" />} title="H1" />
               <ToolbarButton onClick={() => insertText('## ')} icon={<Heading2 className="w-4 h-4" />} title="H2" />
               <ToolbarButton onClick={() => insertText('- ')} icon={<List className="w-4 h-4" />} title="List" />
-              <div className="w-px h-6 bg-brand-100 mx-1" />
+              <div className="w-px h-6 bg-black/10 mx-1" />
               
               <div className="relative">
                 <ToolbarButton 
@@ -444,7 +444,7 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
                   title="Emoji" 
                 />
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full mb-4 left-0 bg-white border border-brand-100 p-3 rounded-2xl shadow-xl grid grid-cols-4 gap-2 z-10 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="absolute bottom-full mb-4 left-0 bg-white border border-black/5 p-3 rounded-xl shadow-xl grid grid-cols-4 gap-2 z-10 animate-in fade-in slide-in-from-bottom-2">
                     {emojis.map(e => (
                       <button 
                         key={e} 
@@ -475,9 +475,9 @@ function RichPostEditor({ onClose, onPostCreated }: { onClose: () => void, onPos
             <button 
               onClick={handlePost}
               disabled={isPosting || (!content.trim() && !image)}
-              className="gradient-brand text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50"
+              className="bg-[#0066cc] text-white px-8 py-4 rounded-full font-semibold shadow-xl hover:bg-[#0044bb] transition-all flex items-center gap-3 disabled:opacity-50"
             >
-              {isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Publish Post <Send className="w-4 h-4" /></>}
+              {isPosting ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Publish Post <Send className="w-5 h-5" /></>}
             </button>
           </div>
         </div>
@@ -491,7 +491,7 @@ function ToolbarButton({ onClick, icon, title }: { onClick: () => void, icon: Re
     <button 
       onClick={onClick}
       title={title}
-      className="p-2.5 rounded-xl hover:bg-brand-50 text-brand-500 hover:text-brand-900 transition-all"
+      className="p-2.5 rounded-xl hover:bg-[#f5f5f7] text-[#1d1d1f] transition-all"
     >
       {icon}
     </button>
@@ -505,17 +505,17 @@ function SuggestionItem({ profile, status, onConnect }: { profile: any; status: 
   return (
     <div className="flex items-center justify-between gap-3 group">
       <Link to={`/profile/${profile.username}`} className="min-w-0 flex items-center gap-3">
-        <ProfileAvatar profile={profile} className="w-10 h-10 rounded-xl gradient-soft border border-brand-50 text-brand-400 font-bold text-sm shrink-0" />
+        <ProfileAvatar profile={profile} className="w-10 h-10 rounded-full bg-[#ff3b30] text-white font-semibold text-sm shrink-0 shadow-md" />
         <div className="min-w-0 flex flex-col">
-          <span className="text-sm font-bold text-brand-900 leading-tight group-hover:text-accent-600 transition-colors truncate">{profile.full_name}</span>
-          <span className="text-[10px] text-brand-400 font-medium truncate">{roleLabel} - {profile.school_name}</span>
+          <span className="text-sm font-bold text-[#1d1d1f] leading-tight group-hover:text-[#0066cc] transition-colors truncate">{profile.full_name}</span>
+          <span className="text-[10px] text-[#86868b] font-medium truncate uppercase tracking-wider">{roleLabel} • {profile.school_name}</span>
         </div>
       </Link>
       <button
         onClick={onConnect}
         disabled={isSending}
         aria-label={`Connect with ${profile.full_name}`}
-        className="p-1.5 rounded-lg bg-brand-50 text-brand-500 hover:bg-brand-900 hover:text-white transition-all disabled:opacity-50 shrink-0"
+        className="p-1.5 rounded-full bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#34c759] hover:text-white transition-all disabled:opacity-50 shrink-0 border border-black/5 shadow-sm"
       >
         {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
       </button>
@@ -527,15 +527,12 @@ function OpportunitySidebarItem({ opportunity, onClick }: { opportunity: any; on
   return (
     <button
       onClick={onClick}
-      className="w-full text-left flex flex-col hover:bg-brand-50 p-2 rounded-xl transition-colors cursor-pointer group"
+      className="w-full text-left flex flex-col hover:bg-[#f5f5f7] p-3 rounded-xl transition-all border border-transparent hover:border-black/5 group"
     >
-      <span className="text-sm font-bold text-brand-900 group-hover:text-accent-600 transition-colors line-clamp-2">{opportunity.title}</span>
-      <span className="text-[10px] text-brand-400 font-medium mt-1">
-        {[opportunity.university, opportunity.department].filter(Boolean).join(' - ')}
+      <span className="text-sm font-bold text-[#1d1d1f] group-hover:text-[#0066cc] transition-colors line-clamp-2">{opportunity.title}</span>
+      <span className="text-[10px] text-[#86868b] font-semibold mt-1 uppercase tracking-wider">
+        {[opportunity.university, opportunity.department].filter(Boolean).join(' • ')}
       </span>
-      {opportunity.description && (
-        <span className="text-xs text-brand-500 mt-2 line-clamp-2">{opportunity.description}</span>
-      )}
     </button>
   )
 }
@@ -611,36 +608,36 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
     <div
       id={`post-${post.id}`}
       className={clsx(
-        "bg-white rounded-[2rem] border shadow-sm hover:shadow-md transition-all overflow-hidden scroll-mt-24",
-        isHighlighted ? "border-accent-300 ring-4 ring-accent-100" : "border-brand-100"
+        "bg-white rounded-xl border border-black/5 shadow-xl hover:shadow-xl transition-all overflow-hidden scroll-mt-24",
+        isHighlighted && "ring-4 ring-[#ffcc00]/30 border-[#ffcc00]"
       )}
     >
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Link to={`/profile/${profiles?.username}`} className="hover:scale-105 transition-transform shrink-0">
-              <ProfileAvatar profile={profiles} className="w-12 h-12 rounded-2xl gradient-brand text-white font-bold text-xl shadow-sm" />
+              <ProfileAvatar profile={profiles} className="w-12 h-12 rounded-full bg-[#ff3b30] text-white font-semibold text-xl shadow-xl" />
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${profiles?.username}`} className="font-bold text-brand-900 leading-tight hover:text-accent-600 transition-colors">
+                <Link to={`/profile/${profiles?.username}`} className="font-bold text-[#1d1d1f] leading-tight hover:text-[#0066cc] transition-colors">
                   {profiles?.full_name}
                 </Link>
                 {isProfessor && (
-                  <span className="bg-accent-100 text-accent-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="bg-[#ffcc00]/10 text-[#ffcc00] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#ffcc00]/20">
                     Professor
                   </span>
                 )}
               </div>
-              <span className="text-xs text-brand-400 font-medium">{profiles?.school_name} • {formatDistanceToNow(new Date(created_at))} ago</span>
+              <span className="text-xs text-[#86868b] font-semibold">{profiles?.school_name} • {formatDistanceToNow(new Date(created_at))} ago</span>
             </div>
           </div>
-          <button className="text-brand-300 hover:text-brand-600 transition-colors">
-            <MoreHorizontal className="w-6 h-6" />
+          <button className="text-[#86868b] hover:text-[#1d1d1f] transition-colors p-2 rounded-full hover:bg-[#f5f5f7]">
+            <MoreHorizontal className="w-5 h-5" />
           </button>
         </div>
         
-        <div className="prose prose-brand max-w-none text-brand-800 leading-relaxed mb-4">
+        <div className="prose prose-brand max-w-none text-[#1d1d1f] leading-relaxed mb-4">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </div>
@@ -650,23 +647,23 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
           <img 
             src={image_url} 
             alt="Post content" 
-            className="w-full h-auto rounded-3xl object-cover border border-brand-50 shadow-sm"
+            className="w-full h-auto rounded-xl object-cover border border-black/5 shadow-md"
           />
         </div>
       )}
 
-      <div className="px-6 py-4 bg-brand-50/50 border-t border-brand-50 flex items-center justify-between">
+      <div className="px-6 py-4 bg-[#f5f5f7] border-t border-black/5 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <button 
             onClick={toggleLike}
             className={clsx(
               "flex items-center gap-2 transition-colors group",
-              isLiked ? "text-accent-600" : "text-brand-500 hover:text-accent-600"
+              isLiked ? "text-[#ff3b30]" : "text-[#86868b] hover:text-[#ff3b30]"
             )}
           >
             <div className={clsx(
               "p-2 rounded-xl transition-colors",
-              isLiked ? "bg-accent-50" : "group-hover:bg-accent-50"
+              isLiked ? "bg-[#ff3b30]/10" : "group-hover:bg-[#ff3b30]/10"
             )}>
               <Heart className={clsx("w-5 h-5", isLiked && "fill-current")} />
             </div>
@@ -676,35 +673,35 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
             onClick={() => setShowComments(!showComments)}
             className={clsx(
               "flex items-center gap-2 transition-colors group",
-              showComments ? "text-brand-900" : "text-brand-500 hover:text-brand-900"
+              showComments ? "text-[#1d1d1f]" : "text-[#86868b] hover:text-[#1d1d1f]"
             )}
           >
             <div className={clsx(
               "p-2 rounded-xl transition-colors",
-              showComments ? "bg-brand-100" : "group-hover:bg-brand-100"
+              showComments ? "bg-[#34c759]/10" : "group-hover:bg-[#34c759]/10"
             )}>
               <MessageCircle className="w-5 h-5" />
             </div>
             <span className="text-sm font-bold">{commentCount}</span>
           </button>
         </div>
-        <button className="text-brand-500 hover:text-brand-900 transition-colors p-2 rounded-xl hover:bg-brand-100">
+        <button className="text-[#86868b] hover:text-[#0066cc] transition-colors p-2 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-black/5">
           <Share2 className="w-5 h-5" />
         </button>
       </div>
 
       {showComments && (
-        <div className="px-6 py-6 bg-white border-t border-brand-50 animate-in slide-in-from-top duration-300">
+        <div className="px-6 py-6 bg-white border-t border-black/5 animate-in slide-in-from-top duration-300">
           <form onSubmit={handleComment} className="flex gap-3 mb-6">
-            <ProfileAvatar profile={currentProfile} className="w-8 h-8 rounded-lg gradient-brand text-white font-bold text-xs shrink-0 mt-1" />
+            <ProfileAvatar profile={currentProfile} className="w-8 h-8 rounded-full bg-[#ff3b30] text-white font-semibold text-xs shrink-0 mt-1 shadow-sm" />
             <div className="flex-1 relative">
               <input 
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
                 placeholder="Write a comment..."
-                className="w-full bg-brand-50 rounded-xl px-4 py-2 text-sm outline-none border border-transparent focus:border-brand-200 transition-all pr-10"
+                className="w-full bg-[#f5f5f7] rounded-full px-4 py-2 text-sm outline-none border border-transparent focus:border-black/10 transition-all pr-10 text-[#1d1d1f]"
               />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-400 hover:text-accent-600">
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#0066cc] hover:text-[#0044bb]">
                 <Send className="w-4 h-4" />
               </button>
             </div>
@@ -713,13 +710,13 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
           <div className="space-y-4">
             {post_comments?.map((comment: any) => (
               <div key={comment.id} className="flex gap-3 group">
-                <ProfileAvatar profile={comment.profiles} className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 font-bold text-xs shrink-0" />
-                <div className="flex-1 bg-brand-50/50 p-3 rounded-2xl rounded-tl-none border border-brand-50">
+                <ProfileAvatar profile={comment.profiles} className="w-8 h-8 rounded-full bg-[#ffcc00] text-[#1d1d1f] font-semibold text-xs shrink-0 shadow-sm" />
+                <div className="flex-1 bg-[#f5f5f7] p-4 rounded-2xl border border-black/5">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-brand-900">{comment.profiles?.full_name}</span>
-                    <span className="text-[10px] text-brand-400">{formatDistanceToNow(new Date(comment.created_at))} ago</span>
+                    <span className="text-xs font-bold text-[#1d1d1f]">{comment.profiles?.full_name}</span>
+                    <span className="text-[10px] text-[#86868b] font-semibold">{formatDistanceToNow(new Date(comment.created_at))} ago</span>
                   </div>
-                  <p className="text-sm text-brand-700 leading-snug">{comment.content}</p>
+                  <p className="text-sm text-[#1d1d1f] leading-relaxed">{comment.content}</p>
                 </div>
               </div>
             ))}

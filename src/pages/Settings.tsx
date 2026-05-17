@@ -12,7 +12,8 @@ import {
   type ProjectEntry,
   type ResearchEntry,
 } from '@/lib/supabaseHelpers'
-import { Camera, Check, Loader2, Plus, Trash2, User } from 'lucide-react'
+import { Camera, Check, Loader2, Plus, Trash2, User, Bell, Shield } from 'lucide-react'
+import { clsx } from 'clsx'
 
 export default function Settings() {
   const { profile, setProfile } = useAuthStore()
@@ -97,134 +98,144 @@ export default function Settings() {
     }
   }
 
-  if (!profile) return <div className="py-20 text-center">Profile not found</div>
+  if (!profile) return <div className="py-20 text-center text-[#1d1d1f]">Profile not found</div>
 
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-bold text-brand-900">Settings</h1>
-        <p className="text-brand-500 mt-1 font-medium">Update the profile details students and professors see.</p>
+        <h1 className="text-3xl font-semibold text-[#1d1d1f]">Settings</h1>
+        <p className="text-[#86868b] mt-1 font-bold">Manage your account and profile preferences.</p>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8 md:p-12">
-        <h2 className="text-xl font-bold text-brand-900 mb-8">Profile Information</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1 space-y-2">
+          <SettingsTab icon={<User className="w-5 h-5" />} label="Profile" active />
+          <SettingsTab icon={<Bell className="w-5 h-5" />} label="Notifications" />
+          <SettingsTab icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
+        </div>
 
-        {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">{error}</div>}
+        <div className="lg:col-span-3 space-y-8">
+          <div className="bg-white rounded-xl border border-black/5 shadow-xl p-8 md:p-12">
+            <h2 className="text-xl font-semibold text-[#1d1d1f] mb-8">Profile Information</h2>
 
-        <form onSubmit={handleUpdateProfile} className="space-y-8">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-28 h-28 rounded-[2rem] gradient-soft flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
-              {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-brand-300" />}
-            </div>
-            <div className="w-full">
-              <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Image</label>
-              <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
-                <Camera className="w-5 h-5" />
-                Choose Image
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (!file) return
-                    setAvatarFile(file)
-                    const reader = new FileReader()
-                    reader.onloadend = () => setAvatarPreview(reader.result as string)
-                    reader.readAsDataURL(file)
-                  }}
-                />
-              </label>
-            </div>
-          </div>
+            {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-black/5">{error}</div>}
 
-          <div>
-            <label className="block text-sm font-semibold text-brand-900 mb-2">Profile Banner</label>
-            <div className="h-40 rounded-[2rem] gradient-brand overflow-hidden border border-brand-100 shadow-sm mb-4">
-              {bannerPreview || formData.banner_url ? (
-                <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+            <form onSubmit={handleUpdateProfile} className="space-y-8">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="w-28 h-28 rounded-full bg-[#34c759] flex items-center justify-center border border-black/5 shadow-xl overflow-hidden shrink-0">
+                  {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-white" />}
+                </div>
+                <div className="w-full">
+                  <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">Profile Image</label>
+                  <label className="cursor-pointer bg-white border border-black/5 text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2">
+                    <Camera className="w-5 h-5" />
+                    Choose Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        if (!file) return
+                        setAvatarFile(file)
+                        const reader = new FileReader()
+                        reader.onloadend = () => setAvatarPreview(reader.result as string)
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">Profile Banner</label>
+                <div className="h-40 rounded-xl bg-[#ff3b30] overflow-hidden border border-black/5 shadow-xl mb-4">
+                  {bannerPreview || formData.banner_url ? (
+                    <img src={bannerPreview || formData.banner_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+                  )}
+                </div>
+                <label className="cursor-pointer bg-white border border-black/5 text-[#1d1d1f] px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Choose Banner
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (!file) return
+                      setBannerFile(file)
+                      const reader = new FileReader()
+                      reader.onloadend = () => setBannerPreview(reader.result as string)
+                      reader.readAsDataURL(file)
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextField label="Full Name" value={formData.full_name} onChange={(full_name) => setFormData({ ...formData, full_name })} />
+                <TextField label="Username" value={formData.username} onChange={(username) => setFormData({ ...formData, username })} />
+                <TextField label="College" value={formData.school_name} onChange={(school_name) => setFormData({ ...formData, school_name })} />
+                {profile.role === 'student' ? (
+                  <>
+                    <TextField label="Major" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
+                    <TextField label="Academic Year" value={formData.academic_year} onChange={(academic_year) => setFormData({ ...formData, academic_year })} />
+                  </>
+                ) : (
+                  <TextField label="Department" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
+                )}
+              </div>
+
+              <TextArea label="Biography" value={formData.bio} onChange={(bio) => setFormData({ ...formData, bio })} placeholder="Tell your story..." />
+              <TextArea label="Interests" value={formData.interestsText} onChange={(interestsText) => setFormData({ ...formData, interestsText })} placeholder="Separate interests with commas." />
+              {profile.role === 'student' && (
+                <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
               )}
-            </div>
-            <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all inline-flex items-center gap-2">
-              <Camera className="w-5 h-5" />
-              Choose Banner
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (!file) return
-                  setBannerFile(file)
-                  const reader = new FileReader()
-                  reader.onloadend = () => setBannerPreview(reader.result as string)
-                  reader.readAsDataURL(file)
-                }}
-              />
-            </label>
+
+              {profile.role === 'student' ? (
+                <>
+                  <CourseworkEditor
+                    entries={formData.coursework}
+                    onChange={(coursework) => setFormData({ ...formData, coursework })}
+                  />
+                  <ExperienceEditor
+                    entries={formData.experience}
+                    onChange={(experience) => setFormData({ ...formData, experience })}
+                  />
+                  <ProjectsEditor
+                    entries={formData.projects}
+                    onChange={(projects) => setFormData({ ...formData, projects })}
+                  />
+                </>
+              ) : (
+                <>
+                  <ClassMaterialsEditor
+                    entries={formData.class_materials}
+                    onChange={(class_materials) => setFormData({ ...formData, class_materials })}
+                  />
+                  <ResearchEditor
+                    entries={formData.research}
+                    onChange={(research) => setFormData({ ...formData, research })}
+                  />
+                </>
+              )}
+
+              <div className="flex items-center gap-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={loading || !formData.full_name || !formData.username || !formData.school_name}
+                  className="bg-[#ff3b30] text-white px-8 py-3.5 rounded-full font-semibold shadow-xl hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <Check className="w-5 h-5" /> : 'Save Changes')}
+                </button>
+                {success && <span className="text-green-600 font-semibold text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
+              </div>
+            </form>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TextField label="Full Name" value={formData.full_name} onChange={(full_name) => setFormData({ ...formData, full_name })} />
-            <TextField label="Username" value={formData.username} onChange={(username) => setFormData({ ...formData, username })} />
-            <TextField label="College" value={formData.school_name} onChange={(school_name) => setFormData({ ...formData, school_name })} />
-            {profile.role === 'student' ? (
-              <>
-                <TextField label="Major" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
-                <TextField label="Academic Year" value={formData.academic_year} onChange={(academic_year) => setFormData({ ...formData, academic_year })} />
-              </>
-            ) : (
-              <TextField label="Department" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} />
-            )}
-          </div>
-
-          <TextArea label="Biography" value={formData.bio} onChange={(bio) => setFormData({ ...formData, bio })} placeholder="Tell your story..." />
-          <TextArea label="Interests" value={formData.interestsText} onChange={(interestsText) => setFormData({ ...formData, interestsText })} placeholder="Separate interests with commas." />
-          {profile.role === 'student' && (
-            <TextArea label="Transfer Goals" value={formData.transfer_goals} onChange={(transfer_goals) => setFormData({ ...formData, transfer_goals })} placeholder="Target schools, target majors, and academic goals." />
-          )}
-
-          {profile.role === 'student' ? (
-            <>
-              <CourseworkEditor
-                entries={formData.coursework}
-                onChange={(coursework) => setFormData({ ...formData, coursework })}
-              />
-              <ExperienceEditor
-                entries={formData.experience}
-                onChange={(experience) => setFormData({ ...formData, experience })}
-              />
-              <ProjectsEditor
-                entries={formData.projects}
-                onChange={(projects) => setFormData({ ...formData, projects })}
-              />
-            </>
-          ) : (
-            <>
-              <ClassMaterialsEditor
-                entries={formData.class_materials}
-                onChange={(class_materials) => setFormData({ ...formData, class_materials })}
-              />
-              <ResearchEditor
-                entries={formData.research}
-                onChange={(research) => setFormData({ ...formData, research })}
-              />
-            </>
-          )}
-
-          <div className="flex items-center gap-4 pt-4">
-            <button
-              type="submit"
-              disabled={loading || !formData.full_name || !formData.username || !formData.school_name}
-              className="bg-brand-900 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <Check className="w-5 h-5" /> : 'Save Changes')}
-            </button>
-            {success && <span className="text-green-600 font-bold text-sm animate-in fade-in duration-300">Profile updated successfully!</span>}
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   )
@@ -233,11 +244,11 @@ export default function Settings() {
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-brand-900 mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{label}</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-xl border border-black/5 bg-[#f5f5f7] focus:bg-white focus:ring-2 focus:ring-[#0066cc]/20 outline-none transition-all"
       />
     </div>
   )
@@ -246,12 +257,12 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-brand-900 mb-2">{label}</label>
+      <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{label}</label>
       <textarea
         rows={4}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"
+        className="w-full px-4 py-3 rounded-xl border border-black/5 bg-[#f5f5f7] focus:bg-white focus:ring-2 focus:ring-[#0066cc]/20 outline-none transition-all resize-none"
         placeholder={placeholder}
       />
     </div>
@@ -289,7 +300,7 @@ function ExperienceEditor({ entries, onChange }: { entries: ExperienceEntry[]; o
             <TextField label="Start Date" value={entry.start_date || ''} onChange={(start_date) => updateEntry(entries, index, { ...entry, start_date }, onChange)} />
             <TextField label="End Date" value={entry.is_present ? '' : entry.end_date || ''} onChange={(end_date) => updateEntry(entries, index, { ...entry, end_date }, onChange)} />
           </div>
-          <label className="flex items-center gap-2 text-sm font-bold text-brand-600">
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#1d1d1f]">
             <input
               type="checkbox"
               checked={Boolean(entry.is_present)}
@@ -365,10 +376,10 @@ function ResearchEditor({ entries, onChange }: { entries: ResearchEntry[]; onCha
 
 function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => void; children: React.ReactNode }) {
   return (
-    <section className="border-t border-brand-50 pt-8 space-y-4">
+    <section className="border-t border-black/5 pt-8 space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-lg font-bold text-brand-900">{title}</h3>
-        <button type="button" onClick={onAdd} className="bg-brand-50 text-brand-800 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 border border-brand-100">
+        <h3 className="text-lg font-semibold text-[#1d1d1f]">{title}</h3>
+        <button type="button" onClick={onAdd} className="bg-white text-[#1d1d1f] px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 border border-black/5 shadow-md hover:shadow-lg transition-all">
           <Plus className="w-4 h-4" /> Add
         </button>
       </div>
@@ -379,9 +390,9 @@ function EntrySection({ title, onAdd, children }: { title: string; onAdd: () => 
 
 function EntryCard({ onDelete, children }: { onDelete: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-brand-100 bg-brand-50/50 p-5 space-y-4">
+    <div className="rounded-xl border border-black/5 bg-[#f5f5f7] p-5 space-y-4 shadow-sm">
       <div className="flex justify-end">
-        <button type="button" onClick={onDelete} className="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-1">
+        <button type="button" onClick={onDelete} className="text-red-500 hover:text-red-600 font-semibold text-sm flex items-center gap-1">
           <Trash2 className="w-4 h-4" /> Delete
         </button>
       </div>
@@ -392,6 +403,18 @@ function EntryCard({ onDelete, children }: { onDelete: () => void; children: Rea
 
 function updateEntry<T>(entries: T[], index: number, nextEntry: T, onChange: (entries: T[]) => void) {
   onChange(entries.map((entry, entryIndex) => entryIndex === index ? nextEntry : entry))
+}
+
+function SettingsTab({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) {
+  return (
+    <button className={clsx(
+      'w-full flex items-center gap-4 px-6 py-4 rounded-xl font-semibold transition-all text-left',
+      active ? 'bg-[#ff3b30] text-white shadow-lg' : 'text-[#1d1d1f] hover:bg-white hover:text-[#1d1d1f]'
+    )}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  )
 }
 
 function makeForm(profile: any) {

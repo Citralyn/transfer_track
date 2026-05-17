@@ -129,31 +129,31 @@ export default function Connections() {
   return (
     <div className="space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-bold text-brand-900">Connections</h1>
-        <p className="text-brand-500 mt-1 font-medium">Manage your network requests and accepted connections.</p>
+        <h1 className="text-3xl font-semibold text-[#1d1d1f]">Connections</h1>
+        <p className="text-[#1d1d1f] mt-1 font-bold">Manage your network requests and accepted connections.</p>
       </div>
 
       {message && (
-        <div className="rounded-3xl border border-brand-100 bg-brand-50 px-5 py-4 text-brand-700 shadow-sm">
+        <div className="rounded-xl border border-black/5 bg-white px-5 py-4 text-[#1d1d1f] shadow-xl">
           {message}
         </div>
       )}
 
-      <div className="flex flex-wrap bg-white p-1.5 rounded-2xl border border-brand-100 shadow-sm w-fit">
+      <div className="flex flex-wrap bg-white p-1.5 rounded-xl border border-black/5 shadow-xl w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={clsx(
-              'px-5 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2',
-              activeTab === tab.id ? 'gradient-brand text-white shadow-md' : 'text-brand-500 hover:text-brand-800'
+              'px-5 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2',
+              activeTab === tab.id ? 'bg-[#ff3b30] text-white shadow-xl' : 'text-[#1d1d1f] hover:text-[#1d1d1f]'
             )}
           >
             {tab.icon}
             {tab.label}
             <span className={clsx(
-              'px-2 py-0.5 rounded-full text-xs',
-              activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-500'
+              'px-2 py-0.5 rounded-xl text-xs',
+              activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-white text-[#1d1d1f]'
             )}>
               {tab.count}
             </span>
@@ -193,20 +193,20 @@ function RequestList({
 }) {
   if (loading) {
     return (
-      <div className="rounded-3xl border border-brand-100 bg-white shadow-sm p-8 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-500" />
+      <div className="rounded-xl border border-black/5 bg-white shadow-xl p-8 text-center">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#1d1d1f]" />
       </div>
     )
   }
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-[2.5rem] border border-brand-100 bg-white shadow-sm p-10 text-center">
-        <div className="w-16 h-16 gradient-soft rounded-3xl flex items-center justify-center text-brand-300 mx-auto mb-5">
+      <div className="rounded-xl border border-black/5 bg-white shadow-xl p-10 text-center">
+        <div className="w-16 h-16 bg-[#34c759] rounded-full flex items-center justify-center text-[#1d1d1f] mx-auto mb-5">
           <Users className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-bold text-brand-900">Nothing here yet</h3>
-        <p className="text-brand-500 mt-2">
+        <h3 className="text-xl font-semibold text-[#1d1d1f]">Nothing here yet</h3>
+        <p className="text-[#1d1d1f] mt-2">
           {mode === 'connections'
             ? 'Accepted connections will appear here.'
             : mode === 'received'
@@ -218,7 +218,7 @@ function RequestList({
   }
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-brand-100 shadow-sm p-8">
+    <div className="bg-white rounded-xl border border-black/5 shadow-xl p-8">
       <div className="space-y-4">
         {requests.map((request: any) => {
           const isSentByCurrentUser = request.requester_id === currentProfileId || request.requesterId === currentProfileId
@@ -256,39 +256,39 @@ function RequestList({
               role={canOpenProfile ? 'button' : undefined}
               tabIndex={canOpenProfile ? 0 : undefined}
               className={clsx(
-                'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-brand-100 bg-brand-50 group hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-brand-500',
+                'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-black/5 bg-white group hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-500',
                 canOpenProfile && 'cursor-pointer'
               )}
             >
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
-                  <ProfileAvatar profile={displayProfile} name={name} className="w-14 h-14 rounded-2xl gradient-brand text-white font-bold text-xl shadow-sm" />
+                  <ProfileAvatar profile={displayProfile} name={name} className="w-14 h-14 rounded-full bg-[#ff3b30] text-white font-semibold text-xl shadow-xl" />
                   {role && (
                     <div className={clsx(
-                      'absolute -bottom-1 -right-1 w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center shadow-sm',
-                      role === 'professor' ? 'bg-accent-500 text-white' : 'bg-brand-500 text-white'
+                      'absolute -bottom-1 -right-1 w-7 h-7 rounded-xl border border-black/5 flex items-center justify-center shadow-xl',
+                      role === 'professor' ? 'bg-[#af52de] text-white' : 'bg-white0 text-white'
                     )}>
                       {role === 'professor' ? <GraduationCap className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="font-bold text-brand-900 group-hover:text-accent-600 transition-colors">{name}</p>
-                  <p className="text-xs font-bold text-brand-400 uppercase tracking-widest">
+                  <p className="font-semibold text-[#1d1d1f] group-hover:text-[#4f46e5] transition-colors">{name}</p>
+                  <p className="text-xs font-semibold text-[#1d1d1f] uppercase tracking-widest">
                     {role || 'Profile'} - {request.status}
                   </p>
-                  <p className="text-sm text-brand-600 mt-1">
+                  <p className="text-sm text-[#1d1d1f] mt-1">
                     {email} - {createdAt ? new Date(createdAt).toLocaleDateString() : 'No date'}
                   </p>
                   {(school || summary) && (
-                    <p className="text-sm text-brand-500 mt-1 flex items-center gap-1">
-                      {school && <><MapPin className="w-3.5 h-3.5 text-brand-300" /> {school}</>}
+                    <p className="text-sm text-[#1d1d1f] mt-1 flex items-center gap-1">
+                      {school && <><MapPin className="w-3.5 h-3.5 text-[#1d1d1f]" /> {school}</>}
                       {school && summary ? ' - ' : ''}
                       {summary}
                     </p>
                   )}
                   {!canOpenProfile && (
-                    <p className="text-xs text-brand-400 mt-1">Profile details are unavailable for this request.</p>
+                    <p className="text-xs text-[#1d1d1f] mt-1">Profile details are unavailable for this request.</p>
                   )}
                 </div>
               </div>
@@ -300,7 +300,7 @@ function RequestList({
                       onUpdateStatus(request.id, 'accepted')
                     }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+                    className="bg-[#34c759] hover:bg-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm border border-black/5 transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
@@ -310,7 +310,7 @@ function RequestList({
                       onUpdateStatus(request.id, 'declined')
                     }}
                     disabled={actionLoadingId === request.id}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+                    className="bg-[#ff3b30] hover:bg-[#ff3b30] text-white px-4 py-2 rounded-full font-semibold text-sm border border-black/5 transition-all disabled:opacity-50"
                   >
                     {actionLoadingId === request.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                   </button>

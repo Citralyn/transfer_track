@@ -87,71 +87,71 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-50 px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white px-6 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 gradient-brand rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+          <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
+            <div className="w-14 h-14 bg-[#ff3b30] border border-black/5 rounded-full flex items-center justify-center text-white font-semibold text-2xl shadow-xl group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-xl transition-all">
               TT
             </div>
-            <span className="text-2xl font-bold text-brand-900 tracking-tight">Transfer Track</span>
+            <span className="text-3xl font-semibold text-[#1d1d1f] tracking-tighter uppercase">Transfer Track</span>
           </Link>
-          <h2 className="text-3xl font-bold text-brand-900">Welcome back</h2>
-          <p className="text-brand-600 mt-2">Log in to your account</p>
+          <h2 className="text-4xl font-semibold text-[#1d1d1f] uppercase tracking-tighter">Welcome back</h2>
+          <p className="text-[#1d1d1f] font-semibold mt-2 uppercase text-sm tracking-widest">Access your academic hub</p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-brand-100">
-          <form onSubmit={handleLogin} className="space-y-6">
+        <div className="bg-white p-10 rounded-xl shadow-xl border border-black/5">
+          <form onSubmit={handleLogin} className="space-y-8">
             {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
+              <div className="bg-[#ff3b30] text-white p-4 rounded-full font-semibold border border-black/5 shadow-xl">
                 {error}
               </div>
             )}
             <div>
-              <label className="block text-sm font-semibold text-brand-900 mb-2">Email Address</label>
+              <label className="block text-xs font-semibold text-[#1d1d1f] uppercase tracking-[0.2em] mb-3 ml-1">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                placeholder="you@example.com"
+                className="w-full px-5 py-4 rounded-xl border border-black/5 bg-white focus:bg-[#ffcc00] transition-colors outline-none font-semibold text-[#1d1d1f]"
+                placeholder="YOU@EXAMPLE.COM"
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-brand-900">Password</label>
-                <a href="#" className="text-xs font-bold text-accent-600 hover:underline">Forgot password?</a>
+              <div className="flex items-center justify-between mb-3 ml-1">
+                <label className="block text-xs font-semibold text-[#1d1d1f] uppercase tracking-[0.2em]">Password</label>
+                <a href="#" className="text-xs font-semibold text-[#1d1d1f] hover:underline uppercase">Forgot?</a>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1d1d1f]" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Use your password or leave blank for demo"
+                  className="w-full pl-14 pr-5 py-4 rounded-xl border border-black/5 bg-white focus:bg-[#34c759] transition-colors outline-none font-semibold text-[#1d1d1f]"
+                  placeholder="DEMO MODE"
                 />
               </div>
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full gradient-brand text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:transform-none"
+              className="w-full bg-[#af52de] text-white py-5 rounded-full font-semibold text-xl border border-black/5 shadow-xl hover:shadow-xl hover:translate-x-1 hover:translate-y-1 transition-all uppercase tracking-widest disabled:opacity-50"
             >
               {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-8 h-8 animate-spin mx-auto" />
               ) : (
-                <>Log In <ArrowRight className="w-5 h-5" /></>
+                <span className="flex items-center justify-center gap-3">Log In <ArrowRight className="w-6 h-6 stroke-[3]" /></span>
               )}
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-brand-50 text-center">
-            <p className="text-brand-600">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-accent-600 font-bold hover:underline">
-                Sign Up
+          <div className="mt-10 pt-8 border-t border-black/5 text-center">
+            <p className="text-[#1d1d1f] font-semibold uppercase text-sm">
+              New here?{' '}
+              <Link to="/signup" className="text-[#1d1d1f] font-semibold hover:underline">
+                Sign Up Now
               </Link>
             </p>
           </div>
