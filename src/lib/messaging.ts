@@ -136,6 +136,46 @@ export async function fetchConversations(userId: string) {
 }
 
 /**
+ * Fetch a single conversation by ID
+ */
+export async function fetchConversation(conversationId: string, userId: string) {
+  if (!isSupabaseConfigured()) return null
+
+  const { data, error } = await supabase
+    .from('conversations')
+    .select(`
+      id,
+      created_at,
+      conversation_participants (
+        user_id,
+        profiles (
+          full_name,
+          username,
+          avatar_url,
+          role
+        )
+      ),
+      messages (
+        id
+      )
+    `)
+    .eq('id', conversationId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching conversation:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    created_at: data.created_at,
+    participants: data.conversation_participants.filter((p: any) => p.user_id !== userId),
+    messageCount: data.messages?.length || 0
+  }
+}
+
+/**
  * Fetch messages for a conversation
  */
 export async function fetchMessages(conversationId: string) {
@@ -171,6 +211,27 @@ export async function sendMessage(conversationId: string, senderId: string, cont
 
   if (error) throw error
   return data
+}
+
+/**
+ * Subscribe to new messages across ALL of the user's conversations
+ * (Relies on RLS to only receive messages for conversations they are part of)
+ */
+export function subscribeToAllUserMessages(onMessage: (message: Message) => void) {
+  return supabase
+    .channel('global:messages')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      },
+      (payload) => {
+        onMessage(payload.new as Message)
+      }
+    )
+    .subscribe()
 }
 
 /**

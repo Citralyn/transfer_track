@@ -6,6 +6,8 @@ import {
   fetchMessages, 
   sendMessage, 
   subscribeToMessages,
+  subscribeToAllUserMessages,
+  fetchConversation,
   type Message,
   type Conversation
 } from '@/lib/messaging'
@@ -49,6 +51,40 @@ export default function Messages() {
     }
     
     loadConvs()
+  }, [profile?.id])
+
+  // 1.5 Global message listener for sidebar updates
+  useEffect(() => {
+    if (!profile?.id) return
+
+    const subscription = subscribeToAllUserMessages(async (msg) => {
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === msg.conversation_id)
+        
+        if (exists) {
+          // Update count for existing conversation
+          return prev.map(c => 
+            c.id === msg.conversation_id ? { ...c, messageCount: (c.messageCount || 0) + 1 } : c
+          )
+        } else {
+          // This might be a brand new conversation for the recipient!
+          // We need to fetch the details to add it to the sidebar.
+          fetchConversation(msg.conversation_id, profile.id).then(newConv => {
+            if (newConv) {
+              setConversations(current => {
+                if (current.some(c => c.id === newConv.id)) return current
+                return [newConv, ...current]
+              })
+            }
+          })
+          return prev
+        }
+      })
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [profile?.id])
 
   // 2. Fetch messages for active conversation & subscribe to new ones
