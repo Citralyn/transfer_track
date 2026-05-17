@@ -341,8 +341,11 @@ function OpportunityDetailModal({ opportunity, onClose }: { opportunity: any, on
 
           {/* Professor Profile */}
           <div className="bg-brand-50 p-8 rounded-3xl border border-brand-100 flex flex-col md:flex-row items-center gap-6">
-             <Link to={`/profile/${opportunity.profiles?.username}`} className="w-20 h-20 rounded-2xl gradient-soft flex items-center justify-center text-brand-400 font-bold text-3xl shadow-sm border border-white hover:scale-105 transition-transform">
-                {opportunity.profiles?.full_name?.charAt(0)}
+             <Link to={`/profile/${opportunity.profiles?.username}`} className="hover:scale-105 transition-transform shrink-0">
+                <ProfileAvatar 
+                  profile={opportunity.profiles} 
+                  className="w-20 h-20 rounded-2xl gradient-soft text-brand-400 font-bold text-3xl shadow-sm border border-white" 
+                />
              </Link>
              <div className="flex-1 text-center md:text-left">
                 <Link to={`/profile/${opportunity.profiles?.username}`} className="text-xl font-bold text-brand-900 hover:text-accent-600 transition-colors">

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar'
 
 export default function Messages() {
   const { conversationId } = useParams()
@@ -148,9 +149,10 @@ export default function Messages() {
                     isActive ? "bg-brand-50 border-accent-500" : "border-transparent"
                   )}
                 >
-                  <div className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold shrink-0 shadow-sm">
-                    {otherUser?.full_name?.charAt(0)}
-                  </div>
+                  <ProfileAvatar 
+                    profile={otherUser} 
+                    className="w-12 h-12 rounded-2xl gradient-brand text-white font-bold shrink-0 shadow-sm" 
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
                       <h4 className="font-bold text-brand-900 truncate">{otherUser?.full_name}</h4>
@@ -184,9 +186,10 @@ export default function Messages() {
                 >
                   <ChevronLeft className="w-6 h-6 text-brand-600" />
                 </button>
-                <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white font-bold shadow-sm">
-                  {activeConversation.participants[0]?.profiles?.full_name?.charAt(0)}
-                </div>
+                <ProfileAvatar 
+                  profile={activeConversation.participants[0]?.profiles} 
+                  className="w-10 h-10 rounded-xl gradient-brand text-white font-bold shadow-sm" 
+                />
                 <div>
                   <h3 className="font-bold text-brand-900 leading-tight">
                     {activeConversation.participants[0]?.profiles?.full_name}
