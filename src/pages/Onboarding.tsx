@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { FALLBACK_SCHOOLS, makeProfilePayload, uploadProfileImage, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { ArrowLeft, ArrowRight, Camera, Check, Loader2, User } from 'lucide-react'
 import { clsx } from 'clsx'
+import { colleges } from '@/college_list'
 
 const STUDENT_STEPS = ['about', 'biography', 'interests', 'transfer-goals', 'image'] as const
 type OnboardingStep = typeof STUDENT_STEPS[number]
@@ -248,7 +249,30 @@ function StepContent({
   avatarPreview: string | null
   onAvatarSelected: (file: File, preview: string) => void
 }) {
+  const [schoolSearch, setSchoolSelectorSearch] = useState('')
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSchoolDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   if (step === 'about') {
+    const isStudent = formData.role === 'student'
+    const schoolList = isStudent ? colleges : schools
+      .filter((school) => !formData.school_type || school.type === formData.school_type)
+      .map((s) => s.name)
+
+    const filteredSchools = schoolList.filter(s => 
+      s.toLowerCase().includes(schoolSearch.toLowerCase())
+    ).slice(0, 10)
+
     return (
       <div className="space-y-8 flex-1">
         <div>
@@ -257,18 +281,48 @@ function StepContent({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="relative" ref={dropdownRef}>
             <label className="block text-sm font-semibold text-[#1d1d1f] mb-2">{formData.role === 'professor' ? 'University' : 'College'}</label>
-            <select
-              value={formData.school_name}
-              onChange={(event) => setFormData({ ...formData, school_name: event.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white"
-            >
-              <option value="">Select a school...</option>
-              {schools
-                .filter((school) => !formData.school_type || school.type === formData.school_type)
-                .map((school) => <option key={school.id} value={school.name}>{school.name}</option>)}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.school_name}
+                onFocus={() => setShowSchoolDropdown(true)}
+                onChange={(e) => {
+                  setFormData({ ...formData, school_name: e.target.value })
+                  setSchoolSelectorSearch(e.target.value)
+                  setShowSchoolDropdown(true)
+                }}
+                className="w-full px-4 py-3 rounded-xl border border-black/5 focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-[#f5f5f7] font-semibold"
+                placeholder={isStudent ? "Search for your college..." : "Search for your university..."}
+              />
+              {showSchoolDropdown && schoolSearch && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-black/5 rounded-xl shadow-2xl z-[110] max-h-60 overflow-y-auto">
+                  {filteredSchools.length > 0 ? (
+                    filteredSchools.map((school) => (
+                      <button
+                        key={school}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ 
+                            ...formData, 
+                            school_name: school,
+                            school_type: isStudent ? 'community_college' : 'university'
+                          })
+                          setSchoolSelectorSearch('')
+                          setShowSchoolDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-[#f5f5f7] transition-colors font-semibold text-[#1d1d1f]"
+                      >
+                        {school}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-[#86868b]">No results found.</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           {formData.role === 'student' ? (
             <>
