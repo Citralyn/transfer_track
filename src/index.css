@@ -28,6 +28,10 @@
   --radius-2xl: 20px;
   --radius-3xl: 24px;
 
+  /* Custom Fonts */
+  --font-bungee: "Bungee", cursive;
+  --font-train: "Train One", cursive;
+
   /* Diffuse iOS Shadows */
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
@@ -114,4 +118,8 @@
 .card-apple:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+}
+
+.font-logo {
+  font-family: var(--font-bungee);
 }

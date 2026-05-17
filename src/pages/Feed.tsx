@@ -7,8 +7,6 @@ import {
   Send, 
   Heart, 
   MessageCircle, 
-  Share2, 
-  MoreHorizontal, 
   Plus, 
   Loader2, 
   Bold, 
@@ -632,9 +630,6 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
               <span className="text-xs text-[#86868b] font-semibold">{profiles?.school_name} • {formatDistanceToNow(new Date(created_at))} ago</span>
             </div>
           </div>
-          <button className="text-[#86868b] hover:text-[#1d1d1f] transition-colors p-2 rounded-full hover:bg-[#f5f5f7]">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
         </div>
         
         <div className="prose prose-brand max-w-none text-[#1d1d1f] leading-relaxed mb-4">
@@ -685,9 +680,6 @@ function PostCard({ post, isHighlighted = false }: { post: any; isHighlighted?: 
             <span className="text-sm font-bold">{commentCount}</span>
           </button>
         </div>
-        <button className="text-[#86868b] hover:text-[#0066cc] transition-colors p-2 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-black/5">
-          <Share2 className="w-5 h-5" />
-        </button>
       </div>
 
       {showComments && (

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, GraduationCap, Users, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
+import logo from '@/assets/red_train.png'
 
 export default function Landing() {
   return (
@@ -8,10 +9,8 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#ff3b30] rounded-xl flex items-center justify-center text-white shadow-lg">
-            <span className="text-xl">🍎</span>
-          </div>
-          <span className="text-2xl font-bold text-[#1d1d1f] tracking-tight">Transfer Track</span>
+          <img src={logo} alt="Transfer Track" className="w-10 h-10 object-contain" />
+          <span className="text-3xl font-logo text-[#ff3b30] tracking-tight">Transfer Track</span>
         </div>
         <div className="flex items-center gap-4">
           <Link to="/login" className="text-[#1d1d1f] font-bold hover:text-[#1d1d1f] transition-colors">
@@ -27,12 +26,14 @@ export default function Landing() {
       <header className="px-6 pt-24 pb-32 max-w-7xl mx-auto text-center relative">
         <div className="flex justify-center mb-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
            <div className="w-full max-w-2xl aspect-[21/9] bg-gradient-to-br from-[#ff3b30]/10 to-[#34c759]/10 rounded-[40px] border border-black/5 flex items-center justify-center relative overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 flex items-center justify-around opacity-20 text-8xl grayscale select-none">
-                 <span>🍎</span><span>🍏</span><span>🍐</span><span>🍊</span>
+              <div className="absolute inset-0 flex items-center justify-around opacity-10 grayscale select-none">
+                 <img src={logo} alt="" className="w-20 h-20 object-contain -rotate-12" />
+                 <img src={logo} alt="" className="w-24 h-24 object-contain rotate-12" />
+                 <img src={logo} alt="" className="w-20 h-20 object-contain -rotate-6" />
+                 <img src={logo} alt="" className="w-28 h-28 object-contain rotate-6" />
               </div>
               <p className="text-[#1d1d1f] font-semibold text-lg relative z-10 flex flex-col items-center gap-2">
-                 <span className="text-4xl">🧺</span>
-                 [ Placeholder: A beautiful basket of fresh red and green fruit ]
+                 <img src="/src/assets/apples_background.jpg"></img>
               </p>
            </div>
         </div>

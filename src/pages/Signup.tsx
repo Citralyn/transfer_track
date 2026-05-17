@@ -15,6 +15,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import logo from '@/assets/red_train.png'
 
 export default function Signup() {
   const [step, setStep] = useState(1)
@@ -102,10 +103,8 @@ export default function Signup() {
       <div className="w-full max-w-2xl">
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-            <div className="w-14 h-14 bg-[#ff3b30] border border-black/5 rounded-full flex items-center justify-center text-white font-semibold text-2xl shadow-xl group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-xl transition-all">
-              TT
-            </div>
-            <span className="text-3xl font-semibold text-[#1d1d1f] tracking-tighter uppercase">Transfer Track</span>
+            <img src={logo} alt="Transfer Track" className="w-16 h-16 object-contain group-hover:scale-105 transition-transform" />
+            <span className="text-3xl font-logo text-[#ff3b30] tracking-tighter">Transfer Track</span>
           </Link>
           <div className="flex items-center justify-center gap-3 mb-2">
              {[1, 2].map(s => (

@@ -1,10 +1,6 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { 
-  Home, 
   Search, 
-  Briefcase, 
-  User, 
-  MessageSquare, 
   Settings, 
   LogOut, 
   Bell, 
@@ -24,6 +20,7 @@ import {
   type AppNotification,
 } from '@/lib/notifications'
 import { encodeSearchSlug } from '@/lib/search'
+import logo from '@/assets/red_train.png'
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -110,10 +107,8 @@ export default function MainLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-black/5 h-screen sticky top-0 p-6">
         <Link to="/feed" className="flex items-center gap-3 mb-12 px-2">
-          <div className="w-11 h-11 bg-gradient-to-br from-[#ff3b30] to-[#ff9500] rounded-xl flex items-center justify-center text-white shadow-lg">
-            <span className="text-2xl">🍎</span>
-          </div>
-          <span className="text-xl font-bold text-[#1d1d1f] tracking-tight">Transfer Track</span>
+          <img src={logo} alt="Transfer Track" className="w-12 h-12 object-contain" />
+          <span className="text-2xl font-logo text-[#ff3b30] tracking-tight">Transfer Track</span>
         </Link>
 
         <nav className="flex-1 space-y-4">
@@ -160,9 +155,7 @@ export default function MainLayout() {
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-black/5 sticky top-0 z-50">
         <Link to="/feed" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#ff3b30] border border-black/5 rounded-xl flex items-center justify-center text-white shadow-lg">
-            <span className="text-xl">🍎</span>
-          </div>
+          <img src={logo} alt="Transfer Track" className="w-10 h-10 object-contain" />
         </Link>
         <div className="flex items-center gap-4">
           <div className="relative" ref={mobileNotificationsRef}>
@@ -422,24 +415,4 @@ function getNotificationTarget(href: string) {
   return '/feed'
 }
 
-function UsersIcon(props: any) {
-  return (
-    <svg 
-      {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
+

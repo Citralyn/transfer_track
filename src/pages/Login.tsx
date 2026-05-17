@@ -4,6 +4,7 @@ import { loadLocalProfile, makeProfilePayload, signInOrSignUpDemo, upsertProfile
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { ArrowRight, Loader2, Lock } from 'lucide-react'
+import logo from '@/assets/red_train.png'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -91,10 +92,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-            <div className="w-14 h-14 bg-[#ff3b30] border border-black/5 rounded-full flex items-center justify-center text-white font-semibold text-2xl shadow-xl group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-xl transition-all">
-              TT
-            </div>
-            <span className="text-3xl font-semibold text-[#1d1d1f] tracking-tighter uppercase">Transfer Track</span>
+            <img src={logo} alt="Transfer Track" className="w-16 h-16 object-contain group-hover:scale-105 transition-transform" />
+            <span className="text-3xl font-logo text-[#ff3b30] tracking-tighter">Transfer Track</span>
           </Link>
           <h2 className="text-4xl font-semibold text-[#1d1d1f] uppercase tracking-tighter">Welcome back</h2>
           <p className="text-[#1d1d1f] font-semibold mt-2 uppercase text-sm tracking-widest">Access your academic hub</p>
