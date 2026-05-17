@@ -23,6 +23,7 @@ import {
   saveSeenNotificationIds,
   type AppNotification,
 } from '@/lib/notifications'
+import { encodeSearchSlug } from '@/lib/search'
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -91,7 +92,7 @@ export default function MainLayout() {
     event.preventDefault()
     const query = searchQuery.trim()
     if (query) {
-      navigate(`/search?q=${encodeURIComponent(query)}`)
+      navigate(`/search/${encodeSearchSlug(query)}`)
       setIsMobileMenuOpen(false)
     }
   }
