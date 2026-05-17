@@ -19,6 +19,7 @@ export interface ProfilePayload {
   academic_year?: string | null
   department?: string | null
   bio?: string | null
+  avatar_url?: string | null
   transfer_goals?: string | null
   research_areas?: string[] | null
   interests?: string[] | null
@@ -31,12 +32,13 @@ export interface LocalConnectionRequest {
   requesterId: string
   requesterEmail: string
   requesterName: string
+  requesterUsername?: string
   receiverId?: string
   receiverEmail?: string
   receiverName?: string
   receiverUsername?: string
   requestedAt: string
-  status: 'pending'
+  status: 'pending' | 'accepted' | 'declined' | 'canceled'
   message: string
 }
 
@@ -47,6 +49,8 @@ export interface ConnectionResult {
   message: string
   connection?: any
 }
+
+export type RelationshipStatus = 'none' | 'pending_outgoing' | 'pending_incoming' | 'connected' | 'declined'
 
 export interface AuthBridgeInput {
   email: string
@@ -168,6 +172,7 @@ export async function upsertProfile(profile: ProfilePayload) {
     skills: profile.skills || null,
     transfer_goals: profile.transfer_goals || null,
     bio: profile.bio || null,
+    avatar_url: profile.avatar_url || null,
     gender: profile.gender || null,
   }
 
@@ -255,15 +260,20 @@ export async function sendConnectionRequest(
     return { success: false, message: 'Missing requester id.' }
   }
 
-  if (requester.role && requester.role !== 'student') {
-    return { success: false, message: 'Only students can express interest in a professor.' }
+  if (
+    target.id === requesterId ||
+    (requester.email && target.email && requester.email.toLowerCase() === target.email.toLowerCase()) ||
+    (requester.username && target.username && requester.username.toLowerCase() === target.username.toLowerCase())
+  ) {
+    return { success: false, message: 'You cannot request a connection with yourself.' }
   }
 
   const requestPayload: LocalConnectionRequest = {
     id: `${requesterId}-${target.id || target.email || target.username}-${Date.now()}`,
     requesterId,
     requesterEmail: requester.email ?? 'unknown',
-    requesterName: requester.full_name ?? requester.username ?? 'Student',
+    requesterName: requester.full_name ?? requester.username ?? 'User',
+    requesterUsername: requester.username,
     receiverId: target.id,
     receiverEmail: target.email,
     receiverName: target.full_name,
@@ -289,7 +299,7 @@ export async function sendConnectionRequest(
       return {
         success: false,
         fallback: true,
-        message: 'Demo request saved locally. Supabase sign-in is not active for this student.',
+        message: 'Demo request saved locally. Supabase sign-in is not active for this user.',
       }
     }
 
@@ -304,12 +314,44 @@ export async function sendConnectionRequest(
       return {
         success: false,
         fallback: true,
-        message: 'Demo request saved locally. This professor has not joined the live database yet.',
+        message: 'Demo request saved locally. This person has not joined the live database yet.',
       }
     }
 
     if (receiverId === requesterId) {
       return { success: false, message: 'You cannot request a connection with yourself.' }
+    }
+
+    const existingConnection = await getExistingConnection(requesterId, receiverId)
+    const existingStatus = getRelationshipStatusFromConnection(existingConnection, requesterId)
+    if (existingStatus === 'connected') {
+      return { success: true, duplicate: true, message: 'Already connected.', connection: existingConnection }
+    }
+    if (existingStatus === 'pending_outgoing') {
+      return { success: true, duplicate: true, message: 'Request Sent.', connection: existingConnection }
+    }
+    if (existingStatus === 'pending_incoming') {
+      return { success: false, duplicate: true, message: 'This person already sent you a request.' }
+    }
+    if (existingStatus === 'declined') {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('connections')
+          .update({
+            requester_id: requesterId,
+            receiver_id: receiverId,
+            status: 'pending',
+          })
+          .eq('id', existingConnection.id)
+          .select()
+          .single(),
+        'Supabase connection retry'
+      )
+
+      if (!error) {
+        saveLocalConnectionRequest({ ...requestPayload, id: data.id || requestPayload.id })
+        return { success: true, message: 'Request Sent.', connection: data }
+      }
     }
 
     const { data, error } = await withTimeout(
@@ -331,7 +373,14 @@ export async function sendConnectionRequest(
       const message = error.message || 'Unable to send connection request.'
       const duplicate = error.code === '23505' || message.toLowerCase().includes('duplicate')
       if (duplicate) {
-        return { success: true, duplicate: true, message: 'Request Sent.' }
+        const relationship = await getRelationshipStatus(requesterId, receiverId)
+        if (relationship !== 'connected') saveLocalConnectionRequest(requestPayload)
+        return {
+          success: true,
+          duplicate: true,
+          message: relationship === 'connected' ? 'Already connected.' : 'Request Sent.',
+          connection: data,
+        }
       }
 
       console.warn('Supabase connection insert failed, saving locally:', message)
@@ -343,6 +392,7 @@ export async function sendConnectionRequest(
       }
     }
 
+    saveLocalConnectionRequest({ ...requestPayload, id: data.id || requestPayload.id })
     return { success: true, message: 'Request Sent.', connection: data }
   } catch (error) {
     console.warn('Supabase connection flow unavailable, saving locally:', error)
@@ -363,8 +413,9 @@ export async function getExistingConnection(requesterId: string, receiverId: str
       supabase
         .from('connections')
         .select('*')
-        .eq('requester_id', requesterId)
-        .eq('receiver_id', receiverId)
+        .or(`and(requester_id.eq.${requesterId},receiver_id.eq.${receiverId}),and(requester_id.eq.${receiverId},receiver_id.eq.${requesterId})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle(),
       'Supabase existing connection lookup'
     )
@@ -377,6 +428,94 @@ export async function getExistingConnection(requesterId: string, receiverId: str
   }
 }
 
+export async function uploadProfileImage(profileId: string, image: File) {
+  if (!isSupabaseConfigured()) {
+    return readFileAsDataUrl(image)
+  }
+
+  const fileExt = image.name.split('.').pop() || 'jpg'
+  const fileName = `avatars/${profileId}-${Date.now()}.${fileExt}`
+  const { data, error } = await supabase.storage
+    .from('post_images')
+    .upload(fileName, image)
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('post_images')
+    .getPublicUrl(data.path)
+
+  return publicUrl
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error || new Error('Unable to read image file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+export async function getRelationshipStatus(currentProfileId: string, otherProfileId: string): Promise<RelationshipStatus> {
+  if (!currentProfileId || !otherProfileId || currentProfileId === otherProfileId) return 'none'
+
+  const localStatus = getLocalRelationshipStatus(currentProfileId, otherProfileId)
+
+  if (!isSupabaseConfigured()) return localStatus
+
+  const connection = await getExistingConnection(currentProfileId, otherProfileId)
+  const liveStatus = getRelationshipStatusFromConnection(connection, currentProfileId)
+  return liveStatus === 'none' ? localStatus : liveStatus
+}
+
+export async function getRelationshipStatusMap(currentProfileId: string, otherProfileIds: string[]) {
+  const uniqueIds = Array.from(new Set(otherProfileIds.filter((id) => id && id !== currentProfileId)))
+  const statusMap: Record<string, RelationshipStatus> = {}
+
+  uniqueIds.forEach((id) => {
+    statusMap[id] = 'none'
+  })
+
+  if (!currentProfileId || uniqueIds.length === 0) return statusMap
+
+  const applyLocalStatuses = () => {
+    uniqueIds.forEach((id) => {
+      const localStatus = getLocalRelationshipStatus(currentProfileId, id)
+      if (localStatus !== 'none' && statusMap[id] === 'none') statusMap[id] = localStatus
+    })
+  }
+
+  if (!isSupabaseConfigured()) {
+    applyLocalStatuses()
+    return statusMap
+  }
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('connections')
+        .select('id, requester_id, receiver_id, status, created_at')
+        .or(`requester_id.eq.${currentProfileId},receiver_id.eq.${currentProfileId}`)
+        .order('created_at', { ascending: false }),
+      'Supabase relationship status map'
+    )
+
+    if (error || !data) return statusMap
+
+    data.forEach((connection: any) => {
+      const otherId = connection.requester_id === currentProfileId ? connection.receiver_id : connection.requester_id
+      if (!uniqueIds.includes(otherId) || statusMap[otherId] !== 'none') return
+      statusMap[otherId] = getRelationshipStatusFromConnection(connection, currentProfileId)
+    })
+  } catch (error) {
+    console.warn('Relationship status map lookup failed:', error)
+  }
+
+  applyLocalStatuses()
+  return statusMap
+}
+
 export async function getConnectionCount(profileId: string) {
   if (!isSupabaseConfigured()) return 0
 
@@ -385,6 +524,7 @@ export async function getConnectionCount(profileId: string) {
       supabase
         .from('connections')
         .select('id', { count: 'exact', head: true })
+        .eq('status', 'accepted')
         .or(`requester_id.eq.${profileId},receiver_id.eq.${profileId}`),
       'Supabase connection count'
     )
@@ -404,7 +544,7 @@ export async function fetchIncomingRequests(professorId: string) {
     const { data, error } = await withTimeout(
       supabase
         .from('connections')
-        .select('id, status, created_at, requester:requester_id(id, full_name, email, username)')
+        .select('id, requester_id, receiver_id, status, created_at')
         .eq('receiver_id', professorId)
         .order('created_at', { ascending: false }),
       'Supabase incoming requests'
@@ -425,7 +565,7 @@ export async function fetchSentRequests(requesterId: string) {
     const { data, error } = await withTimeout(
       supabase
         .from('connections')
-        .select('id, status, created_at, receiver:receiver_id(id, full_name, email, username)')
+        .select('id, requester_id, receiver_id, status, created_at')
         .eq('requester_id', requesterId)
         .order('created_at', { ascending: false }),
       'Supabase sent requests'
@@ -435,6 +575,27 @@ export async function fetchSentRequests(requesterId: string) {
     return data
   } catch (error) {
     console.warn('Sent requests lookup failed:', error)
+    return []
+  }
+}
+
+export async function fetchProfilesByIds(profileIds: string[]) {
+  const ids = Array.from(new Set(profileIds.filter(Boolean)))
+  if (!isSupabaseConfigured() || ids.length === 0) return []
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('profiles')
+        .select('id, role, full_name, username, email, school_name, academic_year, department, bio')
+        .in('id', ids),
+      'Supabase connection profile lookup'
+    )
+
+    if (error || !data) return []
+    return data
+  } catch (error) {
+    console.warn('Connection profile lookup failed:', error)
     return []
   }
 }
@@ -455,11 +616,37 @@ export async function updateConnectionStatus(connectionId: string, status: 'acce
       'Supabase connection status update'
     )
 
+    if (!error && data) updateLocalConnectionStatus(connectionId, status)
     return { data, error }
   } catch (error) {
     console.warn('Connection status update failed:', error)
     return { data: null, error: new Error('Live request update is unavailable right now.') }
   }
+}
+
+function getRelationshipStatusFromConnection(connection: any, currentProfileId: string): RelationshipStatus {
+  if (!connection) return 'none'
+  if (connection.status === 'accepted') return 'connected'
+  if (connection.status === 'pending') {
+    return connection.requester_id === currentProfileId ? 'pending_outgoing' : 'pending_incoming'
+  }
+  if (connection.status === 'declined' || connection.status === 'canceled') return 'declined'
+  return 'none'
+}
+
+function getLocalRelationshipStatus(currentProfileId: string, otherProfileId: string): RelationshipStatus {
+  const local = loadLocalConnectionRequests().find((request) =>
+    (request.requesterId === currentProfileId && request.receiverId === otherProfileId) ||
+    (request.requesterId === otherProfileId && request.receiverId === currentProfileId)
+  )
+
+  if (!local) return 'none'
+  if (local.status === 'accepted') return 'connected'
+  if (local.status === 'pending') {
+    return local.requesterId === currentProfileId ? 'pending_outgoing' : 'pending_incoming'
+  }
+  if (local.status === 'declined' || local.status === 'canceled') return 'declined'
+  return 'none'
 }
 
 export function saveLocalConnectionRequest(request: LocalConnectionRequest) {
@@ -471,6 +658,13 @@ export function saveLocalConnectionRequest(request: LocalConnectionRequest) {
       item.receiverUsername === request.receiverUsername)
   )
   const next = existing ? current : [...current, request]
+  window.localStorage.setItem(LOCAL_CONNECTION_REQUESTS_KEY, JSON.stringify(next))
+}
+
+export function updateLocalConnectionStatus(connectionId: string, status: LocalConnectionRequest['status']) {
+  const next = loadLocalConnectionRequests().map((request) =>
+    request.id === connectionId ? { ...request, status } : request
+  )
   window.localStorage.setItem(LOCAL_CONNECTION_REQUESTS_KEY, JSON.stringify(next))
 }
 
@@ -517,6 +711,7 @@ export function makeProfilePayload(input: {
   skills?: string[] | null
   transfer_goals?: string | null
   bio?: string | null
+  avatar_url?: string | null
   gender?: string | null
 }): ProfilePayload {
   const email = input.email || ''
@@ -531,14 +726,21 @@ export function makeProfilePayload(input: {
     school_name: input.school_name || null,
     school_type: input.school_type || (input.role === 'student' ? 'community_college' : null),
     academic_year: input.role === 'student' ? input.academic_year || null : null,
-    department: input.role === 'professor' ? input.department || null : null,
+    department: input.department || null,
     research_areas: input.role === 'professor' ? input.research_areas || null : null,
     interests: input.role === 'student' ? input.interests || null : null,
     skills: input.role === 'student' ? input.skills || null : null,
     transfer_goals: input.role === 'student' ? input.transfer_goals || null : null,
     bio: input.bio || null,
+    avatar_url: input.avatar_url || null,
     gender: input.gender || null,
   }
+}
+
+export function isProfileOnboardingComplete(profile?: Partial<ProfilePayload> | null) {
+  if (!profile?.role || !profile.full_name || !profile.username || !profile.school_name) return false
+  if (profile.role === 'professor' && !profile.department) return false
+  return true
 }
 
 export function isUuid(value?: string | null) {

@@ -1,23 +1,33 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
-import { sendConnectionRequest, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import {
+  getRelationshipStatusMap,
+  sendConnectionRequest,
+  upsertProfile,
+  withTimeout,
+  type RelationshipStatus,
+} from '@/lib/supabaseHelpers'
 import { Search, GraduationCap, BookOpen, MapPin, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 export default function People() {
   const [people, setPeople] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'student' | 'professor'>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusMap, setStatusMap] = useState<Record<string, 'idle' | 'sending' | 'sent'>>({})
+  const [statusMap, setStatusMap] = useState<Record<string, RelationshipStatus | 'sending'>>({})
   const [message, setMessage] = useState<string | null>(null)
   const { profile: currentProfile } = useAuthStore()
 
   useEffect(() => {
     fetchPeople()
   }, [filter])
+
+  useEffect(() => {
+    loadRelationshipStatuses()
+  }, [people, currentProfile?.id])
 
   const fetchPeople = async () => {
     setLoading(true)
@@ -39,18 +49,34 @@ export default function People() {
       )
 
       if (error) {
-        console.warn('Error fetching people, using fallback people:', error.message)
-        setPeople(getFallbackPeople(filter))
+        console.warn('Error fetching people from Supabase:', error.message)
+        setPeople([])
+        setMessage(`Unable to load people from Supabase: ${error.message}`)
         return
       }
 
-      setPeople(data?.length ? data : getFallbackPeople(filter))
+      setPeople(data ?? [])
     } catch (error) {
-      console.warn('People lookup unavailable, using fallback people:', error)
-      setPeople(getFallbackPeople(filter))
+      console.warn('People lookup unavailable:', error)
+      if (isSupabaseConfigured()) {
+        setPeople([])
+        setMessage('Unable to load people from Supabase. Check your browser console for the exact error.')
+      } else {
+        setPeople(getFallbackPeople(filter))
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadRelationshipStatuses = async () => {
+    if (!currentProfile?.id || people.length === 0) return
+
+    const relationships = await getRelationshipStatusMap(
+      currentProfile.id,
+      people.map((person) => person.id)
+    )
+    setStatusMap((prev) => ({ ...relationships, ...pickSendingStatuses(prev) }))
   }
 
   const handleConnect = async (person: any) => {
@@ -68,16 +94,19 @@ export default function People() {
         username: person.username,
       })
 
-      if (result.success || result.duplicate || result.fallback) {
-        setStatusMap((prev) => ({ ...prev, [person.id]: 'sent' }))
+      if (result.message === 'Already connected.') {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'connected' }))
+        setMessage(null)
+      } else if (result.success || result.duplicate || result.fallback) {
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'pending_outgoing' }))
         setMessage(result.message)
       } else {
-        setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+        setStatusMap((prev) => ({ ...prev, [person.id]: 'none' }))
         setMessage(result.message)
       }
     } catch (error) {
       console.warn('Connection request failed:', error)
-      setStatusMap((prev) => ({ ...prev, [person.id]: 'idle' }))
+      setStatusMap((prev) => ({ ...prev, [person.id]: 'none' }))
       setMessage('Demo request could not be saved. Please try again.')
     }
   }
@@ -139,25 +168,39 @@ export default function People() {
           [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-white rounded-[2rem] border border-brand-100 p-8 h-[280px] animate-pulse" />)
         ) : filteredPeople.length > 0 ? (
           filteredPeople.map(person => {
-            const canExpressInterest = currentProfile?.role === 'student' && person.role === 'professor' && currentProfile.id !== person.id
-            const status = statusMap[person.id] ?? 'idle'
+            const canConnect = Boolean(currentProfile && !isSameProfile(currentProfile, person))
+            const status = statusMap[person.id] ?? 'none'
+            const isDisabled = status === 'sending' || status === 'pending_outgoing' || status === 'pending_incoming' || status === 'connected'
+            const buttonLabel = status === 'sending'
+              ? 'Sending...'
+              : status === 'connected'
+                ? 'Connected'
+                : status === 'pending_outgoing'
+                  ? 'Request Sent'
+                  : status === 'pending_incoming'
+                    ? 'Request Received'
+                    : 'Connect'
 
             return (
               <UserCard
                 key={person.id}
                 person={person}
-                actionButton={canExpressInterest ? (
+                actionButton={canConnect ? (
                   <button
-                    onClick={() => handleConnect(person)}
-                    disabled={status === 'sending' || status === 'sent'}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      if (isDisabled) return
+                      handleConnect(person)
+                    }}
+                    disabled={isDisabled}
                     className={clsx(
                       "w-full rounded-2xl py-3.5 font-bold transition-all flex items-center justify-center gap-2",
-                      status === 'sent'
-                        ? 'bg-brand-100 text-brand-700 cursor-default'
+                      isDisabled
+                        ? 'bg-white border border-brand-100 text-brand-400 cursor-default shadow-sm'
                         : 'gradient-brand text-white hover:shadow-lg'
                     )}
                   >
-                    {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Request Sent' : 'Express Interest'}
+                    {buttonLabel}
                   </button>
                 ) : undefined}
               />
@@ -174,6 +217,18 @@ export default function People() {
         )}
       </div>
     </div>
+  )
+}
+
+function pickSendingStatuses(statusMap: Record<string, RelationshipStatus | 'sending'>) {
+  return Object.fromEntries(Object.entries(statusMap).filter(([, status]) => status === 'sending'))
+}
+
+function isSameProfile(currentProfile: any, person: any) {
+  return Boolean(
+    currentProfile.id === person.id ||
+    (currentProfile.email && person.email && currentProfile.email.toLowerCase() === person.email.toLowerCase()) ||
+    (currentProfile.username && person.username && currentProfile.username.toLowerCase() === person.username.toLowerCase())
   )
 }
 
@@ -216,9 +271,23 @@ function getFallbackPeople(filter: 'all' | 'student' | 'professor') {
 
 function UserCard({ person, actionButton }: { person: any; actionButton?: ReactNode }) {
   const isProfessor = person.role === 'professor'
+  const navigate = useNavigate()
+  const profilePath = `/profile/${person.username}`
+  const openProfile = () => navigate(profilePath)
 
   return (
-    <div className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group">
+    <div
+      onClick={openProfile}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openProfile()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className="bg-white rounded-[2rem] border border-brand-100 shadow-sm hover:shadow-md transition-all p-8 flex flex-col items-center text-center group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
+    >
       <div className="relative mb-6">
         <div className="w-24 h-24 rounded-[2rem] gradient-brand flex items-center justify-center text-white font-bold text-3xl shadow-lg group-hover:scale-105 transition-transform duration-300">
           {person.full_name?.charAt(0)}
@@ -231,9 +300,7 @@ function UserCard({ person, actionButton }: { person: any; actionButton?: ReactN
         </div>
       </div>
 
-      <Link to={`/profile/${person.username}`} className="hover:text-accent-600 transition-colors">
-        <h3 className="text-lg font-bold text-brand-900 mb-1">{person.full_name}</h3>
-      </Link>
+      <h3 className="text-lg font-bold text-brand-900 mb-1 group-hover:text-accent-600 transition-colors">{person.full_name}</h3>
       <p className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-4">{person.role}</p>
       
       <div className="space-y-2 mb-8 flex-1">

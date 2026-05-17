@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { isProfileOnboardingComplete, makeProfilePayload, signInOrSignUpDemo, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { ArrowRight, Loader2, Lock } from 'lucide-react'
@@ -65,7 +65,7 @@ export default function Login() {
       }
 
       setProfile(profile)
-      navigate(profile?.role === 'professor' ? '/professor-dashboard' : from, { replace: true })
+      navigate(isProfileOnboardingComplete(profile) ? (profile?.role === 'professor' ? '/professor-dashboard' : from) : '/onboarding/about', { replace: true })
     } catch (error) {
       console.warn('Login failed:', error)
       setError('Sign-in hit a snag. Please try again.')

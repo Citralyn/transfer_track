@@ -1,29 +1,44 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
-import { FALLBACK_SCHOOLS, makeProfilePayload, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
-import { GraduationCap, BookOpen, User, Check, ArrowRight, ArrowLeft, Loader2, Upload } from 'lucide-react'
+import { FALLBACK_SCHOOLS, makeProfilePayload, uploadProfileImage, upsertProfile, withTimeout } from '@/lib/supabaseHelpers'
+import { ArrowLeft, ArrowRight, Camera, Check, Loader2, User } from 'lucide-react'
 import { clsx } from 'clsx'
 
-export default function Onboarding() {
-  const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [schools, setSchools] = useState<any[]>(FALLBACK_SCHOOLS)
-  const { user, setProfile } = useAuthStore()
-  const navigate = useNavigate()
+const STUDENT_STEPS = ['about', 'biography', 'interests', 'transfer-goals', 'image'] as const
+type OnboardingStep = typeof STUDENT_STEPS[number]
+const PROFESSOR_STEPS: readonly OnboardingStep[] = ['about', 'biography', 'interests', 'image']
 
-  const [formData, setFormData] = useState({
-    role: '' as 'student' | 'professor' | '',
-    full_name: '',
-    username: '',
-    gender: 'prefer-not-to-say',
-    school_name: '',
-    school_type: '',
-    academic_year: '',
-    department: '',
-    avatar_url: ''
-  })
+type FormData = {
+  role: 'student' | 'professor' | ''
+  full_name: string
+  username: string
+  school_name: string
+  school_type: string
+  academic_year: string
+  department: string
+  bio: string
+  interestsText: string
+  transfer_goals: string
+  avatar_url: string
+  gender: string
+}
+
+export default function Onboarding() {
+  const { step = 'about' } = useParams()
+  const navigate = useNavigate()
+  const { user, profile, setProfile } = useAuthStore()
+  const [schools, setSchools] = useState<any[]>(FALLBACK_SCHOOLS)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState<FormData>(() => makeInitialForm(profile, user?.email))
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    setFormData(makeInitialForm(profile, user?.email))
+  }, [profile?.id])
 
   useEffect(() => {
     const fetchSchools = async () => {
@@ -46,216 +61,125 @@ export default function Onboarding() {
     fetchSchools()
   }, [])
 
-  const handleNext = () => setStep(step + 1)
-  const handleBack = () => setStep(step - 1)
+  const steps = useMemo(() => formData.role === 'professor' ? PROFESSOR_STEPS : STUDENT_STEPS, [formData.role])
+  const stepIndex = steps.indexOf(step as OnboardingStep)
 
-  const handleSubmit = async () => {
-    if (!user) return
+  if (!user) return <Navigate to="/login" replace />
+  if (!STUDENT_STEPS.includes(step as OnboardingStep)) return <Navigate to="/onboarding/about" replace />
+  if (formData.role === 'professor' && step === 'transfer-goals') return <Navigate to="/onboarding/image" replace />
+  if (stepIndex === -1) return <Navigate to="/onboarding/about" replace />
+
+  const currentStep = steps[stepIndex]
+  const isFirstStep = stepIndex === 0
+  const isFinalStep = stepIndex === steps.length - 1
+
+  const saveCurrentStep = async () => {
+    setError(null)
+    if (!formData.role) {
+      setError('Your profile type is missing. Please return to signup.')
+      return false
+    }
+    if (currentStep === 'about' && !formData.school_name.trim()) {
+      setError('College or university is required.')
+      return false
+    }
+    if (currentStep === 'about' && formData.role === 'professor' && !formData.department.trim()) {
+      setError('Department is required for professors.')
+      return false
+    }
+
     setLoading(true)
-
     try {
-      if (!formData.role) {
-        alert('Please choose student or professor.')
-        return
-      }
-
+      const avatarUrl = avatarFile ? await uploadProfileImage(user.id, avatarFile) : formData.avatar_url
       const profileData = makeProfilePayload({
         id: user.id,
-        email: user.email!,
+        email: user.email || profile?.email || '',
         role: formData.role,
         full_name: formData.full_name,
         username: formData.username,
         school_name: formData.school_name,
-        school_type: formData.school_type,
-        academic_year: formData.academic_year,
+        school_type: formData.school_type || (formData.role === 'student' ? 'community_college' : 'university'),
+        academic_year: formData.role === 'student' ? formData.academic_year : null,
         department: formData.department,
+        bio: formData.bio,
+        interests: splitTags(formData.interestsText),
+        transfer_goals: formData.role === 'student' ? formData.transfer_goals : null,
+        avatar_url: avatarUrl,
         gender: formData.gender,
       })
 
       const { data, error } = await upsertProfile(profileData)
-
-      if (error) {
-        console.warn('Profile save failed, continuing with local profile:', (error as Error).message)
-        setProfile(profileData)
-        navigate(profileData.role === 'professor' ? '/professor-dashboard' : '/feed')
-      } else {
-        setProfile(data)
-        navigate(data?.role === 'professor' ? '/professor-dashboard' : '/feed')
+      if (error) console.warn('Onboarding save failed, using local profile:', (error as Error).message)
+      setProfile(data || profileData)
+      if (avatarFile) {
+        setAvatarFile(null)
+        setAvatarPreview(null)
+        setFormData((current) => ({ ...current, avatar_url: avatarUrl }))
       }
+      return true
     } catch (error) {
       console.warn('Onboarding save failed:', error)
-      alert('We could not save just now. Please try again.')
+      setError('We could not save just now. Please try again.')
+      return false
     } finally {
       setLoading(false)
     }
   }
 
+  const handleNext = async () => {
+    const saved = await saveCurrentStep()
+    if (!saved) return
+    if (isFinalStep) {
+      navigate('/profile', { replace: true })
+      return
+    }
+    navigate(`/onboarding/${steps[stepIndex + 1]}`)
+  }
+
+  const handleBack = () => {
+    if (isFirstStep) return
+    navigate(`/onboarding/${steps[stepIndex - 1]}`)
+  }
+
   return (
     <div className="min-h-screen bg-brand-50 px-6 py-12 flex flex-col items-center justify-center">
-      <div className="w-full max-w-2xl">
-        {/* Progress Bar */}
-        <div className="flex items-center justify-between mb-12 px-2">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center flex-1 last:flex-none">
-              <div className={clsx(
-                "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500",
-                step >= s ? "gradient-brand text-white shadow-lg" : "bg-white text-brand-300 border border-brand-100"
-              )}>
-                {step > s ? <Check className="w-6 h-6" /> : s}
-              </div>
-              {s < 3 && (
+      <div className="w-full max-w-3xl">
+        <div className="mb-10">
+          <p className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-3">Profile setup</p>
+          <div className="flex items-center gap-3">
+            {steps.map((item, index) => (
+              <div key={item} className="flex items-center flex-1 last:flex-none">
                 <div className={clsx(
-                  "h-1 flex-1 mx-4 rounded-full transition-all duration-500",
-                  step > s ? "gradient-brand" : "bg-brand-100"
-                )} />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-brand-100 min-h-[500px] flex flex-col">
-          {step === 1 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2">Choose your path</h2>
-              <p className="text-brand-600 mb-10">Are you a student or a professor?</p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
-                <RoleCard 
-                  active={formData.role === 'student'}
-                  onClick={() => setFormData({ ...formData, role: 'student', school_type: 'community_college' })}
-                  icon={<BookOpen className="w-10 h-10" />}
-                  title="Community College Student"
-                  description="I'm preparing to transfer to a 4-year university."
-                />
-                <RoleCard 
-                  active={formData.role === 'professor'}
-                  onClick={() => setFormData({ ...formData, role: 'professor', school_type: 'university' })}
-                  icon={<GraduationCap className="w-10 h-10" />}
-                  title="University Professor"
-                  description="I'm teaching at a 4-year university and want to connect."
-                />
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2">Where do you {formData.role === 'student' ? 'study' : 'teach'}?</h2>
-              <p className="text-brand-600 mb-8">Select your {formData.role === 'student' ? 'Community College' : 'University'}</p>
-              
-              <div className="space-y-6 flex-1">
-                <div>
-                  <label className="block text-sm font-semibold text-brand-900 mb-3">California {formData.role === 'student' ? 'Community College' : 'University'}</label>
-                  <select 
-                    value={formData.school_name}
-                    onChange={(e) => setFormData({ ...formData, school_name: e.target.value })}
-                    className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white appearance-none text-lg"
-                  >
-                    <option value="">Select a school...</option>
-                    {schools
-                      .filter(s => s.type === formData.school_type)
-                      .map(s => (
-                        <option key={s.id} value={s.name}>{s.name}</option>
-                      ))
-                    }
-                  </select>
+                  'w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all',
+                  index <= stepIndex ? 'gradient-brand text-white shadow-lg' : 'bg-white text-brand-300 border border-brand-100'
+                )}>
+                  {index < stepIndex ? <Check className="w-5 h-5" /> : index + 1}
                 </div>
-                
-                {formData.role === 'student' ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-brand-900 mb-3">Academic Year</label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {['Freshman', 'Sophomore', 'Junior', 'Senior'].map(year => (
-                        <button
-                          key={year}
-                          onClick={() => setFormData({ ...formData, academic_year: year })}
-                          className={clsx(
-                            "px-4 py-3 rounded-xl border font-medium transition-all",
-                            formData.academic_year === year 
-                              ? "bg-accent-50 border-accent-200 text-accent-700 shadow-sm" 
-                              : "border-brand-100 text-brand-600 hover:border-brand-200"
-                          )}
-                        >
-                          {year}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-brand-900 mb-3">Department</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Computer Science, Biology..."
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all text-lg"
-                    />
-                  </div>
+                {index < steps.length - 1 && (
+                  <div className={clsx('h-1 flex-1 mx-3 rounded-full', index < stepIndex ? 'gradient-brand' : 'bg-brand-100')} />
                 )}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
 
-          {step === 3 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
-              <h2 className="text-3xl font-bold text-brand-900 mb-2">Final touches</h2>
-              <p className="text-brand-600 mb-8">Tell us a bit about yourself</p>
-              
-              <div className="space-y-6 flex-1">
-                <div className="flex flex-col items-center mb-8">
-                   <div className="w-32 h-32 rounded-full gradient-soft flex items-center justify-center border-4 border-white shadow-xl relative overflow-hidden group cursor-pointer">
-                      <User className="w-16 h-16 text-brand-300" />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Upload className="w-8 h-8 text-white" />
-                      </div>
-                   </div>
-                   <p className="text-xs text-brand-500 mt-3 font-medium">Upload profile photo</p>
-                </div>
+        <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-brand-100 min-h-[520px] flex flex-col">
+          {error && <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">{error}</div>}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-brand-900 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                      placeholder="Jane Doe"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-brand-900 mb-2">Username</label>
-                    <input
-                      type="text"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                      placeholder="janedoe24"
-                    />
-                  </div>
-                </div>
+          <StepContent
+            step={currentStep}
+            schools={schools}
+            formData={formData}
+            setFormData={setFormData}
+            avatarPreview={avatarPreview}
+            onAvatarSelected={(file, preview) => {
+              setAvatarFile(file)
+              setAvatarPreview(preview)
+            }}
+          />
 
-                <div>
-                  <label className="block text-sm font-semibold text-brand-900 mb-2">Gender</label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all bg-white"
-                  >
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="non-binary">Non-binary</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Buttons */}
           <div className="mt-12 flex items-center justify-between gap-4">
-            {step > 1 ? (
+            {!isFirstStep ? (
               <button
                 onClick={handleBack}
                 className="px-8 py-4 rounded-2xl font-bold text-brand-600 hover:bg-brand-50 transition-colors flex items-center gap-2"
@@ -264,23 +188,13 @@ export default function Onboarding() {
               </button>
             ) : <div />}
 
-            {step < 3 ? (
-              <button
-                disabled={step === 1 ? !formData.role : !formData.school_name}
-                onClick={handleNext}
-                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
-              >
-                Continue <ArrowRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !formData.full_name || !formData.username}
-                className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
-              >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Finish <Check className="w-5 h-5" /></>}
-              </button>
-            )}
+            <button
+              onClick={handleNext}
+              disabled={loading}
+              className="px-10 py-4 gradient-brand text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:transform-none"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : isFinalStep ? <>Finish <Check className="w-5 h-5" /></> : <>Next <ArrowRight className="w-5 h-5" /></>}
+            </button>
           </div>
         </div>
       </div>
@@ -288,25 +202,172 @@ export default function Onboarding() {
   )
 }
 
-function RoleCard({ active, onClick, icon, title, description }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={clsx(
-        "flex flex-col items-center text-center p-8 rounded-[2rem] border-2 transition-all duration-300 group",
-        active 
-          ? "border-accent-400 bg-accent-50 shadow-md ring-4 ring-accent-100" 
-          : "border-brand-50 hover:border-brand-200 hover:bg-brand-50"
-      )}
-    >
-      <div className={clsx(
-        "w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110 duration-300",
-        active ? "gradient-brand text-white" : "bg-brand-50 text-brand-400"
-      )}>
-        {icon}
+function StepContent({
+  step,
+  schools,
+  formData,
+  setFormData,
+  avatarPreview,
+  onAvatarSelected,
+}: {
+  step: OnboardingStep
+  schools: any[]
+  formData: FormData
+  setFormData: (data: FormData) => void
+  avatarPreview: string | null
+  onAvatarSelected: (file: File, preview: string) => void
+}) {
+  if (step === 'about') {
+    return (
+      <div className="space-y-8 flex-1">
+        <div>
+          <h2 className="text-3xl font-bold text-brand-900 mb-2">Academic details</h2>
+          <p className="text-brand-600">Add your school and role-specific academic information.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-brand-900 mb-2">{formData.role === 'professor' ? 'University' : 'College'}</label>
+            <select
+              value={formData.school_name}
+              onChange={(event) => setFormData({ ...formData, school_name: event.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white"
+            >
+              <option value="">Select a school...</option>
+              {schools
+                .filter((school) => !formData.school_type || school.type === formData.school_type)
+                .map((school) => <option key={school.id} value={school.name}>{school.name}</option>)}
+            </select>
+          </div>
+          {formData.role === 'student' ? (
+            <>
+              <TextField label="Major" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} placeholder="Computer Science" />
+              <TextField label="Academic Year" value={formData.academic_year} onChange={(academic_year) => setFormData({ ...formData, academic_year })} placeholder="Sophomore" />
+            </>
+          ) : (
+            <TextField label="Department" value={formData.department} onChange={(department) => setFormData({ ...formData, department })} placeholder="Computer Science" />
+          )}
+        </div>
       </div>
-      <h3 className={clsx("text-xl font-bold mb-3", active ? "text-brand-900" : "text-brand-700")}>{title}</h3>
-      <p className="text-sm text-brand-500 leading-relaxed">{description}</p>
-    </button>
+    )
+  }
+
+  if (step === 'biography') {
+    return (
+      <div className="space-y-8 flex-1">
+        <div>
+          <h2 className="text-3xl font-bold text-brand-900 mb-2">Write your biography</h2>
+          <p className="text-brand-600">Share a short introduction for people who visit your profile.</p>
+        </div>
+        <textarea
+          rows={9}
+          value={formData.bio}
+          onChange={(event) => setFormData({ ...formData, bio: event.target.value })}
+          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          placeholder="Tell your story, what you're studying, and what kinds of academic connections you're looking for."
+        />
+      </div>
+    )
+  }
+
+  if (step === 'interests') {
+    return (
+      <div className="space-y-8 flex-1">
+        <div>
+          <h2 className="text-3xl font-bold text-brand-900 mb-2">Add your interests</h2>
+          <p className="text-brand-600">Separate interests with commas.</p>
+        </div>
+        <textarea
+          rows={7}
+          value={formData.interestsText}
+          onChange={(event) => setFormData({ ...formData, interestsText: event.target.value })}
+          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          placeholder="Machine learning, biology, robotics, transfer advising"
+        />
+      </div>
+    )
+  }
+
+  if (step === 'transfer-goals') {
+    return (
+      <div className="space-y-8 flex-1">
+        <div>
+          <h2 className="text-3xl font-bold text-brand-900 mb-2">Transfer goals</h2>
+          <p className="text-brand-600">Add target schools, target majors, and academic or career goals.</p>
+        </div>
+        <textarea
+          rows={9}
+          value={formData.transfer_goals}
+          onChange={(event) => setFormData({ ...formData, transfer_goals: event.target.value })}
+          className="w-full px-5 py-4 rounded-2xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none text-brand-900"
+          placeholder="UC Berkeley or UCLA for Computer Science; research in human-centered AI; prepare for graduate school."
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8 flex-1">
+      <div>
+        <h2 className="text-3xl font-bold text-brand-900 mb-2">Add a profile image</h2>
+        <p className="text-brand-600">Choose an image from your files.</p>
+      </div>
+      <div className="flex flex-col items-center gap-6">
+        <div className="w-36 h-36 rounded-[2.5rem] gradient-soft flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
+          {avatarPreview || formData.avatar_url ? <img src={avatarPreview || formData.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-16 h-16 text-brand-300" />}
+        </div>
+        <label className="cursor-pointer bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+          <Camera className="w-5 h-5" />
+          Choose Image
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (!file) return
+              const reader = new FileReader()
+              reader.onloadend = () => onAvatarSelected(file, reader.result as string)
+              reader.readAsDataURL(file)
+            }}
+          />
+        </label>
+      </div>
+    </div>
   )
+}
+
+function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-brand-900 mb-2">{label}</label>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full px-4 py-3 rounded-xl border border-brand-200 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+        placeholder={placeholder}
+      />
+    </div>
+  )
+}
+
+function makeInitialForm(profile: any, email?: string | null): FormData {
+  return {
+    role: profile?.role || '',
+    full_name: profile?.full_name || '',
+    username: profile?.username || (email ? email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase() : ''),
+    school_name: profile?.school_name || '',
+    school_type: profile?.school_type || (profile?.role === 'professor' ? 'university' : 'community_college'),
+    academic_year: profile?.academic_year || '',
+    department: profile?.department || '',
+    bio: profile?.bio || '',
+    interestsText: Array.isArray(profile?.interests) ? profile.interests.join(', ') : '',
+    transfer_goals: profile?.transfer_goals || '',
+    avatar_url: profile?.avatar_url || '',
+    gender: profile?.gender || 'prefer-not-to-say',
+  }
+}
+
+function splitTags(value: string) {
+  return value.split(',').map((item) => item.trim()).filter(Boolean)
 }

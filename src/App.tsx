@@ -14,6 +14,7 @@ import Feed from '@/pages/Feed'
 import Opportunities from '@/pages/Opportunities'
 import People from '@/pages/People'
 import Profile from '@/pages/Profile'
+import Connections from '@/pages/Connections'
 import Messages from '@/pages/Messages'
 import Settings from '@/pages/Settings'
 
@@ -47,9 +48,7 @@ function App() {
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
-          const localProfile = loadLocalProfile()
-          setProfile(localProfile)
-          setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+          setProfile(null)
         }
       } catch (error) {
         console.warn('Auth initialization fell back to local profile:', error)
@@ -72,9 +71,7 @@ function App() {
       if (session?.user) {
         await fetchProfile(session.user.id)
       } else {
-        const localProfile = loadLocalProfile()
-        setProfile(localProfile)
-        setUser(localProfile ? { id: localProfile.id, email: localProfile.email } : null)
+        setProfile(null)
         setLoading(false)
       }
     })
@@ -97,7 +94,7 @@ function App() {
         console.warn('Supabase profile lookup failed, using local profile:', error.message)
       }
 
-      setProfile(data || loadLocalProfile())
+      setProfile(data || null)
     } catch (error) {
       console.warn('Supabase profile lookup unavailable, using local profile:', error)
       setProfile(loadLocalProfile())
@@ -115,11 +112,13 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<Navigate to="/onboarding/about" replace />} />
+            <Route path="/onboarding/:step" element={<Onboarding />} />
             <Route element={<MainLayout />}>
               <Route path="/feed" element={<Feed />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/people" element={<People />} />
+              <Route path="/connections" element={<Connections />} />
               <Route path="/profile/:username?" element={<Profile />} />
               <Route path="/professor-dashboard" element={<Profile />} />
               <Route path="/messages" element={<Messages />} />
@@ -144,14 +143,10 @@ function ProtectedRoute() {
 
   if (!session && !profile) return <Navigate to="/login" state={{ from: location }} replace />
   
-  const isOnboardingPath = location.pathname === '/onboarding'
+  const isOnboardingPath = location.pathname.startsWith('/onboarding')
   
   if (!profile && !isOnboardingPath) {
     return <Navigate to="/onboarding" replace />
-  }
-
-  if (profile && isOnboardingPath) {
-    return <Navigate to="/feed" replace />
   }
 
   return <Outlet />
