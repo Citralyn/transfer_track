@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
@@ -17,6 +17,7 @@ import {
   withTimeout,
   type RelationshipStatus,
 } from '@/lib/supabaseHelpers'
+import { getOrCreateConversation } from '@/lib/messaging'
 import {
   MapPin,
   Building2,
@@ -45,6 +46,7 @@ export default function Profile() {
   const [professorOpportunities, setProfessorOpportunities] = useState<any[]>([])
   const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus | 'sending' | 'error'>('none')
   const [requestMessage, setRequestMessage] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchProfile()
@@ -196,6 +198,17 @@ export default function Profile() {
     }
   }
 
+  const handleStartMessage = async () => {
+    if (!loggedInProfile || !profile?.id) return
+    try {
+      const conversationId = await getOrCreateConversation(loggedInProfile.id, profile.id)
+      navigate(`/messages/${conversationId}`)
+    } catch (error) {
+      console.error('Error starting conversation:', error)
+      setRequestMessage('Could not start conversation. Please try again.')
+    }
+  }
+
   if (loading) {
     return <LoadingScreen />
   }
@@ -252,7 +265,10 @@ export default function Profile() {
                         'Connect'
                       )}
                     </button>
-                    <button className="bg-white border border-brand-100 text-brand-800 px-4 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all">
+                    <button 
+                      onClick={handleStartMessage}
+                      className="bg-white border border-brand-100 text-brand-800 px-4 py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all"
+                    >
                       <MessageSquare className="w-5 h-5" />
                     </button>
                   </>

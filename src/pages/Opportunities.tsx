@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useQuery } from '@tanstack/react-query'
@@ -242,7 +243,10 @@ function OpportunityCard({ opportunity, onClick }: { opportunity: any, onClick: 
             <Tag className="w-4 h-4" /> {opportunity.department}
           </div>
           <div className="flex items-center gap-2 text-brand-500 font-medium text-sm">
-            <User className="w-4 h-4" /> {opportunity.profiles?.full_name}
+            <User className="w-4 h-4" /> 
+            <Link to={`/profile/${opportunity.profiles?.username}`} className="hover:text-accent-600 transition-colors">
+              {opportunity.profiles?.full_name}
+            </Link>
           </div>
         </div>
 
@@ -337,17 +341,18 @@ function OpportunityDetailModal({ opportunity, onClose }: { opportunity: any, on
 
           {/* Professor Profile */}
           <div className="bg-brand-50 p-8 rounded-3xl border border-brand-100 flex flex-col md:flex-row items-center gap-6">
-             <ProfileAvatar
-                profile={opportunity.profiles}
-                className="w-20 h-20 rounded-2xl gradient-soft text-brand-400 font-bold text-3xl shadow-sm border border-white"
-             />
+             <Link to={`/profile/${opportunity.profiles?.username}`} className="w-20 h-20 rounded-2xl gradient-soft flex items-center justify-center text-brand-400 font-bold text-3xl shadow-sm border border-white hover:scale-105 transition-transform">
+                {opportunity.profiles?.full_name?.charAt(0)}
+             </Link>
              <div className="flex-1 text-center md:text-left">
-                <h4 className="text-xl font-bold text-brand-900">{opportunity.profiles?.full_name}</h4>
+                <Link to={`/profile/${opportunity.profiles?.username}`} className="text-xl font-bold text-brand-900 hover:text-accent-600 transition-colors">
+                  {opportunity.profiles?.full_name}
+                </Link>
                 <p className="text-brand-500 text-sm font-medium">Professor in {opportunity.profiles?.department || opportunity.department}</p>
              </div>
-             <button className="bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold hover:shadow-md transition-all flex items-center gap-2">
+             <Link to={`/profile/${opportunity.profiles?.username}`} className="bg-white border border-brand-100 text-brand-800 px-6 py-3 rounded-2xl font-bold hover:shadow-md transition-all flex items-center gap-2">
                 <User className="w-5 h-5" /> View Profile
-             </button>
+             </Link>
           </div>
         </div>
 
